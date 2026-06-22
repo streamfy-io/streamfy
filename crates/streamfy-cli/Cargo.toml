@@ -1,0 +1,101 @@
+[package]
+name = "streamfy-cli"
+description = "Streamfy CLI"
+version = "0.0.0"
+publish = false
+default-run = "streamfy"
+repository.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+
+[lib]
+name = "streamfy_cli"
+path = "src/lib.rs"
+
+[[bin]]
+name = "streamfy"
+path = "src/bin/main.rs"
+doc = false
+
+[features]
+default = ["consumer", "k8s", "producer-file-io"]
+consumer = [
+    "ctrlc",
+    "content_inspector",
+    "streamfy-types",
+    "streamfy-future",
+    "streamfy-sc-schema",
+    "streamfy-spu-schema",
+]
+k8s = [
+    "k8-client",
+    "k8-config",
+    "streamfy-cluster",
+]
+smartengine = ["streamfy-smartengine/default"]
+producer-file-io = ["streamfy-cli-common/file-records"]
+
+[dependencies]
+async-channel = { workspace = true }
+async-trait = { workspace = true }
+anyhow = { workspace = true }
+bytesize = { workspace = true, features = ['serde'] }
+clap = { workspace = true, features = ["std", "derive", "string", "help", "usage", "env", "error-context"] }
+clap_complete = { workspace = true }
+indicatif = { workspace = true }
+sha2 = { workspace = true }
+home = { workspace = true }
+current_platform = { workspace = true }
+comfy-table = { workspace = true }
+ctrlc = { workspace = true, optional = true }
+colored = { workspace = true }
+handlebars = { workspace = true }
+content_inspector = { optional = true, workspace = true }
+flate2 = { workspace = true }
+crossterm = { workspace = true, features = ['event-stream',"bracketed-paste", "windows","events"]}
+tui = { workspace = true, features = ['crossterm'] }
+futures = { workspace = true }
+futures-util = { workspace = true, features = ["sink"] }
+humantime = { workspace = true }
+mimalloc = { workspace = true }
+serde_yaml = { workspace = true }
+serde = { workspace = true, features = ["derive"] }
+serde_json = { workspace = true }
+semver = { workspace = true }
+thiserror = { workspace = true }
+tokio = { workspace = true,  features = ["macros"] }
+tracing = { workspace = true }
+which = { workspace = true }
+
+# Streamfy dependencies
+k8-config = { workspace = true, optional = true }
+k8-client = { workspace = true, optional = true }
+k8-types = { workspace = true , features = ["core"] }
+streamfy-cluster = { workspace = true, features = ["cli"], optional = true }
+
+streamfy = { workspace = true }
+streamfy-auth = { workspace = true }
+streamfy-benchmark = { workspace = true }
+fluvio-command = { workspace = true  }
+streamfy-package-index = { workspace = true }
+streamfy-extension-common = { workspace = true,  features = ["target", "installation"] }
+streamfy-channel = { workspace = true }
+streamfy-cli-common = { workspace = true, features = ["serde", "version-cmd"] }
+streamfy-smartengine = { workspace = true,  features = ["transformation"]}
+streamfy-protocol = { workspace = true, features=["record","api"] }
+streamfy-smartmodule = { workspace = true  }
+streamfy-controlplane-metadata = { workspace = true, features = ["smartmodule"] }
+
+# Optional Streamfy dependencies
+streamfy-types = { workspace = true,  optional = true }
+streamfy-future = { workspace = true, features = ["fs", "io", "subscriber", "native_tls"], optional = true }
+streamfy-sc-schema = { workspace = true,  features = ["use_serde"], optional = true }
+streamfy-spu-schema = { workspace = true, optional = true }
+
+# smartmodule depends on cranelift, which is not available for `arm`
+[target.'cfg(not(target_arch = "arm"))'.dependencies]
+streamfy-cli-common = { workspace = true, features = ["smartmodule-test"] }
+
+[dev-dependencies]
+streamfy-future = { workspace = true, features = ["fixture"] }

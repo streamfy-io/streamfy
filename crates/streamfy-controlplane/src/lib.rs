@@ -1,0 +1,12 @@
+pub mod sc_api;
+pub mod spu_api;
+pub mod replica;
+pub mod message;
+pub mod requests;
+
+pub use alias::*;
+mod alias {
+    use streamfy_controlplane_metadata::{store::MetadataStoreObject, partition::PartitionSpec};
+
+    pub type PartitionMetadata<C> = MetadataStoreObject<PartitionSpec, C>;
+}

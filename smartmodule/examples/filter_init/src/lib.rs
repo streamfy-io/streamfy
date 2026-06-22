@@ -1,0 +1,25 @@
+use std::sync::OnceLock;
+
+use streamfy_smartmodule::{
+    smartmodule, SmartModuleRecord, Result, eyre,
+    dataplane::smartmodule::{SmartModuleExtraParams, SmartModuleInitError},
+};
+
+static CRITERIA: OnceLock<String> = OnceLock::new();
+
+#[smartmodule(init)]
+fn init(params: SmartModuleExtraParams) -> Result<()> {
+    if let Some(key) = params.get("key") {
+        CRITERIA
+            .set(key.clone())
+            .map_err(|err| eyre!("failed setting key: {:#?}", err))
+    } else {
+        Err(SmartModuleInitError::MissingParam("key".to_string()).into())
+    }
+}
+
+#[smartmodule(filter)]
+pub fn filter(record: &SmartModuleRecord) -> Result<bool> {
+    let string = std::str::from_utf8(record.value.as_ref())?;
+    Ok(string.contains(CRITERIA.get().unwrap()))
+}

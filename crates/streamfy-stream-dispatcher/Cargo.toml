@@ -1,0 +1,42 @@
+[package]
+name = "streamfy-stream-dispatcher"
+description = "Streamfy Event Stream access"
+version.workspace = true
+repository.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+
+[lib]
+name = "streamfy_stream_dispatcher"
+path = "src/lib.rs"
+
+[features]
+local = ["streamfy-stream-model/use_serde", "streamfy-stream-model/k8", "serde_yaml", "parking_lot"]
+k8 = ["streamfy-stream-model/k8", "k8-client", "serde_json"]
+
+[dependencies]
+anyhow = { workspace = true }
+async-trait = { workspace = true }
+async-lock = { workspace = true }
+async-channel = { workspace = true }
+cfg-if = { workspace = true }
+futures-util = { workspace = true, features = ["alloc"] }
+once_cell = { workspace = true }
+serde = { workspace = true,  features = ['derive'] }
+serde_json = { workspace = true, optional = true }
+serde_yaml = { workspace = true, optional = true }
+parking_lot = { workspace = true, features = ["send_guard"], optional = true }
+tokio = { workspace = true, features = ["macros"] }
+tracing = { workspace = true }
+tempfile = { workspace = true }
+
+# Streamfy dependencies
+streamfy-types = { workspace = true }
+streamfy-stream-model = { workspace = true }
+k8-client = { workspace = true, optional = true, features = ["memory_client"] }
+streamfy-future = { workspace = true, features = ["task", "timer"] }
+
+[dev-dependencies]
+streamfy-future = { workspace = true, features = ["fixture"] }
+streamfy-stream-model = { workspace = true, features = ["fixture"]  }

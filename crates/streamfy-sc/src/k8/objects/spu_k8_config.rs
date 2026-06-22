@@ -1,0 +1,249 @@
+use std::collections::{BTreeMap, HashMap};
+use std::fmt;
+
+use anyhow::Result;
+use serde::{Deserialize, Serialize};
+use tracing::{debug, info};
+
+use streamfy_controlplane_metadata::core::MetadataContext;
+use streamfy_types::defaults::SPU_PUBLIC_PORT;
+use streamfy_stream_model::k8_types::Env;
+use streamfy_stream_model::k8_types::core::pod::{
+    ResourceRequirements, PodSecurityContext, ContainerSpec, VolumeMount, VolumeSpec,
+};
+use streamfy_stream_model::k8_types::core::config_map::{ConfigMapSpec, ConfigMapStatus};
+use streamfy_stream_model::k8_types::core::service::{
+    ServicePort, ServiceSpec, TargetPort, LoadBalancerType,
+};
+
+use crate::dispatcher::core::{Spec, Status};
+
+const CONFIG_MAP_NAME: &str = "spu-k8";
+
+// this is same struct as in helm config
+#[derive(Debug, Clone, PartialEq, Eq, Default, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PodConfig {
+    #[serde(default)]
+    pub node_selector: HashMap<String, String>,
+    pub resources: Option<ResourceRequirements>,
+    pub storage_class: Option<String>,
+    pub base_node_port: Option<u16>,
+    #[serde(default)]
+    pub extra_containers: Vec<ContainerSpec>,
+    #[serde(default)]
+    pub extra_env: Vec<Env>,
+    #[serde(default)]
+    pub extra_volume_mounts: Vec<VolumeMount>,
+    #[serde(default)]
+    pub extra_volumes: Vec<VolumeSpec>,
+    pub priority_class_name: Option<String>,
+}
+
+#[derive(Debug, Eq, PartialEq, Default, Clone, Serialize, Deserialize)]
+pub struct ScK8Config {
+    pub image: String,
+    pub pod_security_context: Option<PodSecurityContext>,
+    pub lb_service_annotations: HashMap<String, String>,
+    pub service: Option<ServiceSpec>,
+    pub spu_pod_config: PodConfig,
+}
+
+impl ScK8Config {
+    fn from(mut data: BTreeMap<String, String>) -> Result<Self> {
+        debug!("ConfigMap {} data: {:?}", CONFIG_MAP_NAME, data);
+
+        let image = data.remove("image").ok_or_else(|| {
+            anyhow::anyhow!("image not found in ConfigMap spu-k8 data".to_owned())
+        })?;
+
+        let pod_security_context =
+            if let Some(pod_security_context_string) = data.remove("podSecurityContext") {
+                serde_json::from_str(&pod_security_context_string)?
+            } else {
+                None
+            };
+
+        let lb_service_annotations =
+            if let Some(lb_service_annotations) = data.remove("lbServiceAnnotations") {
+                serde_json::from_str(&lb_service_annotations)?
+            } else {
+                HashMap::new()
+            };
+
+        let service = if let Some(service_data) = data.remove("service") {
+            Some(serde_json::from_str(&service_data)?)
+        } else {
+            None
+        };
+
+        let spu_pod_config = if let Some(config_str) = data.remove("spuPodConfig") {
+            serde_json::from_str(&config_str)
+                .map_err(|err| anyhow::anyhow!("not able to parse spu pod config: {err:#?}"))?
+        } else {
+            info!("spu pod config not found, using default");
+            PodConfig::default()
+        };
+
+        info!(?spu_pod_config, "spu pod config");
+
+        Ok(Self {
+            image,
+            pod_security_context,
+            lb_service_annotations,
+            service,
+            spu_pod_config,
+        })
+    }
+
+    /*
+    pub async fn load(client: &SharedK8Client, namespace: &str) -> Result<Self, ClientError> {
+        let meta = InputObjectMeta::named(CONFIG_MAP_NAME, namespace);
+        let k8_obj = client.retrieve_item::<ConfigMapSpec, _>(&meta).await?;
+
+        Self::from(k8_obj.header.data)
+
+    }
+    */
+
+    /// apply service config to service
+    pub fn apply_service(&self, replica: u16, k8_service: &mut ServiceSpec) {
+        let mut public_port = ServicePort {
+            port: SPU_PUBLIC_PORT,
+            ..Default::default()
+        };
+        public_port.target_port = Some(TargetPort::Number(public_port.port));
+
+        if let Some(service_template) = &self.service {
+            if let Some(ty) = &service_template.r#type {
+                k8_service.r#type = Some(ty.clone());
+                if let (LoadBalancerType::NodePort, Some(node_port)) =
+                    (ty, self.spu_pod_config.base_node_port)
+                {
+                    public_port.node_port = Some(node_port + replica);
+                };
+            }
+            if let Some(local_traffic) = &service_template.external_traffic_policy {
+                k8_service.external_traffic_policy = Some(local_traffic.clone());
+            }
+            if let Some(external_name) = &service_template.external_name {
+                k8_service.external_name = Some(external_name.clone());
+            }
+            if let Some(lb_ip) = &k8_service.load_balancer_ip {
+                k8_service.load_balancer_ip = Some(lb_ip.clone());
+            }
+        }
+
+        k8_service.ports = vec![public_port];
+    }
+}
+
+impl Spec for ScK8Config {
+    const LABEL: &'static str = "StreamfyConfig";
+    type IndexKey = String;
+    type Status = StreamfyConfigStatus;
+    type Owner = Self;
+}
+
+impl From<ConfigMapSpec> for ScK8Config {
+    fn from(_spec: ConfigMapSpec) -> Self {
+        panic!("can't do it")
+    }
+}
+
+impl From<ScK8Config> for ConfigMapSpec {
+    fn from(_spec: ScK8Config) -> Self {
+        panic!("can't do it")
+    }
+}
+
+#[derive(Debug, Eq, PartialEq, Default, Clone, Serialize, Deserialize)]
+pub struct StreamfyConfigStatus();
+
+impl Status for StreamfyConfigStatus {}
+
+impl fmt::Display for StreamfyConfigStatus {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "")
+    }
+}
+
+impl From<ConfigMapStatus> for StreamfyConfigStatus {
+    fn from(_k8: ConfigMapStatus) -> Self {
+        Self {}
+    }
+}
+
+impl From<StreamfyConfigStatus> for ConfigMapStatus {
+    fn from(_status: StreamfyConfigStatus) -> Self {
+        panic!("can't do it")
+    }
+}
+
+mod extended {
+
+    use std::convert::TryInto;
+    use std::io::Error as IoError;
+    use std::io::ErrorKind;
+
+    use tracing::debug;
+    use tracing::trace;
+
+    use streamfy_stream_model::k8_types::K8Obj;
+    use streamfy_stream_model::k8_types::core::config_map::ConfigMapSpec;
+    use streamfy_stream_model::k8_types::Spec as K8Spec;
+
+    use crate::stores::k8::K8ConvertError;
+    use crate::stores::k8::K8ExtendedSpec;
+    use crate::stores::k8::K8MetaItem;
+    use crate::stores::MetadataStoreObject;
+
+    use super::*;
+
+    impl K8ExtendedSpec for ScK8Config {
+        type K8Spec = ConfigMapSpec;
+
+        fn convert_from_k8(
+            k8_obj: K8Obj<Self::K8Spec>,
+            _multi_namespace_context: bool,
+        ) -> Result<MetadataStoreObject<Self, K8MetaItem>, K8ConvertError<Self::K8Spec>> {
+            if k8_obj.metadata.name == "spu-k8" {
+                debug!(k8_name = %k8_obj.metadata.name,
+                    "detected streamfy config");
+                trace!("converting k8 spu service: {:#?}", k8_obj);
+
+                match ScK8Config::from(k8_obj.header.data) {
+                    Ok(config) => match k8_obj.metadata.try_into() {
+                        Ok(ctx_item) => {
+                            let ctx = MetadataContext::new(ctx_item);
+                            Ok(
+                                MetadataStoreObject::new("streamfy", config, StreamfyConfigStatus {})
+                                    .with_context(ctx),
+                            )
+                        }
+                        Err(err) => Err(K8ConvertError::KeyConvertionError(IoError::new(
+                            ErrorKind::InvalidData,
+                            format!("error converting metadata: {err:#?}"),
+                        ))),
+                    },
+                    Err(err) => Err(K8ConvertError::Other(std::io::Error::new(
+                        std::io::ErrorKind::Interrupted,
+                        err.to_string(),
+                    ))),
+                }
+            } else {
+                trace!(
+                    name = %k8_obj.metadata.name,
+                    "skipping non spu service");
+                Err(K8ConvertError::Skip(Box::new(k8_obj)))
+            }
+        }
+
+        fn convert_status_from_k8(status: Self::Status) -> <ConfigMapSpec as K8Spec>::Status {
+            status.into()
+        }
+        fn into_k8(self) -> Self::K8Spec {
+            self.into()
+        }
+    }
+}

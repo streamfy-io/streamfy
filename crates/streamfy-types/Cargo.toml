@@ -1,0 +1,23 @@
+[package]
+name = "streamfy-types"
+description = "Streamfy common types and objects"
+version.workspace = true
+repository.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+
+[features]
+events = ["event-listener"]
+
+[dependencies]
+event-listener = { workspace = true, optional = true }
+thiserror = { workspace = true }
+tracing = { workspace = true }
+schemars = { workspace = true }
+serde = { workspace = true, features = ["derive"], default-features = false }
+toml = { workspace = true, features = ["display", "preserve_order", "parse"] }
+
+[dev-dependencies]
+streamfy-future = { workspace = true, features = ["fixture", "subscriber"] }
+tokio = { workspace = true, features = ["macros"] }

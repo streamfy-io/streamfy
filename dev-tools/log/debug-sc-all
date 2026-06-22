@@ -1,0 +1,2 @@
+#!/bin/sh
+RUST_LOG=kf=trace,streamfy=trace cargo run --bin  streamfy-sc-k8 -- $@

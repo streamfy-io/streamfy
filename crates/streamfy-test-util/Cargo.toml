@@ -1,0 +1,35 @@
+[package]
+name = "streamfy-test-util"
+description = "Streamfy Test utility"
+version = "0.0.0"
+publish = false
+repository.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+
+
+[dependencies]
+tracing = { workspace = true }
+clap = { workspace = true , features = ["std", "derive", "help", "usage", "error-context"] }
+async-trait = { workspace = true }
+syn = { workspace = true }
+serde = { workspace = true }
+humantime = { workspace = true }
+inventory = { workspace = true }
+comfy-table = { workspace = true }
+once_cell = { workspace = true }
+dyn-clone = "1.0"
+semver = { workspace = true }
+hdrhistogram = { workspace = true }
+uuid = { workspace = true }
+anyhow = { workspace = true }
+
+streamfy = { workspace = true  }
+streamfy-types = { workspace = true }
+streamfy-future = { workspace = true, features = ["task", "timer", "subscriber", "fixture"] }
+streamfy-cluster = { workspace = true }
+fluvio-command = { workspace = true  }
+
+[lib]
+path = "lib.rs"

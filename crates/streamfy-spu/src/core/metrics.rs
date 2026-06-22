@@ -1,0 +1,208 @@
+use std::{
+    collections::HashMap,
+    sync::{
+        atomic::{AtomicU64, Ordering},
+        RwLock,
+    },
+    ops::AddAssign,
+};
+
+use streamfy_protocol::record::Batch;
+#[cfg(feature = "smartengine")]
+use streamfy_smartengine::metrics::SmartModuleChainMetrics;
+#[cfg(not(feature = "smartengine"))]
+use crate::smartengine::SmartModuleChainMetrics;
+
+use streamfy_spu_schema::fetch::FilePartitionResponse;
+use serde::Serialize;
+
+#[derive(Default, Debug, Serialize)]
+pub(crate) struct SpuMetrics {
+    inbound: Activity,
+    outbound: Activity,
+    #[serde(skip)] // Skip serializing the RwLock wrapper
+    smartmodule_metrics: RwLock<HashMap<String, SmartModuleChainMetrics>>,
+}
+
+impl SpuMetrics {
+    pub(crate) fn new() -> Self {
+        Self {
+            inbound: Activity::default(),
+            outbound: Activity::default(),
+            smartmodule_metrics: RwLock::new(HashMap::new()),
+        }
+    }
+
+    pub fn inbound(&self) -> &Activity {
+        &self.inbound
+    }
+
+    pub fn outbound(&self) -> &Activity {
+        &self.outbound
+    }
+
+    pub fn smartmodule_metrics(&self) -> HashMap<String, SmartModuleChainMetrics> {
+        // Return a copy of the metrics to avoid holding the lock
+        self.smartmodule_metrics.read().unwrap().clone()
+    }
+
+    pub fn update_smartmodule_metrics(
+        &self,
+        smartmodule_name: &str,
+        metrics: &SmartModuleChainMetrics,
+    ) {
+        tracing::debug!(
+            "Updating smartmodule metrics for {}: {:?}",
+            smartmodule_name,
+            metrics
+        );
+        // Acquire write lock to modify the HashMap
+        let mut metrics_map = self.smartmodule_metrics.write().unwrap();
+
+        // if the smartmodule already exists, take metrics and accumulate
+        // otherwise, insert new metrics
+        if let Some(existing_metrics) = metrics_map.get_mut(smartmodule_name) {
+            existing_metrics.append(metrics);
+        } else {
+            metrics_map.insert(smartmodule_name.to_string(), metrics.clone());
+        }
+    }
+}
+
+#[derive(Default, Debug, Serialize)]
+pub(crate) struct Record {
+    records: AtomicU64,
+    bytes: AtomicU64,
+}
+
+impl Record {
+    pub(crate) fn increase(&self, records: u64, bytes: u64) {
+        self.records.fetch_add(records, Ordering::SeqCst);
+        self.bytes.fetch_add(bytes, Ordering::SeqCst);
+    }
+}
+
+#[derive(Default, Debug, Serialize)]
+pub struct Activity {
+    connector: Record,
+    client: Record,
+}
+
+#[derive(Default, Debug)]
+pub(crate) struct IncreaseValue {
+    records: u64,
+    bytes: u64,
+}
+
+impl Activity {
+    pub(crate) fn increase(&self, connector: bool, records: u64, bytes: u64) {
+        if connector {
+            self.connector.increase(records, bytes);
+        } else {
+            self.client.increase(records, bytes);
+        }
+    }
+
+    pub(crate) fn increase_by_value(&self, connector: bool, value: IncreaseValue) {
+        let IncreaseValue { records, bytes } = value;
+        self.increase(connector, records, bytes)
+    }
+}
+
+#[cfg(test)]
+impl Activity {
+    pub fn connector_records(&self) -> u64 {
+        self.connector.records.load(Ordering::SeqCst)
+    }
+    pub fn connector_bytes(&self) -> u64 {
+        self.connector.bytes.load(Ordering::SeqCst)
+    }
+    pub fn client_records(&self) -> u64 {
+        self.client.records.load(Ordering::SeqCst)
+    }
+    pub fn client_bytes(&self) -> u64 {
+        self.client.bytes.load(Ordering::SeqCst)
+    }
+}
+
+impl IncreaseValue {
+    pub(crate) fn new(records: u64, bytes: u64) -> Self {
+        Self { records, bytes }
+    }
+}
+
+// Measuring of serialized data. `bytes` is length of file slice, `records` is an offset's change
+impl From<&FilePartitionResponse> for IncreaseValue {
+    fn from(resp: &FilePartitionResponse) -> Self {
+        Self::new(
+            (resp.high_watermark - resp.log_start_offset) as u64,
+            resp.records.len() as u64,
+        )
+    }
+}
+
+// Measuring of deserialized data. `bytes` is a sum of key size and value size of every record, `records` is records size
+impl From<&Batch> for IncreaseValue {
+    fn from(batch: &Batch) -> Self {
+        let records = batch.records().len();
+        let mut bytes = 0;
+        for record in batch.records() {
+            bytes.add_assign(record.key().map_or(0, |k| k.len()));
+            bytes.add_assign(record.value.len());
+        }
+        Self::new(records as u64, bytes as u64)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+
+    use super::*;
+    use streamfy::RecordKey;
+    use streamfy_future::file_slice::AsyncFileSlice;
+    use streamfy_protocol::record::Record;
+    use streamfy_protocol::record::RecordData;
+    use streamfy_spu_schema::file::FileRecordSet;
+
+    #[test]
+    fn test_increase_from_batch() {
+        //given
+        let record1_value = [1; 10];
+        let record2_value = [2; 11];
+        let record2_key = [3; 12];
+        let batch = Batch::from(vec![
+            Record::new(RecordData::from(record1_value)),
+            Record::new_key_value(
+                RecordKey::from(record2_key),
+                RecordData::from(record2_value),
+            ),
+        ]);
+        let activity = Activity::default();
+
+        //when
+        activity.increase_by_value(true, IncreaseValue::from(&batch));
+
+        //then
+        assert_eq!(activity.connector.records.load(Ordering::SeqCst), 2);
+        assert_eq!(activity.connector.bytes.load(Ordering::SeqCst), 33); // 10 + 11 + 12
+    }
+
+    #[test]
+    fn test_increase_from_file_partition_response() {
+        //given
+        let response = FilePartitionResponse {
+            high_watermark: 2,
+            log_start_offset: 1,
+            records: FileRecordSet::from(AsyncFileSlice::new(Default::default(), 0, 123)),
+            ..Default::default()
+        };
+        let activity = Activity::default();
+
+        //when
+        activity.increase_by_value(true, IncreaseValue::from(&response));
+
+        //then
+        assert_eq!(activity.connector.records.load(Ordering::SeqCst), 1);
+        assert_eq!(activity.connector.bytes.load(Ordering::SeqCst), 123);
+    }
+}

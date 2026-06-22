@@ -1,0 +1,39 @@
+[package]
+name = "streamfy-channel-cli"
+description = "Streamfy CLI frontend (with channels support)"
+version = "0.0.0"
+repository.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+publish = false
+
+[[bin]]
+name = "streamfy-channel"
+path = "src/bin/main.rs"
+doc = false
+
+[lib]
+name = "streamfy_channel_cli"
+path = "src/lib.rs"
+
+[features]
+default = ["streamfy-future", "streamfy-types"]
+
+[dependencies]
+clap = { workspace = true, features = ["std", "derive", "help", "usage", "error-context"], default-features = false }
+tracing = { workspace = true }
+cfg-if = { workspace = true }
+dirs = { workspace = true }
+anyhow = { workspace = true }
+
+streamfy-cli-common = { workspace = true, features = ["serde"] }
+streamfy-channel = { workspace = true  }
+streamfy-future = { workspace = true, features = ["task", "subscriber"], optional = true }
+streamfy-types = { workspace = true,  default-features = false, optional = true }
+streamfy-package-index = { workspace = true  }
+
+[dev-dependencies]
+assert_cmd = "2.0.4"
+predicates = "3.0.3"
+rand = { workspace = true }

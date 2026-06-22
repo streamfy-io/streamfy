@@ -1,0 +1,15 @@
+[package]
+name = "streamfy-smartmodule-aggregate-with-timestamp"
+version = "0.0.0"
+authors = ["Streamfy Contributors <team@streamfy.io>"]
+edition = "2024"
+publish = false
+
+[lib]
+crate-type = ['cdylib']
+
+[dependencies]
+chrono = { version = "0.4.26", default-features = false }
+
+# Streamfy
+streamfy-smartmodule = { workspace = true }

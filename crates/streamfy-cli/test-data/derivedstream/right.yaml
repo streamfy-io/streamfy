@@ -1,0 +1,7 @@
+name: rdouble
+input:
+  topic:
+    name: right
+steps:
+  - map:
+      module: double

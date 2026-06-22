@@ -1,0 +1,138 @@
+extern crate proc_macro;
+
+use proc_macro::TokenStream;
+use proc_macro2::Span;
+use quote::{quote, quote_spanned};
+use syn::spanned::Spanned;
+use syn::{Ident, ItemFn};
+
+#[proc_macro_attribute]
+pub fn main_async(_attr: TokenStream, item: TokenStream) -> TokenStream {
+    let input = syn::parse_macro_input!(item as syn::ItemFn);
+
+    let ret = &input.sig.output;
+    let inputs = &input.sig.inputs;
+    let name = &input.sig.ident;
+    let body = &input.block;
+    let attrs = &input.attrs;
+    let vis = &input.vis;
+
+    if name != "main" {
+        return TokenStream::from(quote_spanned! { name.span() =>
+            compile_error!("only the main function can be tagged with #[streamfy_future::main_async]"),
+        });
+    }
+
+    if input.sig.asyncness.is_none() {
+        return TokenStream::from(quote_spanned! { input.span() =>
+            compile_error!("the async keyword is missing from the function declaration"),
+        });
+    }
+
+    let result = quote! {
+        #vis fn main() #ret {
+
+            ::streamfy_future::subscriber::init_logger();
+
+            #(#attrs)*
+            async fn main(#inputs) #ret {
+                #body
+            }
+
+            ::streamfy_future::task::run_block_on(async {
+                main().await
+            })
+        }
+
+    };
+
+    result.into()
+}
+
+#[proc_macro_attribute]
+pub fn test_async(args: TokenStream, item: TokenStream) -> TokenStream {
+
+    let attribute_args = syn::parse_macro_input!(args with syn::punctuated::Punctuated::<syn::Meta, syn::Token![,]>::parse_terminated);
+    let input = syn::parse_macro_input!(item as ItemFn);
+    let name = &input.sig.ident;
+    let sync_name = format!("{}_sync", name);
+    let out_fn_iden = Ident::new(&sync_name, Span::call_site());
+
+    let test_attributes = generate::generate_test_attributes(&attribute_args);
+
+    let expression = quote! {
+
+        #[test]
+        #test_attributes
+        fn #out_fn_iden()  {
+
+            ::streamfy_future::subscriber::init_logger();
+
+            #input
+
+            let ft = async {
+                #name().await
+            };
+
+            #[cfg(not(target_arch = "wasm32"))]
+            if let Err(err) = ::streamfy_future::task::run_block_on(ft) {
+                assert!(false,"error: {:?}",err);
+            }
+        }
+    };
+
+    expression.into()
+}
+
+#[proc_macro_attribute]
+pub fn test(args: TokenStream, item: TokenStream) -> TokenStream {
+
+    let attribute_args = syn::parse_macro_input!(args with syn::punctuated::Punctuated::<syn::Meta, syn::Token![,]>::parse_terminated);
+    let input = syn::parse_macro_input!(item as ItemFn);
+    let name = &input.sig.ident;
+    let sync_name = format!("{}_sync", name);
+    let out_fn_iden = Ident::new(&sync_name, Span::call_site());
+
+    let test_attributes = generate::generate_test_attributes(&attribute_args);
+
+    let expression = quote! {
+
+        #[test]
+        #test_attributes
+        fn #out_fn_iden()  {
+
+            ::streamfy_future::subscriber::init_logger();
+
+            #input
+
+            let ft = async {
+                #name().await;
+            };
+
+
+            ::streamfy_future::task::run_block_on(ft);
+        }
+    };
+
+    expression.into()
+}
+
+mod generate {
+
+    use proc_macro2::TokenStream;
+    use quote::quote;
+
+    pub fn generate_test_attributes(attributes: &syn::punctuated::Punctuated<syn::Meta, syn::Token![,]>) -> TokenStream {
+        let args = attributes.iter().map(|meta| {
+            quote! {
+                #[#meta]
+            }
+        });
+
+        quote! {
+
+            #(#args)*
+
+        }
+    }
+}

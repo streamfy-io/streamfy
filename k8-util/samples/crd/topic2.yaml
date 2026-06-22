@@ -1,0 +1,9 @@
+apiVersion: "streamfy.streamfy.com/v2"
+kind: Topic
+metadata:
+  name: topic2
+spec:
+  replicas:
+    computed:
+      partitions: 1
+      replicationFactor: 2

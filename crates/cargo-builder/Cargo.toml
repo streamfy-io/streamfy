@@ -1,0 +1,16 @@
+[package]
+name = "cargo-builder"
+description = "Build Cargo project programmability"
+version = "0.0.0"
+publish = false
+repository.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+
+
+
+[dependencies]
+anyhow = { workspace = true }
+derive_builder = { workspace = true }
+cargo_metadata = "0.18.0"

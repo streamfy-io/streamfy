@@ -1,0 +1,27 @@
+meta:
+  version: 0.1.0
+  name: my-test-mqtt
+  type: mqtt
+  topic: my-mqtt
+  create_topic: false
+transforms:
+  - uses: streamfy/sql
+    lookback:
+      last:
+        100
+      age: 1h  
+    with:
+      mapping:
+        table: "topic_message"
+        map-columns:
+          "device_id":
+            json-key: "device.device_id"
+            value:
+              type: "int"
+              default: 0
+              required: true
+          "record":
+            json-key: "$"
+            value:
+              type: "jsonb"
+              required: true

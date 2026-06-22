@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: streamfy-sc-internal
+spec:
+  selector:
+    app: streamfy-sc
+  ports:
+  - protocol: TCP
+    port: 9004
+    targetPort: 9004

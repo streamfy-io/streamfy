@@ -1,0 +1,50 @@
+use std::sync::Arc;
+use std::fmt::Debug;
+
+use async_trait::async_trait;
+use clap::Parser;
+use futures::StreamExt;
+use tokio::select;
+use anyhow::Result;
+
+use streamfy::metadata::smartmodule::SmartModuleSpec;
+use streamfy::Streamfy;
+
+use crate::client::cmd::ClientCmd;
+use crate::client::smartmodule::list::ListSmartModuleOpt;
+use crate::common::output::Terminal;
+use crate::common::OutputFormat;
+
+/// Watch for changes to SmartModules
+#[derive(Debug, Parser)]
+pub struct WatchSmartModuleOpt {
+    #[clap(flatten)]
+    output: OutputFormat,
+}
+
+#[async_trait]
+impl ClientCmd for WatchSmartModuleOpt {
+    async fn process_client<O: Terminal + Debug + Send + Sync>(
+        self,
+        out: Arc<O>,
+        streamfy: &Streamfy,
+    ) -> Result<()> {
+        let admin = streamfy.admin().await;
+
+        let mut watch_stream = admin.watch::<SmartModuleSpec>().await?;
+        loop {
+            select! {
+                next = watch_stream.next() => {
+                    if let Some(Ok(_event)) = next {
+                        out.println("");    // add newline
+                        let opt = ListSmartModuleOpt::new(self.output.clone());
+                        opt.process_client(out.clone(), streamfy).await?;
+                    } else {
+                        break;
+                    }
+                }
+            }
+        }
+        Ok(())
+    }
+}

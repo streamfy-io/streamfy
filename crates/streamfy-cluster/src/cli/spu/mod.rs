@@ -1,0 +1,58 @@
+use std::sync::Arc;
+use clap::Parser;
+
+mod list;
+mod display;
+mod register;
+mod unregister;
+
+use anyhow::Result;
+
+use streamfy::Streamfy;
+use list::ListSpusOpt;
+use register::RegisterCustomSpuOpt;
+use unregister::UnregisterCustomSpuOpt;
+
+use super::common::COMMAND_TEMPLATE;
+use super::common::output::Terminal;
+
+#[derive(Debug, Parser)]
+pub enum SpuCmd {
+    /// Register a new custom SPU with the cluster
+    #[command(
+        name = "register",
+        help_template = COMMAND_TEMPLATE,
+    )]
+    Register(RegisterCustomSpuOpt),
+
+    /// Unregister a custom SPU from the cluster
+    #[command(
+        name = "unregister",
+        help_template = COMMAND_TEMPLATE,
+    )]
+    Unregister(UnregisterCustomSpuOpt),
+
+    /// List all SPUs known by this cluster (managed AND custom)
+    #[command(
+        name = "list",
+        help_template = COMMAND_TEMPLATE,
+    )]
+    List(ListSpusOpt),
+}
+
+impl SpuCmd {
+    pub async fn process<O: Terminal>(self, out: Arc<O>, streamfy: &Streamfy) -> Result<()> {
+        match self {
+            Self::Register(register) => {
+                register.process(streamfy).await?;
+            }
+            Self::Unregister(unregister) => {
+                unregister.process(streamfy).await?;
+            }
+            Self::List(list) => {
+                list.process(out, streamfy).await?;
+            }
+        }
+        Ok(())
+    }
+}

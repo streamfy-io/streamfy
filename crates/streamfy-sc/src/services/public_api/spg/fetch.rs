@@ -1,0 +1,56 @@
+use std::io::{Error, ErrorKind};
+
+use streamfy_stream_model::core::MetadataItem;
+use tracing::{debug, trace, instrument};
+use anyhow::Result;
+
+use streamfy_sc_schema::objects::{ListResponse, Metadata, ListFilters};
+use streamfy_sc_schema::spg::SpuGroupSpec;
+use streamfy_auth::{AuthContext, TypeAction};
+use streamfy_controlplane_metadata::store::KeyFilter;
+use streamfy_controlplane_metadata::extended::SpecExt;
+
+use crate::services::auth::AuthServiceContext;
+
+#[instrument(skip(filters, auth_ctx))]
+pub async fn handle_fetch_spu_groups_request<AC: AuthContext, C: MetadataItem>(
+    filters: ListFilters,
+    auth_ctx: &AuthServiceContext<AC, C>,
+) -> Result<ListResponse<SpuGroupSpec>> {
+    debug!("fetching spu groups");
+
+    if let Ok(authorized) = auth_ctx
+        .auth
+        .allow_type_action(SpuGroupSpec::OBJECT_TYPE, TypeAction::Read)
+        .await
+    {
+        if !authorized {
+            trace!("authorization failed");
+            // If permission denied, return empty list;
+            return Ok(ListResponse::new(vec![]));
+        }
+    } else {
+        return Err(Error::new(ErrorKind::Interrupted, "authorization io error").into());
+    }
+
+    let spgs: Vec<Metadata<SpuGroupSpec>> = auth_ctx
+        .global_ctx
+        .spgs()
+        .store()
+        .read()
+        .await
+        .values()
+        .filter_map(|value| {
+            if filters.filter(value.key()) {
+                Some(value.inner().clone().into())
+            } else {
+                None
+            }
+        })
+        .collect();
+
+    debug!("flv fetch spgs resp: {} items", spgs.len());
+    trace!("flv fetch spgs resp {:#?}", spgs);
+
+    Ok(ListResponse::new(spgs))
+}

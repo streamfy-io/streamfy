@@ -1,0 +1,16 @@
+apiVersion: "streamfy.streamfy.com/v1"
+kind: Spu
+metadata:
+  name: "custom-spu-2"
+spec:
+  spuId: 5002
+  spuType: "Custom"
+  publicEndpoint:
+    port: 9007
+    ingress:
+      - hostname: localhost
+    encryption: PLAINTEXT
+  privateEndpoint: 
+    port: 9008
+    host: localhost
+    encryption: PLAINTEXT

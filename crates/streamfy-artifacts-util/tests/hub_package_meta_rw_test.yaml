@@ -1,0 +1,11 @@
+package_format_version: '0.3'
+name: example
+version: 0.0.1
+group: streamfy
+description: Describe the module here
+license: e.g. Apache2
+manifest:
+- module.wasm
+repository_url: null
+tags: null
+visibility: private

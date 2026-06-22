@@ -1,0 +1,59 @@
+[package]
+name = "streamfy-socket"
+description = "Provide TCP socket wrapper for streamfy protocol"
+categories = ["encoding"]
+version.workspace = true
+repository.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+
+[lib]
+name = "streamfy_socket"
+path = "src/lib.rs"
+
+[features]
+file = ["streamfy-future/zero_copy", "streamfy-protocol/store"]
+
+[dependencies]
+tracing = { workspace = true }
+cfg-if = { workspace = true }
+bytes = { workspace = true }
+once_cell = { workspace = true }
+futures-util = { features = ["sink", "io"], workspace = true }
+async-lock = { workspace = true }
+event-listener = { workspace = true }
+async-channel = { workspace = true }
+tokio = { workspace = true, features = ["macros"] }
+tokio-util = { features = ["codec", "compat"], workspace = true }
+async-trait = { workspace = true }
+pin-project = { workspace = true }
+thiserror = { workspace = true }
+semver = { workspace = true }
+nix = { workspace = true, features = ["uio"]}
+
+# Streamfy dependencies
+streamfy-future = { workspace = true, features = ["net", "task", "retry"] }
+streamfy-protocol = { workspace = true, features = [
+    "derive",
+    "api",
+    "codec",
+    "link",
+] }
+
+[dev-dependencies]
+portpicker = { workspace = true }
+
+[target.'cfg(not(target_arch = "wasm32"))'.dev-dependencies]
+streamfy-future = { workspace = true, features = [
+    "fixture",
+    "fs",
+    "zero_copy",
+    "native_tls",
+] }
+streamfy-types = { workspace = true, features = ["events"] }
+
+
+
+[build-dependencies]
+built = "0.7.0"

@@ -1,0 +1,5 @@
+apiVersion: v2
+name: streamfy-app
+description: A Helm chart for Streamfy
+type: application
+version: 0.9.3

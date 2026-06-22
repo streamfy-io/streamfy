@@ -1,0 +1,39 @@
+[package]
+name = "cdk"
+description = "Connector Development Kit"
+version = "0.0.0"
+repository.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+publish = false
+
+[[bin]]
+name = "cdk"
+path = "src/main.rs"
+doc = false
+
+[package.metadata.cargo-udeps.ignore]
+normal = ["streamfy"]
+
+[dependencies]
+anyhow = { workspace = true }
+cargo-builder = { path = "../cargo-builder"}
+cargo-generate = { workspace = true }
+clap = { workspace = true, features = ["std", "derive", "help", "usage", "error-context", "env", "wrap_help", "suggestions"], default-features = false }
+comfy-table = { workspace = true  }
+current_platform = { workspace = true }
+enum-display = { workspace = true }
+include_dir = { workspace = true }
+serde = { workspace = true,  features = ["derive"] }
+sysinfo = { workspace = true, default-features = false }
+tempfile = { workspace = true }
+toml = { workspace = true, features = ["parse", "display", "preserve_order"] }
+tracing = { workspace = true }
+openssl = { workspace = true, features = ["vendored"] } # cargo-generate requires openssl
+
+streamfy = { workspace = true }
+streamfy-cli-common = { workspace = true, features = ["serde", "version-cmd"] }
+streamfy-connector-deployer = { workspace = true }
+streamfy-connector-package = { workspace = true,  features = ["toml"]}
+streamfy-future = { workspace = true, features = ["subscriber"]}

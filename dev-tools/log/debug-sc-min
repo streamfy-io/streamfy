@@ -1,0 +1,2 @@
+#!/bin/sh
+RUST_LOG=kf=debug,streamfy=debug  cargo run --bin  streamfy-sc-k8 -- $@

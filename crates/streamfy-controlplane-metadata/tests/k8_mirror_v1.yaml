@@ -1,0 +1,13 @@
+# full V2 Kubernets CRD
+# 
+apiVersion: streamfy.streamfy.com/v1
+kind: Mirror
+metadata:
+  name: onshore
+spec:
+  mirrorType: 
+    home: 
+      id: onshore-core-1
+      remoteId: offshore-edge-1
+      publicEndpoint: streamfy.com:9000
+    

@@ -1,0 +1,36 @@
+[package]
+name = "streamfy-compression"
+description = "Streamfy Compression library"
+categories = ["compression"]
+keywords = ["streamfy", "compression"]
+version.workspace = true
+repository.workspace = true
+authors.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[features]
+default = ["compress"]
+compress = [
+    "gzip",
+    "lz4",
+    "snap",
+    "zstd"
+]
+gzip = ["dep:flate2"]
+lz4 = ["dep:lz4_flex"]
+snap = ["dep:snap"]
+zstd = ["dep:zstd"]
+
+[dependencies]
+serde = { workspace = true,  features = ['derive'] }
+thiserror = { workspace = true }
+bytes = { workspace = true }
+
+streamfy-types = { workspace = true }
+
+# Optional Dependencies
+flate2 = { workspace = true, optional = true }
+lz4_flex = { version = "0.11.6", default-features = false, features = ["safe-decode", "safe-encode", "frame"], optional = true }
+snap = { version = "1", optional = true }
+zstd = { version = "0.13.0", features = ['wasm'], default-features = false, optional = true }

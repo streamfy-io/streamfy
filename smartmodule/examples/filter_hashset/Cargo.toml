@@ -1,0 +1,12 @@
+[package]
+name = "streamfy-smartmodule-filter-hashset"
+version = "0.0.0"
+authors = ["Streamfy Contributors <team@streamfy.io>"]
+edition = "2024"
+publish = false
+
+[lib]
+crate-type = ['cdylib', 'rlib']
+
+[dependencies]
+streamfy-smartmodule = { workspace = true }

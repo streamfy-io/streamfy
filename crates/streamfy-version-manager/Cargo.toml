@@ -1,0 +1,41 @@
+[package]
+name = "streamfy-version-manager"
+description = "Streamfy Version Manager"
+version = "0.0.0"
+publish = false
+repository.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+
+[[bin]]
+name = "fvm"
+path = "src/main.rs"
+
+[dependencies]
+
+# Workspace Dependencies
+anyhow = { workspace = true }
+clap = { workspace = true, features = ["std", "color", "help", "usage", "derive", "env"] }
+colored = { workspace = true }
+comfy-table = { workspace = true }
+current_platform = { workspace = true }
+dialoguer = { workspace = true }
+dirs = { workspace = true }
+octocrab = { workspace = true, default-features = false, features = ["default-client", "rustls", "rustls-aws-lc-rs"] }
+rustls = { workspace = true, features = ["aws-lc-rs"]}
+semver = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+sha2 = { workspace = true }
+sysinfo = { workspace = true }
+tempfile = { workspace = true }
+tracing = { workspace = true }
+toml = { workspace = true }
+
+# Workspace Crates
+streamfy-future = { workspace = true, features = ["attributes", "fixture", "task", "tls"] }
+streamfy-artifacts-util = { workspace = true }
+
+[dev-dependencies]
+fs_extra = "1.3.0"

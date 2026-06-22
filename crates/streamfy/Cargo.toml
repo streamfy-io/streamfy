@@ -1,0 +1,95 @@
+[package]
+name = "streamfy"
+description = "The official Streamfy driver for Rust"
+categories = ["database"]
+keywords = ["streaming", "stream", "queue"]
+readme = "README.md"
+version.workspace = true
+repository.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+
+[lib]
+name = "streamfy"
+path = "src/lib.rs"
+
+[features]
+default = ["rustls", "compress", "rustls-aws"]
+admin = ["streamfy-sc-schema/use_serde"]
+smartengine = ["streamfy-smartengine"]
+openssl = ["streamfy-future/openssl_tls"]
+rustls = ["streamfy-future/rust_tls", "dep:rustls"]
+compress = ["streamfy-compression/compress", "streamfy-protocol/compress"]
+nightly = []
+unstable = []
+# Crypto providers for rustls (mutually exclusive)
+rustls-aws = ["rustls?/aws-lc-rs", "rustls?/prefer-post-quantum"]
+rustls-ring = ["rustls?/ring"]
+
+[dependencies]
+adaptive_backoff = { workspace = true }
+async-channel = { workspace = true }
+async-lock = { workspace = true }
+async-trait = { workspace = true }
+anyhow = { workspace = true }
+cfg-if = { workspace = true }
+derive_builder = { workspace = true }
+parking_lot = { workspace = true }
+event-listener = { workspace = true }
+futures-util = { workspace = true }
+once_cell = { workspace = true }
+serde = { workspace = true, features = ['derive'] }
+tokio = { workspace = true, features = ["macros"] }
+thiserror = { workspace = true }
+semver = { workspace = true }
+pin-project = { workspace = true }
+siphasher = { workspace = true }
+
+
+toml = { workspace = true, features = ["display", "preserve_order"] }
+tracing = { workspace = true }
+
+# Streamfy dependencies
+streamfy-future = { workspace = true, features = [
+    "future",
+    "task",
+    "retry",
+] }
+rustls = { workspace = true, optional = true, default-features = false, features = [
+    "std",
+    "logging",
+    "tls12",
+] }
+streamfy-types = { workspace = true, features = ["events"] }
+streamfy-sc-schema = { workspace = true }
+streamfy-socket = { workspace = true }
+streamfy-protocol = { workspace = true, features = ["record", "api"] }
+streamfy-compression = { workspace = true, default-features = false }
+streamfy-smartmodule = { workspace = true }
+streamfy-stream-dispatcher = { workspace = true, features = ["local"] }
+
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+dirs = { workspace = true }
+chrono = { workspace = true, features = ["clock"] }
+streamfy-smartengine = { workspace = true, features = [
+    "engine",
+], optional = true }
+
+[target.'cfg(unix)'.dependencies]
+streamfy-spu-schema = { workspace = true, features = ["file"] }
+[target.'cfg(windows)'.dependencies]
+streamfy-spu-schema = { workspace = true }
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+web-time = { workspace = true }
+streamfy-spu-schema = { workspace = true }
+chrono = { workspace = true, features = ["wasmbind", "clock"] }
+
+[dev-dependencies]
+streamfy-future = { workspace = true, features = ["io", "fixture", "future"] }
+mockall = { workspace = true }
+
+[target.'cfg(target_arch = "wasm32")'.dev-dependencies]
+wasm-bindgen-test = { workspace = true }
+fluvio_ws_stream_wasm = { workspace = true }

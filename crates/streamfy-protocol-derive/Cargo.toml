@@ -1,0 +1,24 @@
+[package]
+name = "streamfy-protocol-derive"
+description =  "Procedure macro to encode/decode streamfy protocol"
+categories = ["encoding"]
+version.workspace = true
+repository.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+
+[lib]
+proc-macro = true
+doctest = false
+
+[dependencies]
+proc-macro2 = { workspace = true }
+quote = { workspace = true }
+tracing = { workspace = true }
+
+[dependencies.syn]
+version = "1.0.0"
+features = ["full"]
+
+

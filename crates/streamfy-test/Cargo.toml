@@ -1,0 +1,59 @@
+[package]
+name = "streamfy-test"
+description = "Streamfy Test Utility"
+version = "0.0.0"
+publish = false
+autotests = false
+repository.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+
+[dependencies]
+async-channel = { workspace = true }
+anyhow = { workspace = true }
+futures-lite = { workspace = true }
+futures = { workspace = true }
+clap = { workspace = true, features = ["std", "derive"] }
+
+rand = { workspace = true }
+# Cryptographically secure rand is unnecessary and slow enough to affect for benchmark testing
+fastrand = "2.0.0"
+md-5 = "0.10"
+nix = { workspace = true, features = ["process"] }
+serde = { workspace = true, features = ["derive"] }
+serde_json = { workspace = true }
+inventory = { workspace = true }
+tokio = { workspace = true, features = ["macros"] }
+comfy-table = { workspace = true }
+hdrhistogram = { workspace = true }
+crc = "3.0"
+fork = "0.2"
+sysinfo = { workspace = true }
+signal-hook = "0.3.13"
+indicatif = { workspace = true }
+humantime = { workspace = true }
+
+tracing = { workspace = true }
+
+# Streamfy dependencies
+streamfy = { workspace = true }
+streamfy-types = { workspace = true }
+streamfy-future = { workspace = true, features = [
+    "io",
+    "task",
+    "timer",
+    "subscriber",
+    "fixture",
+] }
+fluvio-command = { version = "0.2.0" }
+streamfy-cli = { workspace = true }
+streamfy-controlplane-metadata = { workspace = true, features = ["k8"] }
+
+# Streamfy test framework Attribute macro
+streamfy-test-derive = { workspace = true }
+streamfy-test-util = { workspace = true }
+streamfy-protocol = { workspace = true, features = ["api"] }
+
+# Streamfy test framework Options derive
+streamfy-test-case-derive = { workspace = true }

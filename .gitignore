@@ -1,0 +1,15 @@
+target/
+**/*.rs.bk
+.DS_Store
+.docker-cargo
+target-docker
+.idea/
+VERSION
+.scripts
+.env
+.vscode/
+vendor/
+*.tmp
+
+# Test Connectors Logs
+connector/**/*.log

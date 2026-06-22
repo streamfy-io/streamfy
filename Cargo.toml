@@ -1,0 +1,265 @@
+[workspace]
+exclude = ["smartmodule/regex-filter"]
+members = [
+    "examples/00-produce",
+    "examples/01-produce-key-value",
+    "examples/01-produce-batch",
+    "examples/02-consume",
+    "examples/03-echo",
+    "examples/04-admin-watch",
+    "examples/partitioning-simple",
+    "crates/streamfy",
+    "crates/streamfy-auth",
+    "crates/streamfy-benchmark",
+    "crates/streamfy-channel",
+    "crates/streamfy-channel-cli",
+    "crates/streamfy-cli",
+    "crates/streamfy-cli-common",
+    "crates/streamfy-cluster",
+    "crates/streamfy-compression",
+    "crates/streamfy-controlplane",
+    "crates/streamfy-controlplane-metadata",
+    "crates/streamfy-artifacts-util",
+    "crates/streamfy-hub-protocol",
+    "crates/streamfy-extension-common",
+    "crates/streamfy-kv-storage",
+    "crates/streamfy-package-index",
+    "crates/streamfy-protocol",
+    "crates/streamfy-protocol-derive",
+    "crates/streamfy-run",
+    "crates/streamfy-sc",
+    "crates/streamfy-sc-schema",
+    "crates/streamfy-service",
+    "crates/streamfy-smartmodule",
+    "crates/streamfy-smartmodule-derive",
+    "crates/streamfy-smartengine",
+    "crates/streamfy-socket",
+    "crates/streamfy-spu",
+    "crates/streamfy-spu-schema",
+    "crates/streamfy-storage",
+    "crates/streamfy-stream-dispatcher",
+    "crates/streamfy-stream-model",
+    "crates/streamfy-test",
+    "crates/streamfy-test-derive",
+    "crates/streamfy-test-case-derive",
+    "crates/streamfy-test-util",
+    "crates/streamfy-types",
+    "crates/streamfy-future",
+    "crates/streamfy-future/streamfy-future-derive",
+    "crates/streamfy-version-manager",
+    "crates/streamfy-connector-package",
+    "crates/streamfy-connector-deployer",
+    "crates/streamfy-connector-common",
+    "crates/streamfy-connector-derive",
+    "release-tools/check-crate-version",
+    "release-tools/check-crate-version/toml-diff",
+    "crates/smartmodule-development-kit",
+    "crates/cdk",
+    "crates/cargo-builder",
+    "connector/json-test-connector",
+    "connector/sink-test-connector",
+]
+resolver = "2"
+
+[workspace.package]
+version = "0.50.2"
+edition = "2024"
+license = "Apache-2.0"
+repository = "https://github.com/streamfy-io/streamfy"
+authors = ["Streamfy Contributors <team@streamfy.io>"]
+
+[workspace.dependencies]
+adaptive_backoff = "0.2.1"
+anyhow = "1.0.86"
+async-channel = { version = "2.3.1",  features = ["std"] }
+async-io = "2.4"
+async-lock = "3.4.0"
+async-trait = { version = "0.1.88", default-features = false }
+base64 = "0.22.1"
+blocking = "1.1.0"
+bytes = "1.11.1"
+bytesize = "1.3.0"
+cargo_toml = "0.21.0"
+cargo-generate = { version = "0.21", default-features = false }
+cfg-if = "1.0.0"
+chrono = { version = "0.4.23", default-features = false }
+clap = { version = "4.0.10", default-features = false }
+clap_complete = "4.0.2"
+color-eyre = { version = "0.6.0", default-features = false }
+colored = "3.0.0"
+comfy-table = { version = "7.2.1", default-features = false }
+const_format = { version = "0.2" }
+content_inspector = { version = "0.2" }
+crc32c = { version = "0.6" }
+criterion = "0.5.0"
+crossbeam-channel = "0.5"
+crossterm = { version = "0.28.1", default-features = false }
+ctrlc = { version = "3.1.3" }
+current_platform = { version = "0.2" }
+derive_builder = "0.20.0"
+dialoguer = "0.11.0"
+directories = "6.0.0"
+dirs = "6.0.0"
+duct = { version = "0.13", default-features = false }
+enum-display = "0.1.3"
+event-listener = "5.4.0"
+eyre = { version = "0.6", default-features = false }
+flate2 = { version = "1.0.25" }
+futures = { version = "0.3.1" }
+futures-channel = "0.3"
+futures-lite = "2.3.0"
+futures-util = { version = "0.3.31", default-features = false }
+getrandom = "0.2.15"
+handlebars = "6.3.0"
+hdrhistogram = "7.0"
+hex = "0.4"
+home = "0.5"
+http = { default-features = false, version = "1.2.0" }
+humantime = "2.0"
+humantime-serde = { version = "1.1.1", default-features = false }
+include_dir = "0.7.2"
+indicatif = "0.17.0"
+inventory = "0.3"
+libc = "0.2.116"
+madato = "0.7.0"
+mimalloc = "0.1.39"
+minijinja = { version = "2.6", default-features = false }
+mime = "0.3"
+mockall = { version = "0.13.1", default-features = false }
+nix = { version = "0.29.0", default-features = false }
+once_cell = "1.7.2"
+openssl = { version = "0.10", default-features = false }
+pathdiff = { version = "0.2.1", default-features = false }
+parking_lot = { version = "0.12.3", default-features = false }
+lib-cargo-crate = "0.2.1"
+octocrab = { version = "0.46", default-features = false }
+pin-project = "1.1.0"
+pin-utils = "0.1.0"
+portpicker = "0.1.1"
+proc-macro2 = "1.0"
+quote = "1.0"
+rand = "0.8.5"
+rayon = "1.10.0"
+rand_xoshiro = "0.6.0"
+regex = "1.7"
+reqwest = { version = "0.12", default-features = false }
+schemars = { version = "1" }
+semver = "1.0.13"
+serde = { version = "1.0", default-features = false }
+serde_json = "1.0.60"
+serde-tuple-vec-map = "1.0.1"
+serde_yaml = { version = "0.9.0", default-features = false }
+sha2 = { version = "0.10" }
+siphasher = "1.0.0"
+static_assertions = "1.1.0"
+syn = "2.0"
+sysinfo = { version = "0.33.1", default-features = false, features = [
+    "system",
+] }
+rustls = { version = "0.23.0", default-features = false }
+tar = { version = "0.4.45", default-features = false }
+tempfile = "3.4.0"
+thiserror = "2.0.11"
+timeago = "0.4.2"
+tokio = { version = "1.34.0", default-features = false }
+tokio-util = { version = "0.7.0", default-features = false }
+toml = { version = "0.8.0", default-features = false }
+tracing = "0.1.19"
+tracing-subscriber = { version = "0.3", default-features = false }
+tui = { version = "0.19.0", default-features = false }
+ureq = { version = "=2.9.7", default-features = false, features = [
+    "tls",
+    "http-crate",
+    "native-certs",
+    "brotli",
+] }
+url = "2.5"
+uuid = { version = "1.1", features = ["serde", "v4"] }
+wasm-bindgen-test = "0.3.50"
+wasm-bindgen = "0.2.100"
+wasi-common = { version = "38.0.4" }
+wasmtime = { version = "38.0.4" }
+wasmparser = "0.235.0"
+web-time = "1.1.0"
+which = "8.0"
+x509-parser = "0.17.0"
+zip = "7"
+
+# External dependencies (published on crates.io under original names)
+fluvio_ws_stream_wasm = "0.7.0"
+fluvio-command = { version = "0.2.0" }
+streamfy-future = { path = "crates/streamfy-future", version = "0.8.3", default-features = false }
+fluvio-helm = { version = "0.4.1" }
+flv-tls-proxy = { version = "0.12.0" }
+flv-util = { version = "0.5.2", default-features = false }
+k8-client = { version = "14.0.0" }
+k8-config = { version = "3.0.0" }
+k8-types = { version = "0.9.0" }
+k8-diff = { version = "0.1.2" }
+trybuild = { version = "1.0.117" }
+# trybuild = { branch = "check_option", git = "https://github.com/streamfy/trybuild" }
+
+# Internal streamfy dependencies
+streamfy-auth = { path = "crates/streamfy-auth" }
+streamfy-benchmark = { path = "crates/streamfy-benchmark" }
+streamfy-channel = { path = "crates/streamfy-channel" }
+streamfy-cli = { path = "crates/streamfy-cli" }
+streamfy-cli-common = { path = "crates/streamfy-cli-common" }
+streamfy-connector-package = { path = "crates/streamfy-connector-package/" }
+streamfy-controlplane = { path = "crates/streamfy-controlplane" }
+streamfy-extension-common = { path = "crates/streamfy-extension-common", default-features = false }
+streamfy-artifacts-util = { path = "crates/streamfy-artifacts-util" }
+streamfy-service = { path = "crates/streamfy-service" }
+streamfy-storage = { path = "crates/streamfy-storage" }
+streamfy-kv-storage = { path = "crates/streamfy-kv-storage", default-features = false }
+streamfy-test-derive = { path = "crates/streamfy-test-derive" }
+streamfy-test-util = { path = "crates/streamfy-test-util" }
+streamfy-test-case-derive = { path = "crates/streamfy-test-case-derive" }
+streamfy-cluster = { path = "crates/streamfy-cluster" }
+streamfy-hub-protocol = { path = "crates/streamfy-hub-protocol", default-features = false }
+streamfy-connector-deployer = { path = "crates/streamfy-connector-deployer" }
+streamfy-sc = { path = "crates/streamfy-sc", default-features = false }
+streamfy-spu = { path = "crates/streamfy-spu", default-features = false }
+streamfy-connector-derive = { path = "crates/streamfy-connector-derive" }
+# Published streamfy dependencies
+streamfy = { version = "0.50.2", path = "crates/streamfy" }
+streamfy-compression = { version = "0.50.2", path = "crates/streamfy-compression", default-features = false }
+streamfy-controlplane-metadata = { version = "0.50.2", default-features = false, path = "crates/streamfy-controlplane-metadata" }
+streamfy-package-index = { version = "0.50.2", path = "crates/streamfy-package-index", default-features = false }
+streamfy-protocol = { version = "0.50.2", path = "crates/streamfy-protocol" }
+streamfy-sc-schema = { version = "0.50.2", path = "crates/streamfy-sc-schema", default-features = false }
+streamfy-smartengine = { version = "0.50.2", path = "crates/streamfy-smartengine", default-features = false }
+streamfy-smartmodule = { version = "0.50.2", path = "crates/streamfy-smartmodule", default-features = false }
+streamfy-smartmodule-derive = { version = "0.50.2", path = "crates/streamfy-smartmodule-derive", default-features = false }
+streamfy-socket = { version = "0.50.2", path = "crates/streamfy-socket", default-features = false }
+streamfy-spu-schema = { version = "0.50.2", path = "crates/streamfy-spu-schema", default-features = false }
+streamfy-stream-dispatcher = { version = "0.50.2", path = "crates/streamfy-stream-dispatcher" }
+streamfy-stream-model = { version = "0.50.2", path = "crates/streamfy-stream-model", default-features = false }
+streamfy-protocol-derive = { version = "0.50.2", path = "crates/streamfy-protocol-derive", default-features = false }
+streamfy-types = { version = "0.50.2", path = "crates/streamfy-types", default-features = false }
+
+# Used to make eyre faster on debug builds
+# See https://github.com/yaahc/color-eyre#improving-perf-on-debug-builds
+[profile.dev.package.backtrace]
+opt-level = 3
+
+# Always optimize sha256, prevents slow `streamfy version`
+[profile.dev.package.sha2]
+opt-level = 3
+
+# Used to preserve some linker hacks used by `inventory` crate
+[profile.dev.package.streamfy-test]
+incremental = false
+
+# Make streamfy-test release package more like dev profile. Specifically for `inventory` crate
+[profile.release.package.streamfy-test]
+opt-level = 0
+debug = true
+debug-assertions = true
+overflow-checks = true
+incremental = false
+codegen-units = 256
+
+[profile.release-lto]
+inherits = "release"
+lto = true

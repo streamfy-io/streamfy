@@ -1,0 +1,15 @@
+meta:
+  version: 0.1.0
+  name: my-test-mqtt
+  type: mqtt
+  topic: my-mqtt
+  create_topic: false
+transforms:
+  - uses: streamfy/json-sql
+    with:
+      mapping:
+        table: "topic_message"
+  - uses: streamfy/avro-sql
+  - uses: streamfy/regex-filter
+    with:
+      regex: "\\w"

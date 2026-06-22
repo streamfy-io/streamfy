@@ -1,0 +1,8 @@
+apiVersion: 0.1.0
+meta:
+  version: 0.1.0
+  name: my-{{project-name}}-test-connector
+  type: {{project-name}}-{% if connector-type == "source" %}source{% else %}sink{% endif %}
+  topic: test-{{project-name}}-topic
+custom:
+  foo: bar

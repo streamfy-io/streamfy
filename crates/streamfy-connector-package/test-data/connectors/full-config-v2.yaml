@@ -1,0 +1,50 @@
+apiVersion: 0.2.0
+meta:
+  version: 0.1.0
+  name: my-test-mqtt
+  type: mqtt
+  topic: 
+    version: 0.1.0
+    meta:
+      name: test-topic
+    partition:
+      count: 3
+      max-size: 1.0 KB
+      replication: 2
+      ignore-rack-assignment: true
+    retention:
+      time: 2m
+      segment-size: 2.0 KB
+    compression:
+      type: Lz4
+    deduplication:
+      bounds:
+        count: 100
+        age: 1m
+      filter:
+        transform:
+          uses: streamfy/streamfy-smartmodule-filter-lookback@0.1.0
+  producer:
+    linger: 1ms
+    batch-size: "44.0 MB"
+    compression: gzip
+  consumer:
+    partition: 10
+    max_bytes: "1 MB"
+    id: "consumer_id_1"
+    offset:
+      start:
+        absolute: 100
+      strategy: auto
+      flush-period:
+        secs: 160
+        nanos: 0
+  secrets:
+    - name: secret1
+transforms:
+  - uses: streamfy/json-sql
+    with:
+      mapping:
+        table: "topic_message"
+      param: param_value
+

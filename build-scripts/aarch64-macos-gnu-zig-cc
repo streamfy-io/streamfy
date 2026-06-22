@@ -1,0 +1,10 @@
+#!/bin/bash
+
+new_array=()
+
+for value in "$@"
+do
+    [[ $value != *self-contained/*crt* ]] && new_array+=($value)
+done
+
+$STREAMFY_BUILD_ZIG cc "${new_array[@]}" -target aarch64-macos-gnu

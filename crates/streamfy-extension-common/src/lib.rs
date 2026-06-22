@@ -1,0 +1,182 @@
+use serde::{Deserialize, Serialize};
+pub mod output;
+mod common;
+
+#[cfg(feature = "target")]
+pub mod tls;
+
+#[cfg(feature = "installation")]
+pub mod installation;
+
+pub use common::*;
+pub use crate::output::Terminal;
+use streamfy_index::{PackageId, MaybeVersion};
+
+pub const COMMAND_TEMPLATE: &str = "{about}
+
+{usage}
+
+{all-args}
+";
+
+#[macro_export]
+macro_rules! t_print {
+    ($out:expr,$($arg:tt)*) => ( $out.print(&format!($($arg)*)))
+}
+
+#[macro_export]
+macro_rules! t_println {
+    ($out:expr,$($arg:tt)*) => ( $out.println(&format!($($arg)*)))
+}
+
+#[macro_export]
+macro_rules! t_print_cli_err {
+    ($out:expr,$x:expr) => {
+        t_println!($out, "\x1B[1;31merror:\x1B[0m {}", $x);
+    };
+}
+
+/// Metadata that plugins may provide to Streamfy at runtime.
+///
+/// This allows `streamfy` to include external plugins in the help
+/// menu, version printouts, and automatic updates.
+#[derive(Debug, Serialize, Deserialize)]
+pub struct StreamfyExtensionMetadata {
+    /// The title is a human-readable pretty name
+    #[serde(alias = "command")]
+    pub title: String,
+    /// Identifies the plugin on the package index
+    ///
+    /// Example: `streamfy/streamfy-cloud`
+    #[serde(default)]
+    pub package: Option<PackageId<MaybeVersion>>,
+    /// A brief description of what this plugin does
+    pub description: String,
+    /// The version of this plugin
+    pub version: semver::Version,
+}
+
+#[derive(Debug)]
+pub struct PrintTerminal {}
+
+impl PrintTerminal {
+    pub fn new() -> Self {
+        Self {}
+    }
+}
+
+impl Default for PrintTerminal {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl Terminal for PrintTerminal {
+    fn print(&self, msg: &str) {
+        print!("{msg}");
+    }
+
+    fn println(&self, msg: &str) {
+        println!("{msg}");
+    }
+}
+
+#[cfg(feature = "target")]
+pub mod target {
+    use std::io::Error as IoError;
+    use std::convert::TryInto;
+    use clap::Parser;
+
+    use anyhow::Result;
+
+    use streamfy::StreamfyClusterConfig;
+    use streamfy::StreamfyError;
+    use streamfy::Streamfy;
+    use streamfy::config::ConfigFile;
+    use crate::tls::TlsClientOpt;
+
+    #[derive(thiserror::Error, Debug)]
+    pub enum TargetError {
+        #[error(transparent)]
+        IoError(#[from] IoError),
+        #[error("Streamfy client error")]
+        ClientError(#[from] StreamfyError),
+        #[error("Invalid argument: {0}")]
+        InvalidArg(String),
+        #[error("Unknown error: {0}")]
+        Other(String),
+    }
+
+    impl TargetError {
+        pub fn invalid_arg(reason: impl Into<String>) -> Self {
+            Self::InvalidArg(reason.into())
+        }
+    }
+
+    /// server configuration
+    #[derive(Debug, Parser, Default, Clone)]
+    pub struct ClusterTarget {
+        /// Address of cluster
+        #[arg(short = 'c', long, value_name = "host:port")]
+        pub cluster: Option<String>,
+
+        #[clap(flatten)]
+        pub tls: TlsClientOpt,
+
+        #[arg(short = 'P', long, value_name = "profile")]
+        pub profile: Option<String>,
+    }
+
+    impl ClusterTarget {
+        /// helper method to connect to streamfy
+        pub async fn connect(self) -> Result<Streamfy> {
+            let streamfy_config = self.load()?;
+            Streamfy::connect_with_config(&streamfy_config).await
+        }
+
+        /// try to create sc config
+        pub fn load(self) -> Result<StreamfyClusterConfig> {
+            let tls = self.tls.try_into()?;
+
+            use streamfy::config::TlsPolicy::*;
+            match (self.profile, self.cluster) {
+                // Profile and Cluster together is illegal
+                (Some(_profile), Some(_cluster)) => Err(TargetError::invalid_arg(
+                    "cluster addr is not valid when profile is used",
+                )
+                .into()),
+                (Some(profile), _) => {
+                    // Specifying TLS is illegal when also giving a profile
+                    if let Anonymous | Verified(_) = tls {
+                        return Err(TargetError::invalid_arg(
+                            "tls is not valid when profile is is used",
+                        )
+                        .into());
+                    }
+
+                    let cluster = StreamfyClusterConfig::load_with_profile(&profile)?
+                        .ok_or_else(|| IoError::other("Cluster not found for profile"))?;
+                    Ok(cluster.clone())
+                }
+                (None, Some(cluster)) => {
+                    let cluster = StreamfyClusterConfig::new(cluster).with_tls(tls);
+                    Ok(cluster)
+                }
+                (None, None) => {
+                    // TLS specification is illegal without Cluster
+                    if let Anonymous | Verified(_) = tls {
+                        return Err(TargetError::invalid_arg(
+                            "tls is only valid if cluster addr is used",
+                        )
+                        .into());
+                    }
+
+                    // Try to use the default cluster from saved config
+                    let config_file = ConfigFile::load(None)?;
+                    let cluster = config_file.config().current_cluster()?;
+                    Ok(cluster.clone())
+                }
+            }
+        }
+    }
+}

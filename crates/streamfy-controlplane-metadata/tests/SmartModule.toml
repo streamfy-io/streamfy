@@ -1,0 +1,20 @@
+[package]
+name = "MyCustomModule"
+group = "streamfy"
+version = "0.1.0"
+apiVersion = "0.1.0"
+description = "My Custom module"
+license = "Apache-2.0"
+repository = "https://github.com/streamfy/streamfy"
+
+
+
+[[params]]
+name = "multiplier"
+description = "multiply input"
+
+
+[[params]]
+name = "scaler"
+description = "scaling factor"
+optional = true

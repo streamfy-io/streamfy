@@ -1,0 +1,56 @@
+[package]
+name = "streamfy-controlplane-metadata"
+description = "Metadata definition for Streamfy control plane"
+version.workspace = true
+repository.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+
+
+[lib]
+name = "streamfy_controlplane_metadata"
+path = "src/lib.rs"
+
+[features]
+smartmodule = ["flate2", "toml", "use_serde"]
+use_serde = [
+    "serde",
+    "semver/serde",
+    "bytesize/serde",
+    "humantime-serde",
+    "serde_yaml",
+    "schemars",
+]
+k8 = ["use_serde", "streamfy-stream-model/k8"]
+
+[dependencies]
+cfg-if = { workspace = true }
+thiserror = { workspace = true }
+base64 = { workspace = true }
+bytes = { workspace = true }
+flate2 = { workspace = true, optional = true }
+lenient_semver = "0.4.2"
+semver = { workspace = true }
+schemars = { workspace = true, optional = true }
+serde = { workspace = true, features = ['derive'], optional = true }
+toml = { workspace = true, default-features = true, optional = true, features = [
+    "parse",
+] }
+tracing = { workspace = true }
+bytesize = { workspace = true }
+humantime-serde = { workspace = true, optional = true }
+anyhow = { workspace = true }
+serde_yaml = { workspace = true, optional = true }
+derive_builder = { workspace = true }
+
+# External Streamfy dependencies
+flv-util = { workspace = true }
+
+streamfy-types = { workspace = true }
+streamfy-stream-model = { workspace = true }
+streamfy-protocol = { workspace = true, features = ["record", "link", "api"] }
+
+
+[dev-dependencies]
+serde_json = { workspace = true }

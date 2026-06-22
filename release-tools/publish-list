@@ -1,0 +1,21 @@
+# This list is approximately sorted for dependency resolution
+# Used by publish crate and crate version check scripts
+
+PUBLISH_CRATES=(
+    streamfy-types
+    streamfy-compression
+    streamfy-protocol-derive
+    streamfy-protocol
+    streamfy-socket
+    streamfy-stream-model
+    streamfy-controlplane-metadata
+    streamfy-spu-schema
+    streamfy-smartengine
+    streamfy-smartmodule-derive
+    streamfy-smartmodule
+    streamfy-sc-schema
+    streamfy
+    streamfy-stream-dispatcher
+    streamfy-package-index
+    streamfy-extension-common
+)

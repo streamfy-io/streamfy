@@ -1,0 +1,29 @@
+//!
+//! # SC Api Keys
+//!
+//! Stores Api Keys supported by the SC.
+//!
+
+use streamfy_protocol::{Encoder, Decoder};
+
+// Make sure that the ApiVersion variant matches dataplane's API_VERSIONS_KEY
+static_assertions::const_assert_eq!(
+    streamfy_protocol::link::versions::VERSIONS_API_KEY,
+    AdminPublicApiKey::ApiVersion as u16,
+);
+
+/// API call from client to SPU
+#[repr(u16)]
+#[derive(Encoder, Decoder, Eq, PartialEq, Debug, Clone, Copy)]
+#[streamfy(encode_discriminant)]
+#[derive(Default)]
+pub enum AdminPublicApiKey {
+    #[default]
+    ApiVersion = 18, // VERSIONS_API_KEY
+    Create = 1001,
+    Delete = 1002,
+    List = 1003,
+    Watch = 1004,
+    Mirroring = 1005,
+    Update = 1006,
+}

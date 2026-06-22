@@ -1,0 +1,9 @@
+meta:
+  version: 0.1.0
+  name: my-json-test-connector
+  type: json-test-source
+  topic: test-topic
+json:
+  interval: 5  
+  timeout: 15
+  template: '{"template":"test"}'  

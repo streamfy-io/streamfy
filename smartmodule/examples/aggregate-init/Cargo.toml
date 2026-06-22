@@ -1,0 +1,13 @@
+[package]
+name = "sm-integer-sum-aggegrate"
+version = "0.0.0"
+authors = ["Streamfy Contributors <team@streamfy.io>"]
+edition = "2024"
+publish = false
+
+[lib]
+crate-type = ['cdylib']
+
+[dependencies]
+streamfy-smartmodule = { workspace = true }
+

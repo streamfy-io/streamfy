@@ -1,0 +1,43 @@
+[package]
+name = "streamfy-connector-common"
+description = "Streamfy Connector Common SDK"
+version = "0.0.0"
+repository.workspace = true
+authors.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[features]
+default = []
+derive = ["streamfy-connector-derive"]
+
+[[test]]
+name = "derive-test"
+path = "ui-test/mod.rs"
+required-features = ["derive"]
+
+[dependencies]
+async-trait = { workspace = true }
+async-channel = { workspace = true }
+ctrlc = { workspace = true, features = ["termination"]}
+anyhow = { workspace = true }
+futures = { workspace = true }
+futures-util = { workspace = true , features = ["sink"]}
+serde = { workspace = true,  features = ["derive", "rc"] }
+serde_json = { workspace = true }
+serde_yaml = { workspace = true }
+tracing = { workspace = true }
+tokio = { workspace = true }
+
+streamfy = { workspace = true, features = ["smartengine"] }
+streamfy-future = { workspace = true, features = ["subscriber"] }
+streamfy-connector-package = { workspace = true  }
+streamfy-connector-derive = { workspace = true, optional = true }
+streamfy-sc-schema = { workspace = true }
+streamfy-smartengine = { workspace = true , features = [ "transformation", "engine"] }
+
+
+[dev-dependencies]
+trybuild = { version = "1.0" } # default workspace dep is forked and fails for this crate
+serde = { workspace = true, features = ["derive"]}
+streamfy = { workspace = true }

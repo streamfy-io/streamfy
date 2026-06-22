@@ -1,0 +1,31 @@
+[package]
+name = "streamfy-auth"
+description = "Authorization framework for Streamfy"
+version = "0.0.0"
+repository.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+publish = false
+
+
+[lib]
+name = "streamfy_auth"
+path = "src/lib.rs"
+
+[dependencies]
+anyhow = { workspace = true }
+async-trait = { workspace = true }
+futures-util = { workspace = true  }
+serde = { workspace = true, features = ['derive'] }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+tracing = { workspace = true }
+x509-parser = { workspace = true }
+
+streamfy-controlplane-metadata = { workspace = true  }
+streamfy-future = { workspace = true, features = ["net"] }
+streamfy-protocol = { workspace = true }
+streamfy-socket = { workspace = true }
+flv-tls-proxy = { workspace = true }
+

@@ -1,0 +1,12 @@
+[package]
+name = "produce"
+version = "0.0.0"
+authors = ["Streamfy Contributors <team@streamfy.io>"]
+edition = "2024"
+publish = false
+
+[dependencies]
+tokio = { workspace = true }
+anyhow = { workspace = true }
+
+streamfy = { workspace = true  }

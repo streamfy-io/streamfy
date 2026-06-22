@@ -1,0 +1,84 @@
+[package]
+name = "streamfy-cluster"
+description = "Tools for installing and managing Streamfy clusters"
+version = "0.0.0"
+repository.workspace = true
+authors.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[lib]
+name = "streamfy_cluster"
+path = "src/lib.rs"
+
+[features]
+cli = [
+    "clap",
+    "color-eyre",
+    "duct",
+    "comfy-table",
+    "tar",
+    "flate2",
+    "streamfy-extension-common/target",
+    "streamfy-cli-common",
+    "streamfy-sc-schema/use_serde",
+]
+
+[dependencies]
+thiserror = { workspace = true }
+derive_builder = { workspace = true }
+tracing = { workspace = true }
+portpicker = { workspace = true }
+async-trait = { workspace = true }
+colored = { workspace = true }
+semver = { workspace = true }
+url = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+serde_yaml = { workspace = true }
+futures-util = { workspace = true }
+tokio = { workspace = true, features = ["macros"] }
+once_cell = { workspace = true }
+which = {workspace = true }
+directories = { workspace = true }
+tempfile = { workspace = true }
+include_dir = { workspace = true }
+anyhow = { workspace = true }
+async-channel = { workspace = true }
+bytesize = { workspace = true,  features = ['serde'] }
+indicatif = { workspace = true }
+rand = { workspace = true }
+chrono = { workspace = true  }
+color-eyre = { workspace = true, default-features = false, optional = true }
+clap = { workspace = true, features = [
+    "std",
+    "derive",
+], optional = true }
+duct = { workspace = true, optional = true }
+comfy-table = { workspace = true, optional = true }
+flate2 = { workspace = true, optional = true }
+tar = { workspace = true ,  optional = true }
+sysinfo = { workspace = true, default-features = false, features = ["system", "network", "disk"] }
+
+
+# External Streamfy dependencies
+fluvio-helm = { workspace = true }
+flv-util = { workspace = true }
+k8-config = { workspace = true }
+k8-client = { workspace = true }
+k8-types = { workspace = true, features = ["app"] }
+fluvio-command = { workspace = true }
+streamfy-future = { workspace = true }
+
+streamfy = { workspace = true  }
+streamfy-extension-common = { workspace = true,  features = ["installation"] }
+streamfy-cli-common = { workspace = true, optional = true }
+streamfy-controlplane-metadata = { workspace = true,  features = ["k8",] }
+streamfy-sc-schema = { workspace = true  }
+streamfy-types = { workspace = true  }
+streamfy-channel = { workspace = true  }
+streamfy-stream-dispatcher = { workspace = true, features = ["k8", "local"]}
+dialoguer.workspace = true
+
+[dev-dependencies]
+streamfy-future = { workspace = true, features = ["task", "fixture"] }

@@ -1,0 +1,5 @@
+transforms:
+  - uses: streamfy/streamfy-smartmodule-filter-lookback@0.1.0
+    lookback:
+      last: 10
+

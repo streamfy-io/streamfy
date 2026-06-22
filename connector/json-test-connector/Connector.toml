@@ -1,0 +1,30 @@
+[package]
+name = "json-test-connector"
+group = "streamfy"
+version = "0.1.0"
+apiVersion = "0.1.0"
+streamfy = "0.10.0"
+description = "Generate JSON generator"
+license = "Apache-2.0"
+
+
+[direction]
+source = true
+
+[deployment]
+binary = "json-test-connector"
+
+[custom]
+name = "json"
+required = ["template", "interval"]
+
+[custom.properties.template]
+title = "template"
+description = "JSON template"
+type = "string"
+
+[custom.properties.interval]
+title = "Interval"
+description = "Interval of producing value"
+type = "integer"
+

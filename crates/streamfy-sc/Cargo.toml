@@ -1,0 +1,65 @@
+[package]
+name = "streamfy-sc"
+description = "Streamfy Stream Controller"
+publish = false
+build = "build.rs"
+repository.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+
+[lib]
+name = "streamfy_sc"
+path = "src/lib.rs"
+
+[[bin]]
+name = "streamfy-sc"
+path = "src/bin/main.rs"
+required-features = []
+
+[features]
+default = []
+
+[dependencies]
+adaptive_backoff = { workspace = true }
+anyhow = { workspace = true }
+async-trait = { workspace = true }
+async-lock = { workspace = true }
+clap = { workspace = true,features = ["std", "derive", "env"]}
+futures-util = { workspace = true }
+mimalloc = { workspace = true }
+once_cell = { workspace = true }
+rand = { workspace = true }
+semver = { workspace = true }
+serde = { workspace = true, features = ['derive'] }
+serde_json = { workspace = true }
+sysinfo = { workspace = true }
+tokio = { workspace = true, features = ["macros"] }
+tracing = { workspace = true }
+
+
+# Streamfy dependencies
+streamfy = { workspace = true }
+streamfy-auth = { workspace = true }
+streamfy-future = { workspace = true, features = [
+    "subscriber",
+    "zero_copy",
+] }
+streamfy-types = { workspace = true,  features = [
+    "events",
+] }
+streamfy-sc-schema = { workspace = true, features = ["use_serde", "json"] }
+streamfy-stream-model = { workspace = true, features = ["k8", "use_serde"]  }
+streamfy-controlplane = { workspace = true }
+streamfy-controlplane-metadata = { workspace = true, features = ["k8","serde"] }
+streamfy-stream-dispatcher = { workspace = true, features = ["k8", "local"]}
+k8-client = { workspace = true, features = ["memory_client"] }
+streamfy-protocol = { workspace = true }
+streamfy-socket = { workspace = true }
+streamfy-service = { workspace = true  }
+flv-tls-proxy = { workspace = true }
+
+[dev-dependencies]
+rand = { workspace = true }
+streamfy-future = { workspace = true, features = ["fixture"] }
+streamfy-stream-model = { workspace = true, features = ["fixture"] }

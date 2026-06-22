@@ -1,0 +1,362 @@
+use std::env;
+use std::str::FromStr;
+use std::env::current_exe;
+use std::ffi::OsString;
+use std::process::Stdio;
+#[cfg(not(target_os = "windows"))]
+use std::os::unix::prelude::CommandExt;
+#[cfg(target_os = "windows")]
+use std::io::{self, Write};
+
+use clap::{Parser, CommandFactory};
+use tracing::debug;
+use cfg_if::cfg_if;
+use anyhow::{anyhow, Result};
+
+use streamfy_future::task::run_block_on;
+use streamfy_channel::{
+    StreamfyChannelConfig, StreamfyChannelInfo, StreamfyBinVersion, DEV_CHANNEL_NAME, STABLE_CHANNEL_NAME,
+};
+use streamfy_channel::ImageTagStrategy;
+use streamfy_cli_common::{STREAMFY_RELEASE_CHANNEL, STREAMFY_EXTENSIONS_DIR, STREAMFY_IMAGE_TAG_STRATEGY};
+
+use streamfy_channel_cli::cli::create::CreateOpt;
+use streamfy_channel_cli::cli::delete::DeleteOpt;
+use streamfy_channel_cli::cli::list::ListOpt;
+use streamfy_channel_cli::cli::switch::SwitchOpt;
+
+const IS_STREAMFY_EXEC_LOOP: &str = "IS_STREAMFY_EXEC_LOOP";
+const STREAMFY_BOOTSTRAP: &str = "STREAMFY_BOOTSTRAP";
+const CHANNEL_BOOTSTRAP: &str = "CHANNEL_BOOTSTRAP";
+const STREAMFY_FRONTEND: &str = "STREAMFY_FRONTEND";
+
+#[derive(Debug, PartialEq, Parser, Default)]
+struct RootOpt {
+    #[arg(long)]
+    skip_channel_check: bool,
+}
+
+#[derive(Debug, PartialEq, Parser, Default)]
+#[command(disable_help_subcommand = true, disable_help_flag = true)]
+struct Root {
+    #[clap(flatten)]
+    opt: RootOpt,
+    #[clap(subcommand)]
+    command: RootCmd,
+}
+
+impl Root {
+    pub fn skip_channel_check(&self) -> bool {
+        self.opt.skip_channel_check
+    }
+}
+
+#[derive(Debug, PartialEq, Parser)]
+struct ChannelOpt {
+    #[clap(subcommand)]
+    cmd: Option<ChannelCmd>,
+    #[arg(long, short)]
+    help: bool,
+}
+
+#[derive(Debug, PartialEq, Parser, Clone)]
+enum ChannelCmd {
+    /// Create a local Streamfy release channel
+    Create(CreateOpt),
+    /// Delete a local Streamfy release channel
+    Delete(DeleteOpt),
+    /// List local Streamfy release channels
+    List(ListOpt),
+    /// Change the active Streamfy release channel
+    Switch(SwitchOpt),
+}
+
+impl ChannelCmd {
+    async fn process(&self) -> Result<()> {
+        match self {
+            Self::Create(create_opt) => create_opt.process().await,
+            Self::Delete(delete_opt) => delete_opt.process().await,
+            Self::List(list_opt) => list_opt.process().await,
+            Self::Switch(switch_opt) => switch_opt.process().await,
+        }
+    }
+}
+
+#[derive(Debug, PartialEq, Parser)]
+#[command(
+    max_term_width = 100,
+    disable_version_flag = true,
+    // VersionlessSubcommands is now default behaviour. See https://github.com/clap-rs/clap/pull/2831
+    // global_setting = AppSettings::DeriveDisplayOrder
+)]
+enum RootCmd {
+    /// Prints help information
+    #[command(hide = true)]
+    Help,
+    Version(ChannelOpt),
+
+    // This should be the streamfy binary's subcommand
+    #[command(external_subcommand)]
+    Other(Vec<String>),
+}
+
+impl Default for RootCmd {
+    fn default() -> Self {
+        RootCmd::Other(Vec::new())
+    }
+}
+
+// `streamfy-channel` is a Streamfy frontend to support release channels.
+// It is intended to be installed at `~/.streamfy/bin/streamfy`
+fn main() -> Result<()> {
+    streamfy_future::subscriber::init_tracer(None);
+
+    let current_exe = current_exe()?;
+    debug!("Check if channel exec is in a loop");
+    if let Ok(channel_info_str) = env::var(IS_STREAMFY_EXEC_LOOP) {
+        // Expecting this string to be in the form
+        // "channel_name,/path/of/the/channel/binary/exec"
+        let channel: Vec<&str> = channel_info_str.split(',').collect();
+        if channel.len() == 2 {
+            eprintln!(
+                "Couldn't find Streamfy channel binary '{}' at '{}'",
+                channel[0], channel[1]
+            );
+        } else {
+            eprintln!(
+                "Couldn't find Streamfy channel binary (Unexpected error formatting (raw output): {channel_info_str})"
+            );
+        }
+        panic!("Exec loop detected");
+    }
+
+    debug!("Check if running as streamfy frontend");
+    // Verify if the current binary is running in the "official" location
+    // If we're not in the streamfy directory then
+    // assume dev mode (i.e., do not exec to other binaries)
+    let is_frontend = if let Some(file) = current_exe.file_name() {
+        let env_var_set = std::env::var(STREAMFY_FRONTEND)
+            .ok()
+            .map(|frontend| bool::from_str(&frontend).unwrap_or(false));
+
+        if let Some(env_var) = env_var_set {
+            if env_var {
+                debug!("Env var set - Frontend mode");
+            } else {
+                debug!("Env var set - Development mode");
+            }
+
+            env_var
+        } else {
+            let file_name = file.to_str().unwrap_or_default();
+
+            if ["streamfy", "streamfy.exe"].contains(&file_name) {
+                // Check on the name this binary was called. If it is `streamfy` be in transparent frontend-mode
+                debug!("Binary is named `{}` - Frontend mode", file_name);
+                true
+            } else {
+                // If development-mode, use the `--help` output from `streamfy-channel`
+                debug!("Binary is named `{}` - Development mode", file_name);
+                false
+            }
+        }
+    } else {
+        unreachable!(
+            "current_exe is a directory path instead of a binary: {:#?}",
+            current_exe
+        );
+    };
+
+    // Now process command line args
+    // If we're in frontend mode, we want to pass the help text request
+
+    let streamfy_channel_root = Root::try_parse();
+
+    let channel_cli = if let Ok(channel_cli) = streamfy_channel_root {
+        match channel_cli.command {
+            RootCmd::Help => {
+                debug!("streamfy-channel Help");
+                print_help(is_frontend)?;
+                std::process::exit(0);
+            }
+            RootCmd::Version(ref channel_opt) => {
+                debug!("streamfy-channel Version");
+
+                if channel_opt.help {
+                    let _ = ChannelOpt::command().print_help();
+                    println!();
+                    std::process::exit(0);
+                } else if let Some(subcmd) = &channel_opt.cmd {
+                    if let Err(e) = run_block_on(subcmd.process()) {
+                        println!("{e}");
+                        std::process::exit(1);
+                    }
+
+                    std::process::exit(0);
+                } else {
+                    debug!("Version command should forward to Streamfy binary")
+                }
+            }
+            RootCmd::Other(ref cmd) => {
+                debug!("Passing command args to streamfy binary: {:#?}", cmd)
+            }
+        };
+        channel_cli
+    } else {
+        debug!("Not one of streamfy-channel's subcommands");
+
+        // Re-build the args list to pass onto exec'ed process
+        let mut args: Vec<String> = std::env::args().collect();
+        if !args.is_empty() {
+            args.remove(0);
+        }
+
+        Root {
+            command: RootCmd::Other(args),
+            ..Default::default()
+        }
+    };
+
+    // Check on channel via channel config file
+    let (channel_name, channel) = if is_frontend && !&channel_cli.skip_channel_check() {
+        // TODO: Let this be configurable, make the location overridable (env var / optional flag))
+        let channel_config_path = StreamfyChannelConfig::default_config_location();
+
+        let maybe_channel_config = if StreamfyChannelConfig::exists(&channel_config_path) {
+            Some(StreamfyChannelConfig::from_file(channel_config_path)?)
+        } else {
+            // If the channel config doesn't exist, we will create one and initialize with defaults
+            None
+        };
+
+        debug!("channel_config: {:#?}", maybe_channel_config);
+
+        // Return the channel info for streamfy location
+        // Write config file to disk if it doesn't already exist
+        let (channel, channel_info) = if let Some(channel_config) = maybe_channel_config {
+            let channel = channel_config.current_channel();
+
+            let channel_info = channel_config
+                .config()
+                .channel()
+                .get(&channel)
+                .ok_or_else(|| anyhow!("Channel info not found"))?
+                .to_owned();
+
+            (channel, channel_info)
+        } else {
+            // Write the channel config for the first time
+
+            let mut default_config = StreamfyChannelConfig::default();
+
+            // If we know we've been called by the installer, then let's add that channel info
+            if env::var(STREAMFY_BOOTSTRAP).is_ok() {
+                let initial_channel = env::var(CHANNEL_BOOTSTRAP)?;
+
+                // parse a version from the channel name
+                let image_tag_strategy = match StreamfyBinVersion::parse(&initial_channel)? {
+                    StreamfyBinVersion::Stable => ImageTagStrategy::Version,
+                    StreamfyBinVersion::Latest => ImageTagStrategy::VersionGit,
+                    StreamfyBinVersion::Tag(_) => ImageTagStrategy::Version,
+                    StreamfyBinVersion::Dev => ImageTagStrategy::Git,
+                };
+
+                // Create a new channel
+                let new_channel_info =
+                    StreamfyChannelInfo::new_channel(&initial_channel, image_tag_strategy);
+
+                default_config.insert_channel(initial_channel.clone(), new_channel_info.clone())?;
+                default_config.set_current_channel(initial_channel.clone())?;
+                default_config.save()?;
+
+                (initial_channel, new_channel_info)
+            } else {
+                let stable_info = StreamfyChannelInfo::stable_channel();
+                default_config
+                    .insert_channel(STABLE_CHANNEL_NAME.to_string(), stable_info.clone())?;
+                default_config.set_current_channel(STABLE_CHANNEL_NAME.to_string())?;
+                default_config.save()?;
+
+                (STABLE_CHANNEL_NAME.to_string(), stable_info)
+            }
+        };
+
+        (channel, channel_info)
+    } else {
+        debug!("Streamfy bin not in standard install location. Assuming dev channel");
+        (
+            DEV_CHANNEL_NAME.to_string(),
+            StreamfyChannelInfo::dev_channel(),
+        )
+    };
+
+    if let RootCmd::Other(args) = channel_cli.command
+        && args.contains(&"update".to_string())
+        && streamfy_channel::is_pinned_version_channel(channel_name.as_str())
+    {
+        println!("Unsupported Feature: The `streamfy update` command is not supported use fvm");
+        std::process::exit(1);
+    }
+
+    // Set env vars
+    unsafe {
+        env::set_var(STREAMFY_RELEASE_CHANNEL, channel_name.clone());
+        env::set_var(STREAMFY_EXTENSIONS_DIR, channel.extensions.clone());
+        env::set_var(
+            STREAMFY_IMAGE_TAG_STRATEGY,
+            channel.image_tag_strategy.to_string(),
+        );
+    }
+
+    // On windows, this path should end in `.exe`
+    let exe = channel.get_binary_path();
+
+    debug!("Will exec to binary @ {:?}", exe);
+
+    // Re-build the args list to pass onto exec'ed process
+    let mut args: Vec<OsString> = std::env::args_os().collect();
+    if !args.is_empty() {
+        args.remove(0);
+    }
+
+    // Set the env var we check at the beginning to signal if we're in an exec loop
+    // Give channel name and binary location for error message in form: <channel_name>,<channel_path>
+    let channel_info = format!("{},{}", channel_name, channel.get_binary_path().display());
+    unsafe {
+        env::set_var(IS_STREAMFY_EXEC_LOOP, channel_info);
+    }
+
+    // Handle pipes
+    let mut proc = std::process::Command::new(exe);
+    proc.args(args);
+    proc.stdin(Stdio::inherit());
+    proc.stdout(Stdio::inherit());
+    proc.stderr(Stdio::inherit());
+
+    cfg_if! {
+        if #[cfg(not(target_os = "windows"))] {
+            let _err = proc.exec();
+        } else {
+            let output = proc.output()?;
+            io::stdout().write_all(&output.stdout)?;
+            io::stderr().write_all(&output.stderr)?;
+        }
+    }
+
+    Ok(())
+}
+
+fn print_help(is_frontend: bool) -> Result<()> {
+    if is_frontend {
+        debug!("Print Streamfy's help");
+        //let mut streamfy_help = StreamfyCliRoot::clap();
+        //streamfy_help.print_help()?;
+    } else {
+        debug!("Print Streamfy-channel's help");
+        let mut streamfy_channel_help = Root::command();
+        streamfy_channel_help.print_help()?;
+        std::process::exit(0);
+    }
+
+    Ok(())
+}

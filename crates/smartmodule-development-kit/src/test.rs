@@ -1,0 +1,76 @@
+use std::fmt::Debug;
+use std::path::PathBuf;
+
+use anyhow::Result;
+use cargo_builder::package::PackageInfo;
+use clap::Parser;
+use streamfy_future::task::run_block_on;
+use streamfy_smartengine::{SmartModuleChainBuilder, SmartModuleConfig, Lookback};
+use crate::cmd::PackageCmd;
+use crate::ENV_SMDK_NOWASI;
+
+use streamfy_cli_common::smartmodule::{BaseTestCmd, WithChainBuilder};
+#[derive(Debug, Parser)]
+#[command(arg_required_else_help = true)]
+pub struct TestCmd {
+    #[clap(flatten)]
+    base_test_cmd: BaseTestCmd,
+    #[clap(flatten)]
+    package: PackageCmd,
+    #[arg(long, group = "TestSmartModule")]
+    wasm_file: Option<PathBuf>,
+    #[arg(long, env=ENV_SMDK_NOWASI, hide_short_help = true)]
+    nowasi: bool,
+}
+
+impl TestCmd {
+    pub(crate) fn process(self) -> Result<()> {
+        run_block_on(self.process_async())
+    }
+
+    async fn process_async(self) -> Result<()> {
+        self.base_test_cmd
+            .process(WithChainBuilder::default().extra_cond(|lookback, params| {
+                let wasm_file = if let Some(wasm_file) = self.wasm_file {
+                    wasm_file
+                } else {
+                    let package_info = PackageInfo::from_options(&self.package.as_opt())?;
+                    if self.nowasi {
+                        package_info.target_wasm32_path()?
+                    } else {
+                        package_info.target_wasm32_wasi_path()?
+                    }
+                };
+                let sm_name = wasm_file
+                    .file_name()
+                    .expect("wasm file name")
+                    .to_string_lossy()
+                    .to_string();
+                build_chain_ad_hoc(
+                    &sm_name,
+                    crate::read_bytes_from_path(&wasm_file)?,
+                    params,
+                    lookback,
+                )
+            }))
+            .await
+    }
+}
+
+fn build_chain_ad_hoc(
+    name: &str,
+    wasm: Vec<u8>,
+    params: Vec<(String, String)>,
+    lookback: Option<Lookback>,
+) -> Result<SmartModuleChainBuilder> {
+    use std::collections::BTreeMap;
+    let params: BTreeMap<_, _> = params.into_iter().collect();
+    Ok(SmartModuleChainBuilder::from((
+        SmartModuleConfig::builder()
+            .smartmodule_names(&[name.to_owned()])
+            .params(params.into())
+            .lookback(lookback)
+            .build()?,
+        wasm,
+    )))
+}

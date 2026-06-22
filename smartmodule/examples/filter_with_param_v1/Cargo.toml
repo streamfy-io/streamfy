@@ -1,0 +1,13 @@
+[package]
+name = "streamfy-wasm-filter-with-parameters-v1"
+version = "0.0.0"
+authors = ["Streamfy Contributors <team@streamfy.io>"]
+edition = "2024"
+publish = false
+description = "Old Streamfy WASM Filter with Parameters"
+
+[lib]
+crate-type = ['cdylib']
+
+[dependencies]
+streamfy-smartmodule = "0.2.5"

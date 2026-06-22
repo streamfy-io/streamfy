@@ -1,0 +1,36 @@
+[package]
+name = "streamfy-sc-schema"
+description = "Streamfy API for SC"
+version.workspace = true
+repository.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+
+[lib]
+name = "streamfy_sc_schema"
+path = "src/lib.rs"
+
+[features]
+use_serde = ["streamfy-controlplane-metadata/use_serde", "serde"]
+json = ["serde_json"]
+
+[dependencies]
+tracing = { workspace = true }
+serde = { workspace = true, features = ['derive'], optional = true }
+serde_json = { workspace = true, optional = true }
+static_assertions = { workspace = true }
+anyhow = { workspace = true }
+paste = "1.0"
+
+# Workspace Dependencies
+thiserror = { workspace = true }
+
+# Streamfy dependencies
+streamfy-controlplane-metadata = {  workspace = true, features = ["smartmodule", "k8"] }
+streamfy-protocol = { workspace = true,  features = ["link"]}
+streamfy-socket = { workspace = true }
+streamfy-stream-model = { workspace = true, features = ["k8"] }
+
+[dev-dependencies]
+streamfy-future = { workspace = true, features = ["subscriber"] }

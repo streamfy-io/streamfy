@@ -1,0 +1,21 @@
+[package]
+name = "streamfy-test-case-derive"
+description = "Streamfy Test - TestCase derive macro"
+version = "0.0.0"
+publish = false
+repository.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+
+[lib]
+proc-macro = true
+
+[dependencies]
+proc-macro2 = { workspace = true }
+quote = { workspace = true }
+syn = { workspace = true, features = ["full"]}
+
+[dev-dependencies]
+trybuild = { version = "1.0.117" }
+# trybuild = {git = "https://github.com/streamfy/trybuild", branch = "check_option"}

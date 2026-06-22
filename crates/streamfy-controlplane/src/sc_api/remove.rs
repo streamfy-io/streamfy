@@ -1,0 +1,35 @@
+use std::fmt;
+
+use streamfy_protocol::api::Request;
+use streamfy_protocol::Decoder;
+use streamfy_protocol::Encoder;
+use streamfy_controlplane_metadata::partition::ReplicaKey;
+
+use super::api::InternalScKey;
+
+/// Confirmation of Replica replica
+#[derive(Decoder, Encoder, Debug, Default, Clone)]
+pub struct ReplicaRemovedRequest {
+    pub id: ReplicaKey,
+    pub confirm: bool, // replica remove confirmed
+}
+
+impl ReplicaRemovedRequest {
+    pub fn new(id: ReplicaKey, confirm: bool) -> Self {
+        Self { id, confirm }
+    }
+}
+
+impl fmt::Display for ReplicaRemovedRequest {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "replica delete {}, confirm: {}", self.id, self.confirm)
+    }
+}
+
+impl Request for ReplicaRemovedRequest {
+    const API_KEY: u16 = InternalScKey::ReplicaRemoved as u16;
+    type Response = ReplicaRemovedResponse;
+}
+
+#[derive(Decoder, Encoder, Default, Debug)]
+pub struct ReplicaRemovedResponse {}

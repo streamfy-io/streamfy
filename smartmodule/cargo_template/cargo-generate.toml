@@ -1,0 +1,23 @@
+[placeholders.streamfy-smartmodule-cargo-dependency]
+type = "string"
+prompt = "Value of `streamfy-smartmodule` dependency in Cargo.toml"
+
+[placeholders.project-group]
+type = "string"
+prompt = "Please set a group name"
+
+[placeholders.smartmodule-type]
+type = "string"
+prompt = "Which type of SmartModule would you like?"
+choices = ["filter", "map", "filter-map", "array-map", "aggregate"]
+default = "filter"
+
+[placeholders.smartmodule-params]
+type = "bool"
+prompt = "Will your SmartModule use init parameters?"
+default = false
+
+[placeholders.smartmodule-public]
+type = "bool"
+prompt = "Will your SmartModule be public?"
+default = false

@@ -1,0 +1,61 @@
+use anyhow::Result;
+use cargo_builder::package::PackageOption;
+use clap::Parser;
+
+use streamfy_cli_common::version_cmd::BasicVersionCmd;
+
+use crate::build::BuildCmd;
+use crate::generate::GenerateCmd;
+use crate::deploy::DeployCmd;
+use crate::test::TestCmd;
+
+/// Connector Development Kit
+#[derive(Debug, Parser)]
+pub enum CdkCommand {
+    Build(BuildCmd),
+    Test(TestCmd),
+    Generate(GenerateCmd),
+    Deploy(DeployCmd),
+    Version(BasicVersionCmd),
+}
+
+impl CdkCommand {
+    pub(crate) fn process(self) -> Result<()> {
+        match self {
+            CdkCommand::Build(opt) => opt.process(),
+            CdkCommand::Test(opt) => opt.process(),
+            CdkCommand::Deploy(opt) => opt.process(),
+            CdkCommand::Generate(opt) => opt.process(),
+            CdkCommand::Version(opt) => opt.process("CDK"),
+        }
+    }
+}
+
+#[derive(Debug, Parser)]
+pub struct PackageCmd {
+    /// Release profile name
+    #[arg(long, default_value = "release")]
+    pub release: String,
+
+    /// Provide target platform for the package. Optional.
+    /// By default the host's one is used.
+    #[arg(
+        long,
+        default_value_t = current_platform::CURRENT_PLATFORM.to_string()
+    )]
+    pub target: String,
+
+    /// Optional package/project name
+    #[arg(long, short)]
+    pub package_name: Option<String>,
+}
+
+impl PackageCmd {
+    pub(crate) fn as_opt(&self) -> PackageOption {
+        PackageOption {
+            release: self.release.clone(),
+            package_name: self.package_name.clone(),
+            target: self.target.clone(),
+        }
+    }
+}

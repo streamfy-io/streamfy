@@ -1,0 +1,14 @@
+[package]
+name = "streamfy-wasm-map-regex"
+version = "0.0.0"
+authors = ["Streamfy Contributors <team@streamfy.io>"]
+edition = "2024"
+publish = false
+
+[lib]
+crate-type = ['cdylib']
+
+[dependencies]
+regex = "1"
+once_cell = "1"
+streamfy-smartmodule = { workspace = true }

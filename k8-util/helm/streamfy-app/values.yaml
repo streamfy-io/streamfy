@@ -1,0 +1,51 @@
+# Default values for streamfy.
+
+loadBalancer:
+  serviceAnnotations: {}
+service:
+  type: NodePort
+scLog: info
+tls: false
+imagePullSecrets: []
+image:
+  registry: ghcr.io/streamfy-io
+  tag: ""
+  pullPolicy: IfNotPresent
+cert:
+  caCert: streamfy-ca
+  tls: streamfy-tls
+  domain: streamfy.local
+authorizationConfigMap: ""
+scPod:
+  resources:
+    requests:
+      memory: 512Mi
+    limits:
+      memory: 512Mi
+  nodeSelector: {}
+  publicPort: 9003
+  nodePort: 30003
+  extraContainers: []
+  extraEnv: []
+  extraVolumes: []
+  extraVolumeMounts: []
+  priorityClassName: null
+spuPod:
+  resources:
+    requests:
+      memory: 256Mi
+    limits:
+      memory: 1Gi
+  nodeSelector: {}
+  storageClass: null
+  baseNodePort: 30004
+  extraContainers: []
+  extraEnv: []
+  extraVolumes: []
+  extraVolumeMounts: []
+  priorityClassName: null
+rbac:
+  create: true
+serviceAccount:
+  name: streamfy
+podSecurityContext: {}

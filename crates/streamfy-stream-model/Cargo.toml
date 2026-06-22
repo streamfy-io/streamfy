@@ -1,0 +1,32 @@
+[package]
+name = "streamfy-stream-model"
+description = "Streamfy Event Stream Model"
+version.workspace = true
+repository.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+
+[lib]
+name = "streamfy_stream_model"
+path = "src/lib.rs"
+
+[features]
+use_serde = ["serde"]
+k8 = ["use_serde", "k8-types"]
+fixture = ["serde"]
+fixtures = []
+
+[dependencies]
+async-lock = { workspace = true }
+event-listener = { workspace = true }
+once_cell = { workspace = true }
+serde = { workspace = true, features = ['derive'], optional = true }
+tracing = { workspace = true }
+
+# Streamfy dependencies
+k8-types = { workspace = true, optional = true, features = ["app"] }
+
+[dev-dependencies]
+tokio = { workspace = true, features = ["macros"] }
+streamfy-future = { workspace = true, features = ["fixture"] }

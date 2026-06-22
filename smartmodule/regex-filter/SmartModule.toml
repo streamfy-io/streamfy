@@ -1,0 +1,14 @@
+[package]
+name = "regex-filter"
+group = "streamfy"
+version = "0.2.0"
+apiVersion = "0.1.0"
+description = "Regex SmartModule"
+license = "Apache-2.0"
+visibility = "public"
+repository = "https://github.com/streamfy/streamfy"
+
+[[params]]
+name = "regex"
+description = "Regex filter"
+optional = false

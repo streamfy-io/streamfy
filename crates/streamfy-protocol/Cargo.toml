@@ -1,0 +1,76 @@
+[package]
+name = "streamfy-protocol"
+description = "Streamfy streaming protocol"
+categories = ["encoding", "api-bindings"]
+version.workspace = true
+repository.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+
+# Refer: https://bheisler.github.io/criterion.rs/book/faq.html#cargo-bench-gives-unrecognized-option-errors-for-valid-command-line-options
+[lib]
+bench = false
+
+[[bench]]
+name = "bench"
+harness = false
+
+[[test]]
+name = "api-test"
+path = "api-test/api.rs"
+required-features = ["api"]
+
+[[test]]
+name = "derive-test"
+path = "derive-test/mod.rs"
+required-features = ["api"]
+
+[features]
+default = ["derive"]
+derive = ["streamfy-protocol-derive"]
+api = [ ]
+codec = ["tokio-util"]
+store = ["streamfy-future"]
+record = [
+    "crc32c",
+    "content_inspector",
+    "streamfy-compression",
+    "once_cell",
+    "streamfy-types"
+]
+types = ["streamfy-types"]
+link = ["api","record","thiserror","flv-util","semver","eyre"]
+fixture = ["record","derive_builder"]
+compress = ["streamfy-compression/compress"]
+
+[dependencies]
+bytes = { workspace = true  }
+cfg-if = { workspace = true }
+crc32c = { workspace = true,  optional = true }
+content_inspector = { optional = true, workspace = true }
+once_cell = { workspace = true, optional = true }
+derive_builder = { workspace = true,  optional = true }
+eyre = { workspace = true,  optional = true }
+semver = { workspace = true, optional = true }
+thiserror = { workspace = true,  optional = true }
+tokio-util = { workspace = true, features = ["codec","compat"], optional = true }
+tracing = { workspace = true }
+
+
+streamfy-protocol-derive = { workspace = true, optional = true }
+streamfy-future = { workspace = true, optional = true }
+flv-util = { workspace = true,  optional = true }
+streamfy-compression = { workspace = true, default-features = false, optional = true }
+streamfy-types = { workspace = true,  optional = true }
+
+[dev-dependencies]
+criterion = { workspace = true }
+trybuild = "1.0.64"
+streamfy-future = { workspace = true, features = [
+    "fixture",
+    "subscriber",
+    "timer",
+    "net",
+] }
+futures = { workspace = true }

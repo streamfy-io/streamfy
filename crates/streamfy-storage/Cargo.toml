@@ -1,0 +1,71 @@
+[package]
+name = "streamfy-storage"
+description = "Storage for Streamfy platform"
+version = "0.0.0"
+publish = false
+repository.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+
+[[bin]]
+name = "storage-cli"
+path = "src/bin/cli.rs"
+doc = false
+required-features = ["cli", "streamfy-future/subscriber"]
+
+[features]
+default = ["iterators"]
+cli = ["clap", "humantime"]
+iterators = ["nix/uio"]
+fixture = []
+
+
+[[test]]
+name = "replication-test"
+path = "tests/replica_test.rs"
+required-features = ["fixture"]
+
+[dependencies]
+anyhow = { workspace = true }
+async-lock = { workspace = true }
+blocking = { workspace = true }
+derive_builder = { workspace = true }
+bytes = { workspace = true }
+nix = { workspace = true }
+thiserror = { workspace = true }
+libc = { workspace = true }
+futures-lite = { workspace = true }
+pin-utils = { workspace = true }
+async-channel = { workspace = true }
+async-trait = { workspace = true }
+serde = { workspace = true, features = ['derive', 'std'] }
+tracing = { workspace = true }
+tokio = { workspace = true, features = ["macros"] }
+
+# these are for CLI only
+clap = { workspace = true, features = [
+    "std",
+    "derive",
+    "help",
+    "usage",
+    "error-context",
+], optional = true }
+humantime = { workspace = true, optional = true }
+
+# Streamfy dependencies
+streamfy-types = { workspace = true, features = ["events"] }
+streamfy-future = { workspace = true, features = ["fs", "mmap", "zero_copy","timer"] }
+streamfy-protocol = { workspace = true }
+streamfy-controlplane-metadata = { workspace = true }
+streamfy-controlplane = { workspace = true }
+streamfy-spu-schema = { workspace = true, features = ["file"] }
+
+[dev-dependencies]
+streamfy-future = { workspace = true, features = ["fixture"] }
+streamfy-socket = { workspace = true, features = ["file"] }
+streamfy-protocol = { workspace = true, features = ["fixture"] }
+flv-util = { workspace = true, features = ["fixture"] }
+
+[package.metadata.cargo-udeps.ignore]
+development = ["streamfy-socket"]

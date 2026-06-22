@@ -1,0 +1,6 @@
+# Release complete
+
+Closes #<checklist issue>
+
+* [ ] Increment patch version in [`VERSION`](https://github.com/streamfy/streamfy/blob/master/VERSION) file
+* [ ] Add a new heading in [`CHANGELOG`](https://github.com/streamfy/streamfy/blob/master/CHANGELOG.md) with for the next release (Use heading level 2) with UNRELEASED for the date

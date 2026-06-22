@@ -1,0 +1,37 @@
+[package]
+name = "streamfy-benchmark"
+description = "Streamfy benchmarking tool"
+version = "0.0.0"
+repository.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+publish = false
+
+[dependencies]
+anyhow = { workspace = true }
+async-lock = { workspace = true }
+async-channel = { workspace = true }
+bytesize = { workspace = true, features = ['serde'] }
+clap = { workspace = true, features = ["std","derive"] }
+derive_builder = { workspace = true }
+futures-util = { workspace = true }
+humantime = { workspace = true }
+hdrhistogram = { workspace = true }
+once_cell = { workspace = true }
+rand = { workspace = true }
+rand_xoshiro = { workspace = true }
+rayon = { workspace = true }
+tokio = { workspace = true, features = ['sync', 'macros'] }
+madato = { workspace = true }
+serde = { workspace = true , features = ['derive'] }
+serde_yaml = { workspace = true }
+thiserror = { workspace = true }
+tracing = {workspace = true }
+
+streamfy = { workspace = true  }
+streamfy-future = { workspace = true, features = [
+    'task',
+    'future',
+    'subscriber',
+] }

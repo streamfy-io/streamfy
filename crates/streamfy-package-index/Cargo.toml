@@ -1,0 +1,26 @@
+[package]
+name = "streamfy-package-index"
+description = "Streamfy Package Index"
+build = "build.rs"
+version.workspace = true
+repository.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+
+[lib]
+name = "streamfy_index"
+path = "src/lib.rs"
+
+[features]
+http_agent = ["http"]
+
+[dependencies]
+http = { optional = true, workspace = true }
+once_cell = { workspace = true }
+semver = { workspace = true,  features = ["serde"] }
+serde = { workspace = true,  features = ["derive"] }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+tracing = { workspace = true }
+url = { workspace = true, features = ["serde"] }

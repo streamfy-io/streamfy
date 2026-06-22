@@ -1,0 +1,77 @@
+[package]
+name = "streamfy-spu"
+description = "Streamfy Stream Processing Unit"
+version = "0.0.0"
+publish = false
+repository.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+
+[lib]
+name = "streamfy_spu"
+path = "src/lib.rs"
+
+[[bin]]
+name = "streamfy-spu"
+path = "src/main.rs"
+doc = false
+
+[features]
+default = ["smartengine"]
+smartengine = ["dep:streamfy-smartengine", "streamfy/smartengine"]
+
+[dependencies]
+cfg-if = { workspace = true }
+anyhow = { workspace = true }
+tracing = { workspace = true }
+bytes = { workspace = true }
+clap = { workspace = true, features = ["std", "derive", "env"]}
+thiserror = { workspace = true }
+futures-util = { workspace = true, features = ["sink"] }
+async-trait = { workspace = true }
+serde = { workspace = true,  features = ['derive'] }
+serde_json = { workspace = true }
+tokio = { workspace = true, features = ["macros"] }
+async-channel = { workspace = true }
+async-lock = { workspace = true }
+async-io = { workspace = true }
+adaptive_backoff = { workspace = true }
+once_cell = { workspace = true }
+sysinfo = { workspace = true }
+chrono = { workspace = true }
+mimalloc = { workspace = true }
+
+# Streamfy dependencies
+streamfy = { workspace = true }
+streamfy-auth = { workspace = true }
+streamfy-types = { workspace = true, features = ["events"] }
+streamfy-storage = { workspace = true, features = ["iterators"] }
+streamfy-compression = { workspace = true }
+streamfy-controlplane = { workspace = true }
+streamfy-controlplane-metadata = { workspace = true }
+streamfy-spu-schema = { workspace = true,  features = ["file"] }
+streamfy-protocol = { workspace = true }
+streamfy-socket = { workspace = true, features = ["file",] }
+streamfy-service = { workspace = true }
+flv-tls-proxy = { workspace = true }
+flv-util = { workspace = true }
+streamfy-future = { workspace = true,features = [
+    "subscriber",
+    "zero_copy",
+] }
+streamfy-smartengine = { workspace = true, optional = true, features = ["engine"] }
+streamfy-smartmodule = { workspace = true}
+streamfy-kv-storage = { workspace = true}
+
+[dev-dependencies]
+once_cell = { workspace = true }
+derive_builder =  { workspace = true }
+serde_json = { workspace = true }
+flate2 = { workspace = true }
+portpicker = { workspace = true }
+rand = { workspace = true }
+
+flv-util = { workspace = true, features = ["fixture"] }
+streamfy-future = { workspace = true,features = ["fixture", "subscriber"] }
+streamfy-protocol = { workspace = true,  features = ["fixture"] }

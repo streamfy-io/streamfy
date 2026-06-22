@@ -1,0 +1,21 @@
+[package]
+name = "streamfy-controlplane"
+description = "API for Streamfy Control Plane"
+version = "0.0.0"
+publish = false
+repository.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+
+[lib]
+name = "streamfy_controlplane"
+path = "src/lib.rs"
+
+[dependencies]
+tracing = { workspace = true }
+
+# Streamfy dependencies
+streamfy-types = { workspace = true  }
+streamfy-controlplane-metadata = { workspace = true  }
+streamfy-protocol = { workspace = true,  features = ["api"]}

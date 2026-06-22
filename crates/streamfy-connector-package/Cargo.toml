@@ -1,0 +1,45 @@
+[package]
+name = "streamfy-connector-package"
+description = "Streamfy Connector Package"
+version = "0.0.0"
+repository.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+
+[features]
+default = ["toml"]
+
+[dependencies]
+anyhow = { workspace = true }
+bytesize = { workspace = true }
+humantime-serde = { workspace = true }
+minijinja = { workspace = true, features = [
+    "custom_syntax",
+    "fuel",
+    "serde",
+] }
+openapiv3 = { version = "2.0", default-features = false }
+schemars = { workspace = true }
+serde = { workspace = true, features = ["derive"], default-features = false }
+serde_yaml = { workspace = true }
+toml = { workspace = true, optional = true, features = [
+    "display",
+    "parse",
+    "preserve_order",
+] }
+tracing = { workspace = true }
+
+# streamfy dependencies
+streamfy-controlplane-metadata = { workspace = true, default-features = false, features = [
+    "use_serde",
+] }
+streamfy-smartengine = { workspace = true, default-features = false, features = [
+    "transformation",
+] }
+streamfy-types = { workspace = true }
+bytesize-serde = "0.2.1"
+
+[dev-dependencies]
+tempfile = { workspace = true }
+pretty_assertions = "1.4.0"

@@ -1,0 +1,13 @@
+[package]
+name = "streamfy-smartmodule-filter-init"
+version = "0.0.0"
+authors = ["Streamfy Contributors <team@streamfy.io>"]
+edition = "2024"
+publish = false
+description = "SmartModule filter with mandatory param"
+
+[lib]
+crate-type = ['cdylib']
+
+[dependencies]
+streamfy-smartmodule = { workspace = true }

@@ -1,0 +1,50 @@
+[package]
+name = "streamfy-cli-common"
+description = "Streamfy CLI common code"
+version = "0.0.0"
+repository.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+publish = false
+
+[lib]
+name = "streamfy_cli_common"
+path = "src/lib.rs"
+
+[features]
+default = ["streamfy-types", "serde"]
+file-records = ["streamfy-protocol/record", "streamfy-protocol/api"]
+version-cmd = ["dep:current_platform", "dep:clap", "dep:sysinfo"]
+smartmodule-test = ["file-records", "dep:streamfy-sc-schema", "dep:streamfy-smartmodule", "dep:streamfy", "dep:streamfy-smartengine", "dep:clap"]
+serde = ["dep:serde", "dep:serde_json", "dep:serde-tuple-vec-map"]
+
+[dependencies]
+anyhow = { workspace = true }
+current_platform = { workspace = true, optional = true }
+clap = { workspace = true, optional = true, features = ["derive", "std"] }
+bytes = { workspace = true }
+chrono = { workspace = true }
+comfy-table = { workspace = true }
+home = { workspace = true }
+hex = { workspace = true }
+http = { workspace = true }
+serde = { workspace = true, optional = true }
+serde_json = { workspace = true, optional = true }
+serde-tuple-vec-map = { workspace = true, optional = true }
+semver = { workspace = true }
+sha2 = { workspace = true }
+sysinfo = { workspace = true, optional = true }
+tempfile = { workspace = true }
+thiserror = { workspace = true }
+tracing = { workspace = true }
+ureq = { workspace = true }
+
+streamfy = { workspace = true, optional = true }
+streamfy-package-index = { workspace = true,  features = ["http_agent"] }
+streamfy-types = { workspace = true , optional = true }
+streamfy-protocol = { workspace = true,  optional = true }
+streamfy-sc-schema = { workspace = true, optional = true }
+streamfy-smartmodule = { workspace = true, optional = true, default-features = false }
+streamfy-smartengine = { workspace = true, optional = true, features = ["transformation", "engine"] }
+

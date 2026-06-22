@@ -1,0 +1,30 @@
+pub mod producer;
+pub mod consumer;
+pub mod util;
+
+use clap::Parser;
+
+use streamfy_future::task::spawn;
+use streamfy_test_derive::streamfy_test;
+use streamfy_test_case_derive::MyTestCase;
+use streamfy_future::task::run_block_on;
+
+#[derive(Debug, Clone, Parser, Default, Eq, PartialEq, MyTestCase)]
+#[command(name = "Streamfy Concurrent Test")]
+pub struct ConcurrentTestOption {}
+
+#[streamfy_test(topic = "test-bug")]
+pub fn concurrent(mut test_driver: TestDriver, mut test_case: TestCase) {
+    println!("Testing concurrent consumer and producer");
+    let option: MyTestCase = test_case.into();
+
+    run_block_on(async {
+        let (sender, receiver) = std::sync::mpsc::channel();
+        spawn(consumer::consumer_stream(
+            test_driver.clone(),
+            option.clone(),
+            receiver,
+        ));
+        producer::producer(&test_driver, option, sender).await;
+    });
+}
