@@ -10,6 +10,7 @@ VERSION
 .vscode/
 vendor/
 *.tmp
+log/
 
 # Test Connectors Logs
 connector/**/*.log

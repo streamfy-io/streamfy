@@ -36,6 +36,15 @@ teardown_file() {
     echo "Topic Details: $PRODUCE_CONSUME_MULTIPLE_PARTITIONS_TOPIC_NAME"
     run timeout 15s "$STREAMFY_BIN" topic describe "$PRODUCE_CONSUME_MULTIPLE_PARTITIONS_TOPIC_NAME"
     assert_success
+    assert_output --partial "PARTITION"
+    assert_output --partial "LAST-OFFSET"
+    assert_output --partial "LAST-PRODUCED"
+    assert_output --partial "CONSUMERS"
+    # Multi-partition topic should list each partition id in the table
+    for (( part = 0; part < $PARTITIONS; part++ ))
+    do
+        assert_output --partial "$part"
+    done
 }
 
 @test "Produces on topic for P/C Multiple Partitions" {

@@ -110,13 +110,20 @@ EOF
     assert_output --partial "Topic already exists"
 }
 
-# Describe topic
+# Describe topic (topic metadata + partition status table)
 @test "Describe a topic" {
     debug_msg "Topic name: $TOPIC_NAME"
     run timeout 15s "$STREAMFY_BIN" topic describe "$TOPIC_NAME"
     debug_msg "status: $status"
-    debug_msg "output: ${lines[0]}"
+    debug_msg "output: ${output}"
     assert_success
+    assert_output --partial "$TOPIC_NAME"
+    # Partition operational table (empty partition: LEO 0, no consumers / last produced)
+    assert_output --partial "PARTITION"
+    assert_output --partial "LEADER"
+    assert_output --partial "LAST-OFFSET"
+    assert_output --partial "LAST-PRODUCED"
+    assert_output --partial "CONSUMERS"
 }
 
 # Delete topic
