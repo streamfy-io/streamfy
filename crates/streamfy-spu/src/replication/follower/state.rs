@@ -16,7 +16,7 @@ use streamfy_storage::{FileReplica, ReplicaStorage, ReplicaStorageConfig};
 use streamfy_types::SpuId;
 
 use crate::replication::leader::ReplicaOffsetRequest;
-use crate::core::FileGlobalContext;
+use crate::core::{FileGlobalContext, GlobalContext};
 use crate::storage::SharableReplicaStorage;
 
 use super::controller::FollowerGroups;
@@ -140,6 +140,22 @@ impl FollowersState<FileReplica> {
     }
 
     pub async fn update_replica(&self, _replica: Replica) {}
+
+    /// Clear follower storage when topic clear_epoch advances (no consumer offset changes).
+    #[instrument(skip(self, ctx, replica))]
+    pub async fn clear_replica_storage(
+        &self,
+        ctx: &GlobalContext<FileReplica>,
+        replica: &Replica,
+    ) -> Result<()> {
+        if let Some(state) = self.get(&replica.id).await {
+            let mut replica_config: <FileReplica as ReplicaStorage>::ReplicaConfig =
+                ctx.config().into();
+            replica_config.update_from_replica(replica);
+            state.clear(replica_config).await?;
+        }
+        Ok(())
+    }
 }
 
 /// State for Follower Replica Controller

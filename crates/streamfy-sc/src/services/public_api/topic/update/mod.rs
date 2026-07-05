@@ -1,5 +1,6 @@
 mod add_partition;
 mod add_mirror;
+mod clear;
 
 use std::io::{Error, ErrorKind};
 
@@ -49,6 +50,7 @@ pub async fn handle_topic_update_request<AC: AuthContext, C: MetadataItem>(
         UpdateTopicAction::AddMirror(req) => {
             add_mirror::handle_add_mirror(topic_name, req, auth_ctx).await?
         }
+        UpdateTopicAction::Clear(_) => clear::handle_clear_topic(topic_name, auth_ctx).await?,
     };
 
     Ok(status)

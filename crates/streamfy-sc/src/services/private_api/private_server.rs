@@ -250,11 +250,13 @@ where
                 current_status,
             )));
         } else {
-            error!(
-                "trying to update replica: {}, that doesn't exist",
-                lrs_req.id
+            // Skip missing replicas (e.g. deleted between LRS queue and flush).
+            // Must not abort the batch — other updates (new topics after clear+delete)
+            // would otherwise never become Online and topic create would hang.
+            debug!(
+                replica = %lrs_req.id,
+                "ignoring lrs update for replica that no longer exists"
             );
-            return;
         }
     }
 

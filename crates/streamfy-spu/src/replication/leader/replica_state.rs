@@ -341,6 +341,27 @@ where
         self.status_update.send(lrs).await
     }
 
+    /// Clear stored records for this leader replica while keeping metadata and consumer offsets.
+    #[instrument(skip(self, config))]
+    pub async fn clear_storage<'a, C>(&self, config: &'a C) -> Result<()>
+    where
+        ReplicationConfig: From<&'a C>,
+        S::ReplicaConfig: From<&'a C>,
+    {
+        let mut replica_config: S::ReplicaConfig = config.into();
+        replica_config.update_from_replica(&self.replica);
+        self.storage.clear(replica_config).await?;
+        // Reset follower lag views so HW can advance on new produces.
+        {
+            let mut followers = self.followers.write().await;
+            for offset in followers.values_mut() {
+                *offset = OffsetInfo::default();
+            }
+        }
+        self.update_status().await;
+        Ok(())
+    }
+
     /// write records to storage
     /// then update our follower's leo
     #[instrument(skip(self, records, notifiers))]

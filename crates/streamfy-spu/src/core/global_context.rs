@@ -6,7 +6,7 @@
 use std::sync::Arc;
 use std::fmt::Debug;
 
-use tracing::{debug, error, instrument};
+use tracing::{info, debug, error, instrument};
 
 use streamfy_types::SpuId;
 use streamfy_storage::ReplicaStorage;
@@ -339,6 +339,16 @@ mod file_replica {
                     SpecChange::Mod(new_replica, old_replica) => {
                         if new_replica.is_being_deleted {
                             self.remove_replica(&mut outputs, new_replica).await;
+                        } else if new_replica.clear_epoch != old_replica.clear_epoch {
+                            // Topic clear: wipe records but keep topic/partitions/consumer offsets.
+                            if let Err(err) = self.clear_replica_storage(&new_replica).await {
+                                error!(
+                                    replica = %new_replica.id,
+                                    %err,
+                                    "failed to clear replica storage"
+                                );
+                                outputs.push(ReplicaChange::StorageError(err));
+                            }
                         } else {
                             // check for leader change
                             if new_replica.leader != old_replica.leader {
@@ -505,6 +515,27 @@ mod file_replica {
 
             debug!(?replica, "consumer offset deleted");
 
+            Ok(())
+        }
+
+        /// Clear on-disk records for a replica while preserving consumer offsets and topic metadata.
+        async fn clear_replica_storage(&self, replica: &Replica) -> anyhow::Result<()> {
+            let local_id = self.local_spu_id();
+            if replica.leader == local_id {
+                if let Some(leader) = self.leaders_state().get(&replica.id).await {
+                    leader.clear_storage(self.config()).await?;
+                    info!(replica = %replica.id, clear_epoch = replica.clear_epoch, "leader replica storage cleared");
+                } else {
+                    warn!(replica = %replica.id, "no leader replica to clear");
+                }
+            } else if replica.replicas.contains(&local_id) {
+                self.followers_state()
+                    .clear_replica_storage(self, replica)
+                    .await?;
+                info!(replica = %replica.id, clear_epoch = replica.clear_epoch, "follower replica storage cleared");
+            } else {
+                debug!(replica = %replica.id, "replica not on this SPU, ignoring clear");
+            }
             Ok(())
         }
     }
