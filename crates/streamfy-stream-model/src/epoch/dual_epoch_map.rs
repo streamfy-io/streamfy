@@ -5,7 +5,7 @@ use std::cmp::Eq;
 use std::collections::HashMap;
 use std::borrow::Borrow;
 
-use once_cell::sync::Lazy;
+use std::sync::LazyLock;
 use tracing::trace;
 
 use super::EpochCounter;
@@ -18,20 +18,20 @@ pub trait DualDiff {
     fn diff(&self, new_value: &Self) -> ChangeFlag;
 }
 
-pub static FULL_FILTER: Lazy<ChangeFlag> = Lazy::new(ChangeFlag::all);
+pub static FULL_FILTER: LazyLock<ChangeFlag> = LazyLock::new(ChangeFlag::all);
 
-pub static SPEC_FILTER: Lazy<ChangeFlag> = Lazy::new(|| ChangeFlag {
+pub static SPEC_FILTER: LazyLock<ChangeFlag> = LazyLock::new(|| ChangeFlag {
     spec: true,
     status: false,
     meta: false,
 });
 
-pub static STATUS_FILTER: Lazy<ChangeFlag> = Lazy::new(|| ChangeFlag {
+pub static STATUS_FILTER: LazyLock<ChangeFlag> = LazyLock::new(|| ChangeFlag {
     spec: false,
     status: true,
     meta: false,
 });
-pub static META_FILTER: Lazy<ChangeFlag> = Lazy::new(|| ChangeFlag {
+pub static META_FILTER: LazyLock<ChangeFlag> = LazyLock::new(|| ChangeFlag {
     spec: false,
     status: false,
     meta: true,

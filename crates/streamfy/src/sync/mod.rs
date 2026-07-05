@@ -13,7 +13,7 @@ mod context {
     use streamfy_stream_dispatcher::metadata::local::LocalMetadataItem;
     use tracing::{debug, instrument};
     use async_lock::RwLockReadGuard;
-    use once_cell::sync::Lazy;
+    use std::sync::LazyLock;
 
     use crate::StreamfyError;
     use crate::metadata::core::Spec;
@@ -26,7 +26,7 @@ mod context {
     pub(crate) type CacheMetadataStoreObject<S> = MetadataStoreObject<S, LocalMetadataItem>;
 
     /// Timeout
-    static MAX_WAIT_TIME: Lazy<u64> = Lazy::new(|| {
+    static MAX_WAIT_TIME: LazyLock<u64> = LazyLock::new(|| {
         use std::env;
         let var_value = env::var("FLV_METADATA_TIMEOUT").unwrap_or_default();
         let wait_time: u64 = var_value.parse().unwrap_or(60000); // up to 60 seconds

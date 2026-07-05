@@ -7,26 +7,57 @@
 
 ---
 
-## Applied (2026-07-05)
+## Applied
 
-Low-risk cleanup from this plan has been applied:
+### Phase A — low-risk cleanup
 
 | Change | Status |
 |---|---|
-| Remove dead direct deps (`parking_lot`, `home`, `current_platform`, `async-lock`, `thiserror` on benchmark, `dirs`/`toml` on smdk, `streamfy` on cdk, `anyhow` on partitioning-simple) | Done |
-| Remove unused workspace pins (`const_format`, `crossbeam-channel`, `futures-channel`, `getrandom`, `k8-diff`, `mime`, `wasm-bindgen`, `wasmparser`) | Done |
-| Feature-gate `streamfy-benchmark` (`benchmark` feature, still in **default**) | Done |
+| Remove dead direct deps | Done |
+| Remove unused workspace pins | Done |
+| Feature-gate `streamfy-benchmark` | Done |
 | Move `k8-types` under optional `k8s` feature | Done |
 | Move `tempfile` to dev-deps in `streamfy-stream-dispatcher` | Done |
-| Keep `tracing` / `nix` / `openssl` where macro or link-time required | Confirmed needed |
 
-**Not applied** (higher risk / product decision / multi-day work): flip defaults off for k8s/smartengine, openssl vendored strategy, tui→ratatui, once_cell→std, cargo-generate split, lockfile duplicate unification.
+### Phase B/C — high-risk / structural (applied)
 
-Slim CLI build (no k8s, no benchmark):
+| Change | Status | Notes |
+|---|---|---|
+| **Slim crate defaults** | Done | CLI default = `consumer,producer-file-io` only; SPU/run default = no smartengine |
+| **Client crypto default `rustls-ring`** | Done | Was `rustls-aws`; use `--features rustls-aws` for aws-lc-rs |
+| **`tui` → `ratatui` 0.29** | Done | Drops dual crossterm 0.25 line from our direct graph |
+| **`once_cell` → `std::sync::{LazyLock,OnceLock}`** | Done | Direct dep removed from workspace members |
+| **`directories` → `dirs` in cluster** | Done | Single home-dir crate in first-party code |
+| **cdk/smdk `generate` feature** | Done | Default off; `cargo-generate` + vendored openssl only with `--features generate` |
+| **`openssl_tls` system OpenSSL + `openssl_vendored` opt-in** | Done | `native_tls` still vendors (CLI identity helpers) |
+| **Makefile product feature sets** | Done | `make build-cli` / `build-run` / `build-cdk` pass full features explicitly |
+
+**Product builds (full weight):**
 
 ```bash
-cargo build -p streamfy-cli --release --no-default-features \
-  --features "consumer,producer-file-io"
+# Full CLI (k8s + benchmark)
+cargo build -p streamfy-cli --release \
+  --features "consumer,k8s,producer-file-io,benchmark"
+
+# Full runner / SPU with SmartModules (wasmtime)
+cargo build -p streamfy-run --release --features spu_smartengine
+cargo build -p streamfy-spu --release --features smartengine
+
+# Kits with project scaffolding
+cargo build -p cdk --features generate
+cargo build -p smdk -p smartmodule-development-kit --features generate
+
+# Or use make (encodes full product features)
+make build-cli build-run build-cdk build-smdk
+```
+
+**Slim defaults (faster local iteration):**
+
+```bash
+cargo build -p streamfy-cli          # consumer + file IO only
+cargo build -p streamfy-spu          # no wasmtime
+cargo build -p streamfy-run          # no wasmtime
+cargo build -p cdk                   # no cargo-generate
 ```
 
 ---

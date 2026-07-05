@@ -5,12 +5,11 @@
 use std::io::Stdout;
 use std::collections::BTreeMap;
 
-use tui::widgets::TableState;
-use tui::{
+use ratatui::{
     backend::CrosstermBackend,
     layout::{Constraint, Layout},
     style::{Color, Modifier, Style},
-    widgets::{Block, Borders, Cell, Row, Table},
+    widgets::{Block, Borders, Cell, Row, Table, TableState},
     Frame, Terminal,
 };
 use crossterm::event::{Event, KeyCode, MouseEventKind};
@@ -341,11 +340,11 @@ impl TableModel {
 
     /// Render the frame for the table
     /// Re-calculates the table frame so it can be drawn on screen
-    pub fn table_ui(&mut self, f: &mut Frame<CrosstermBackend<Stdout>>) {
+    pub fn table_ui(&mut self, f: &mut Frame) {
         let rects = Layout::default()
-            .constraints([Constraint::Percentage(100)].as_ref())
+            .constraints([Constraint::Percentage(100)])
             .margin(0)
-            .split(f.size());
+            .split(f.area());
 
         // Calculate the widths based on # of columns
         let equal_column_width = if self.num_columns() > 1 {
@@ -409,7 +408,6 @@ impl TableModel {
                 cells.push(Cell::from(value));
             }
 
-            //rows.push(Row::new(cells).height(height as u16).bottom_margin(0))
             rows.push(Row::new(cells).height(1).bottom_margin(0))
         }
 
@@ -418,7 +416,7 @@ impl TableModel {
             self.data.len()
         );
 
-        let t = Table::new(rows)
+        let t = Table::new(rows, column_constraints)
             .header(header)
             .block(
                 Block::default()
@@ -426,8 +424,7 @@ impl TableModel {
                     .title(table_title_text),
             )
             .highlight_style(selected_style)
-            .highlight_symbol(selected_symbol.as_str())
-            .widths(&column_constraints);
+            .highlight_symbol(selected_symbol.as_str());
 
         // draw
         f.render_stateful_widget(t, rects[0], &mut self.state);

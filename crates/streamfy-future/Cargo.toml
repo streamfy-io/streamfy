@@ -20,8 +20,11 @@ io = ["async-fs", "async-io"]
 net = ["futures-lite", "async-net", "async-trait", "cfg-if", "futures-util/io", "socket2", "streamfy-ws-stream-wasm"]
 tls = ["rust_tls"]
 rust_tls = ["net", "rustls-pemfile", "futures-rustls", "pin-project", "futures-util/io"]
+# native_tls identity helpers use the openssl crate; vendor so hosts without system OpenSSL still build.
 native_tls = ["net", "pin-project", "async-native-tls", "dep:native-tls", "openssl/vendored", "futures-util/io"]
+# System OpenSSL by default. For musl/CI without libssl, also enable `openssl_vendored`.
 openssl_tls = ["net", "openssl", "openssl-sys", "pin-project", "futures-util/io"]
+openssl_vendored = ["openssl?/vendored", "openssl-sys?/vendored"]
 timer = ["async-io", "pin-project", "futures-lite", "streamfy-wasm-timer"]
 fs = ["async-fs", "futures-lite", "pin-utils", "async-trait"]
 zero_copy = ["nix", "task"]
@@ -57,7 +60,7 @@ memmap2 = { version = "0.9.5", optional = true }
 native-tls = { version = "0.2.14", optional = true }
 nix = { version = "0.30.1", optional = true, features = ["zerocopy"] }
 openssl = { version = "0.10.71", optional = true }
-openssl-sys = { version = "0.9.109", optional = true, features = ["vendored"] }
+openssl-sys = { version = "0.9.109", optional = true }
 openssl-src = { version = "=300.4.2+3.4.1", optional = true } # https://github.com/streamfy/streamfy/issues/4502
 rustls-pemfile = { version = "2.2", optional = true }
 socket2 = { version = "0.5.10", default-features = false, features = ["all"], optional = true }

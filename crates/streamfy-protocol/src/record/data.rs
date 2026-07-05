@@ -12,7 +12,7 @@ use bytes::BytesMut;
 use content_inspector::{inspect, ContentType};
 use tracing::debug;
 use tracing::{trace, warn};
-use once_cell::sync::Lazy;
+use std::sync::LazyLock;
 
 use bytes::Buf;
 use bytes::BufMut;
@@ -37,7 +37,7 @@ use super::Offset;
 use super::batch::RawRecords;
 
 /// maximum text to display
-static MAX_STRING_DISPLAY: Lazy<usize> = Lazy::new(|| {
+static MAX_STRING_DISPLAY: LazyLock<usize> = LazyLock::new(|| {
     let var_value = std::env::var("FLV_MAX_STRING_DISPLAY").unwrap_or_default();
     var_value.parse().unwrap_or(16384)
 });

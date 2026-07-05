@@ -20,7 +20,6 @@ fixtures = []
 [dependencies]
 async-lock = { workspace = true }
 event-listener = { workspace = true }
-once_cell = { workspace = true }
 serde = { workspace = true, features = ['derive'], optional = true }
 tracing = { workspace = true }
 

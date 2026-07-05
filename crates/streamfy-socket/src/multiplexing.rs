@@ -132,9 +132,9 @@ impl MultiplexerSocket {
     where
         R: Request,
     {
-        use once_cell::sync::Lazy;
+        use std::sync::LazyLock;
 
-        static MAX_WAIT_TIME: Lazy<u64> = Lazy::new(|| {
+        static MAX_WAIT_TIME: LazyLock<u64> = LazyLock::new(|| {
             use std::env;
 
             let var_value = env::var("FLV_SOCKET_WAIT").unwrap_or_default();

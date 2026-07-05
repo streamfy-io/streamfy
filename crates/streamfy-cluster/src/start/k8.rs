@@ -16,7 +16,7 @@ use anyhow::{anyhow, Result};
 use derive_builder::Builder;
 use k8_client::meta_client::NameSpace;
 use tracing::{info, warn, error, debug, instrument};
-use once_cell::sync::Lazy;
+use std::sync::LazyLock;
 use tempfile::NamedTempFile;
 use semver::Version;
 
@@ -62,14 +62,14 @@ const DEFAULT_SERVICE_TYPE: &str = "NodePort";
 
 const STREAMFY_SC_SERVICE: &str = "streamfy-sc-public";
 /// maximum time waiting for sc service to come up
-static MAX_SC_SERVICE_WAIT: Lazy<u64> = Lazy::new(|| {
+static MAX_SC_SERVICE_WAIT: LazyLock<u64> = LazyLock::new(|| {
     let var_value = env::var("FLV_CLUSTER_MAX_SC_SERVICE_WAIT").unwrap_or_default();
     var_value.parse().unwrap_or(60)
 });
 
 const STREAMFY_SC_DEPLOYMENT: &str = "streamfy-sc";
 /// maximum time waiting for replica to become available
-static MAX_SC_DEPLOYMENT_AVAILABLE_WAIT: Lazy<u64> = Lazy::new(|| {
+static MAX_SC_DEPLOYMENT_AVAILABLE_WAIT: LazyLock<u64> = LazyLock::new(|| {
     let var_value = env::var("FLV_CLUSTER_MAX_SC_DEPLOYMENT_AVAILABLE_WAIT").unwrap_or_default();
     var_value.parse().unwrap_or(60)
 });

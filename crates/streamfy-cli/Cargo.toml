@@ -19,7 +19,9 @@ path = "src/bin/main.rs"
 doc = false
 
 [features]
-default = ["consumer", "k8s", "producer-file-io", "benchmark"]
+# Slim by default: no k8s cluster tooling, no benchmark, no smartengine.
+# Full product CLI: --features "consumer,k8s,producer-file-io,benchmark"
+default = ["consumer", "producer-file-io"]
 consumer = [
     "ctrlc",
     "content_inspector",
@@ -55,7 +57,7 @@ handlebars = { workspace = true }
 content_inspector = { optional = true, workspace = true }
 flate2 = { workspace = true }
 crossterm = { workspace = true, features = ['event-stream',"bracketed-paste", "windows","events"]}
-tui = { workspace = true, features = ['crossterm'] }
+ratatui = { workspace = true }
 futures = { workspace = true }
 futures-util = { workspace = true, features = ["sink"] }
 humantime = { workspace = true }

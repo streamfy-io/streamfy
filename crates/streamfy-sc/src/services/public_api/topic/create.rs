@@ -199,11 +199,11 @@ async fn process_topic_request<AC: AuthContext, C: MetadataItem>(
     topic_spec: TopicSpec,
 ) -> Status {
     use std::time::Duration;
-    use once_cell::sync::Lazy;
+    use std::sync::LazyLock;
     use tokio::select;
     use streamfy_future::timer::sleep;
 
-    static MAX_WAIT_TIME: Lazy<u64> = Lazy::new(|| {
+    static MAX_WAIT_TIME: LazyLock<u64> = LazyLock::new(|| {
         use std::env;
 
         let var_value = env::var("FLV_TOPIC_WAIT").unwrap_or_default();

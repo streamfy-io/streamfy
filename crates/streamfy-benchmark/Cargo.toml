@@ -18,7 +18,6 @@ derive_builder = { workspace = true }
 futures-util = { workspace = true }
 humantime = { workspace = true }
 hdrhistogram = { workspace = true }
-once_cell = { workspace = true }
 rand = { workspace = true }
 rand_xoshiro = { workspace = true }
 rayon = { workspace = true }

@@ -9,7 +9,7 @@ use async_lock::RwLock;
 use streamfy::ProduceCompletionBatchEvent;
 use streamfy_future::task::spawn;
 use hdrhistogram::Histogram;
-use once_cell::sync::OnceCell;
+use std::sync::OnceLock;
 use tokio::{select, sync::broadcast};
 use tracing::trace;
 
@@ -18,7 +18,7 @@ pub(crate) struct ProducerStat {}
 pub struct TotalStats {
     record_send: AtomicU64,
     record_bytes: AtomicU64,
-    first_start_time: OnceCell<Instant>,
+    first_start_time: OnceLock<Instant>,
 }
 
 pub struct CentralStats {
@@ -174,7 +174,7 @@ impl StatCollector {
         let total_stats = Arc::new(TotalStats {
             record_send: AtomicU64::new(0),
             record_bytes: AtomicU64::new(0),
-            first_start_time: OnceCell::new(),
+            first_start_time: OnceLock::new(),
         });
 
         Self::send_central_stats(

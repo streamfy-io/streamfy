@@ -18,7 +18,8 @@ path = "src/main.rs"
 doc = false
 
 [features]
-default = ["smartengine"]
+# Slim by default (no wasmtime). Full SPU: --features smartengine
+default = []
 smartengine = ["dep:streamfy-smartengine", "streamfy/smartengine"]
 
 [dependencies]
@@ -37,7 +38,6 @@ async-channel = { workspace = true }
 async-lock = { workspace = true }
 async-io = { workspace = true }
 adaptive_backoff = { workspace = true }
-once_cell = { workspace = true }
 sysinfo = { workspace = true }
 chrono = { workspace = true }
 mimalloc = { workspace = true }
@@ -65,7 +65,6 @@ streamfy-smartmodule = { workspace = true}
 streamfy-kv-storage = { workspace = true}
 
 [dev-dependencies]
-once_cell = { workspace = true }
 derive_builder =  { workspace = true }
 serde_json = { workspace = true }
 flate2 = { workspace = true }

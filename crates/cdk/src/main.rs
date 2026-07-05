@@ -1,4 +1,5 @@
 mod cmd;
+#[cfg(feature = "generate")]
 mod generate;
 mod build;
 mod test;

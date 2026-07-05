@@ -13,17 +13,22 @@ name = "smdk"
 path = "src/main.rs"
 doc = false
 
+[features]
+# Project scaffolding pulls cargo-generate (+ system OpenSSL). Enable with --features generate.
+default = []
+generate = ["dep:cargo-generate", "dep:include_dir", "dep:openssl"]
+
 [dependencies]
 tracing = { workspace = true }
 anyhow = { workspace = true }
 clap = { workspace = true, features = ["std", "derive", "help", "usage", "error-context", "env", "wrap_help", "suggestions"], default-features = false }
 enum-display = { workspace = true }
-cargo-generate = { workspace = true }
-include_dir = { workspace = true }
+cargo-generate = { workspace = true, optional = true }
+include_dir = { workspace = true, optional = true }
 tempfile = { workspace = true }
 lib-cargo-crate = { workspace = true }
-openssl = { workspace = true, features = ["vendored"] } # cargo-generate requires openssl
-
+# Vendored only when scaffolding is enabled (avoids system OpenSSL requirement).
+openssl = { workspace = true, optional = true, features = ["vendored"] }
 
 streamfy = { workspace = true }
 streamfy-future = { workspace = true, features = ["subscriber"]}

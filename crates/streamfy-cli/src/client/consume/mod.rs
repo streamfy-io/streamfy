@@ -28,8 +28,8 @@ mod cmd {
     use clap::{Parser, ValueEnum};
     use futures::{select, FutureExt};
     use async_trait::async_trait;
-    use tui::Terminal as TuiTerminal;
-    use tui::backend::CrosstermBackend;
+    use ratatui::Terminal as TuiTerminal;
+    use ratatui::backend::CrosstermBackend;
     use crossterm::tty::IsTty;
     use crossterm::{
         event::EventStream,

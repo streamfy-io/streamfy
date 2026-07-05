@@ -18,7 +18,6 @@ serde = { workspace = true }
 humantime = { workspace = true }
 inventory = { workspace = true }
 comfy-table = { workspace = true }
-once_cell = { workspace = true }
 dyn-clone = "1.0"
 semver = { workspace = true }
 hdrhistogram = { workspace = true }
