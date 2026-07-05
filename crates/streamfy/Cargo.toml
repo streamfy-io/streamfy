@@ -35,7 +35,6 @@ async-trait = { workspace = true }
 anyhow = { workspace = true }
 cfg-if = { workspace = true }
 derive_builder = { workspace = true }
-parking_lot = { workspace = true }
 event-listener = { workspace = true }
 futures-util = { workspace = true }
 once_cell = { workspace = true }

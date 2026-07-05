@@ -13,9 +13,6 @@ name = "cdk"
 path = "src/main.rs"
 doc = false
 
-[package.metadata.cargo-udeps.ignore]
-normal = ["streamfy"]
-
 [dependencies]
 anyhow = { workspace = true }
 cargo-builder = { path = "../cargo-builder"}
@@ -32,7 +29,6 @@ toml = { workspace = true, features = ["parse", "display", "preserve_order"] }
 tracing = { workspace = true }
 openssl = { workspace = true, features = ["vendored"] } # cargo-generate requires openssl
 
-streamfy = { workspace = true }
 streamfy-cli-common = { workspace = true, features = ["serde", "version-cmd"] }
 streamfy-connector-deployer = { workspace = true }
 streamfy-connector-package = { workspace = true,  features = ["toml"]}

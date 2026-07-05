@@ -18,7 +18,6 @@ k8 = ["streamfy-stream-model/k8", "k8-client", "serde_json"]
 [dependencies]
 anyhow = { workspace = true }
 async-trait = { workspace = true }
-async-lock = { workspace = true }
 async-channel = { workspace = true }
 cfg-if = { workspace = true }
 futures-util = { workspace = true, features = ["alloc"] }
@@ -29,7 +28,6 @@ serde_yaml = { workspace = true, optional = true }
 parking_lot = { workspace = true, features = ["send_guard"], optional = true }
 tokio = { workspace = true, features = ["macros"] }
 tracing = { workspace = true }
-tempfile = { workspace = true }
 
 # Streamfy dependencies
 streamfy-types = { workspace = true }
@@ -38,5 +36,6 @@ k8-client = { workspace = true, optional = true, features = ["memory_client"] }
 streamfy-future = { workspace = true, features = ["task", "timer"] }
 
 [dev-dependencies]
+tempfile = { workspace = true }
 streamfy-future = { workspace = true, features = ["fixture"] }
 streamfy-stream-model = { workspace = true, features = ["fixture"]  }

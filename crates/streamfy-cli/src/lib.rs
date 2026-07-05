@@ -50,6 +50,7 @@ mod root {
 
     use clap::{Parser, Command as ClapCommand, CommandFactory};
     use clap_complete::{generate, Shell};
+    #[cfg(feature = "benchmark")]
     use streamfy_benchmark::cli::BenchmarkOpt;
     use tracing::debug;
     use anyhow::Result;
@@ -108,6 +109,7 @@ mod root {
         Streamfy(Box<StreamfyCmd>),
 
         /// Run Streamfy benchmarks
+        #[cfg(feature = "benchmark")]
         #[command(name = "benchmark", alias = "bench")]
         Benchmark(BenchmarkOpt),
 
@@ -154,6 +156,7 @@ mod root {
             let out = Arc::new(PrintTerminal::new());
 
             match self {
+                #[cfg(feature = "consumer")]
                 Self::Streamfy(streamfy_cmd) => {
                     streamfy_cmd.process(out, root.target).await?;
                 }
@@ -178,6 +181,7 @@ mod root {
                 Self::Metadata(metadata) => {
                     metadata.process()?;
                 }
+                #[cfg(feature = "benchmark")]
                 Self::Benchmark(bench) => {
                     bench.process().await?;
                 }

@@ -881,7 +881,6 @@ dependencies = [
  "include_dir",
  "openssl",
  "serde",
- "streamfy",
  "streamfy-cli-common",
  "streamfy-connector-deployer",
  "streamfy-connector-package",
@@ -4253,7 +4252,6 @@ dependencies = [
 name = "partitioning-simple"
 version = "0.0.0"
 dependencies = [
- "anyhow",
  "streamfy",
 ]
 
@@ -5765,7 +5763,6 @@ dependencies = [
  "streamfy-future",
  "streamfy-smartengine",
  "tempfile",
- "toml 0.8.22",
  "tracing",
 ]
 
@@ -5856,7 +5853,6 @@ dependencies = [
  "futures-util",
  "mockall",
  "once_cell",
- "parking_lot 0.12.4",
  "pin-project",
  "rustls 0.23.28",
  "semver",
@@ -5948,7 +5944,6 @@ dependencies = [
  "serde_yaml 0.9.34+deprecated",
  "streamfy",
  "streamfy-future",
- "thiserror 2.0.18",
  "tokio",
  "tracing",
 ]
@@ -6003,12 +5998,10 @@ dependencies = [
  "content_inspector",
  "crossterm 0.28.1",
  "ctrlc",
- "current_platform",
  "flate2",
  "futures",
  "futures-util",
  "handlebars",
- "home",
  "humantime",
  "indicatif",
  "mimalloc",
@@ -6755,7 +6748,6 @@ version = "0.50.2"
 dependencies = [
  "anyhow",
  "async-channel",
- "async-lock",
  "async-trait",
  "cfg-if",
  "futures-util",

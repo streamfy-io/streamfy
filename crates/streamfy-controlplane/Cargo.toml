@@ -13,6 +13,7 @@ name = "streamfy_controlplane"
 path = "src/lib.rs"
 
 [dependencies]
+# Required by streamfy-protocol-derive Decoder expansion
 tracing = { workspace = true }
 
 # Streamfy dependencies

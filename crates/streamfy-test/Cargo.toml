@@ -20,6 +20,7 @@ rand = { workspace = true }
 # Cryptographically secure rand is unnecessary and slow enough to affect for benchmark testing
 fastrand = "2.0.0"
 md-5 = "0.10"
+# Required by streamfy-test-util async_process! / fork_and_wait macros
 nix = { workspace = true, features = ["process"] }
 serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }
