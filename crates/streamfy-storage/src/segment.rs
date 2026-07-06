@@ -418,11 +418,44 @@ impl Segment<MutLogIndex, MutFileRecords> {
         }
 
         batch.set_base_offset(self.end_offset);
+        self.write_batch_at_current_offsets(batch).await
+    }
 
+    /// Append a batch that already has correct absolute offsets set.
+    /// Used by log compaction to preserve original offsets (gaps allowed).
+    ///
+    /// Requirements:
+    /// - `batch.base_offset >= self.end_offset` (monotonic within the segment)
+    /// - batch is non-empty
+    #[instrument(skip(batch))]
+    pub async fn append_batch_preserving_offset<R: BatchRecords>(
+        &mut self,
+        batch: &mut Batch<R>,
+    ) -> Result<bool> {
+        if batch.records_len() == 0 {
+            return Err(StorageError::EmptyBatch.into());
+        }
+        if batch.get_base_offset() < self.end_offset {
+            return Err(StorageError::Other(format!(
+                "compaction batch base_offset {} is before segment end_offset {}",
+                batch.get_base_offset(),
+                self.end_offset
+            ))
+            .into());
+        }
+        // Advance end_offset cursor so relative index uses the batch base.
+        self.end_offset = batch.get_base_offset();
+        self.write_batch_at_current_offsets(batch).await
+    }
+
+    async fn write_batch_at_current_offsets<R: BatchRecords>(
+        &mut self,
+        batch: &mut Batch<R>,
+    ) -> Result<bool> {
         let next_end_offset = batch.get_last_offset();
 
         // relative offset of the batch to segment
-        let relative_offset_in_segment = (self.end_offset - self.base_offset) as i32;
+        let relative_offset_in_segment = (batch.get_base_offset() - self.base_offset) as i32;
         let start_file_pos = self.msg_log.get_pos();
         debug!(
             base_offset = batch.get_base_offset(),

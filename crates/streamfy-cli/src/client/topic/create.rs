@@ -15,6 +15,8 @@ use anyhow::Result;
 use streamfy_types::PartitionCount;
 use streamfy_types::ReplicationFactor;
 use streamfy::metadata::topic::CleanupPolicy;
+use streamfy::metadata::topic::CompactAndDeletePolicy;
+use streamfy::metadata::topic::CompactPolicy;
 use streamfy::metadata::topic::ReplicaSpec;
 use streamfy::metadata::topic::SegmentBasedPolicy;
 use streamfy::metadata::topic::TopicStorageConfig;
@@ -225,7 +227,9 @@ impl CreateTopicOpt {
         };
 
         let mut topic_spec: TopicSpec = replica_spec.into();
-        if let Some(retention) = self.setting.retention_time {
+        if let Some(policy) = self.setting.cleanup_policy_from_args() {
+            topic_spec.set_cleanup_policy(policy);
+        } else if let Some(retention) = self.setting.retention_time {
             topic_spec.set_cleanup_policy(CleanupPolicy::Segment(SegmentBasedPolicy {
                 time_in_seconds: retention.as_secs() as u32,
             }));
@@ -306,6 +310,14 @@ pub struct TopicConfigOpt {
     #[arg(long, value_name = "time",value_parser=parse_duration)]
     retention_time: Option<Duration>,
 
+    /// Cleanup policy for the topic log
+    ///
+    /// - `segment` (default): delete whole sealed segments by age/size
+    /// - `compact`: retain only the latest record per key
+    /// - `compact,delete`: compact keys and also delete old segments by retention
+    #[arg(long = "cleanup-policy", value_name = "policy", value_parser = parse_cleanup_policy)]
+    cleanup_policy: Option<CleanupPolicyArg>,
+
     /// Segment size (by default measured in bytes)
     /// Ex: `2048`, '2 Ki', '10 MiB', `1 GB`
     #[arg(long, value_name = "bytes")]
@@ -337,6 +349,51 @@ pub struct TopicConfigOpt {
     /// System topics are for internal operations
     #[arg(long, short = 's', hide = true)]
     system: bool,
+}
+
+/// CLI representation of cleanup policy (parsed from string).
+#[derive(Debug, Clone)]
+pub enum CleanupPolicyArg {
+    Segment,
+    Compact,
+    CompactAndDelete,
+}
+
+fn parse_cleanup_policy(s: &str) -> Result<CleanupPolicyArg, String> {
+    match s.trim().to_ascii_lowercase().as_str() {
+        "segment" | "delete" => Ok(CleanupPolicyArg::Segment),
+        "compact" => Ok(CleanupPolicyArg::Compact),
+        "compact,delete" | "compact_and_delete" | "compact-delete" => {
+            Ok(CleanupPolicyArg::CompactAndDelete)
+        }
+        other => Err(format!(
+            "unknown cleanup policy '{other}'; expected segment|compact|compact,delete"
+        )),
+    }
+}
+
+impl TopicConfigOpt {
+    fn cleanup_policy_from_args(&self) -> Option<CleanupPolicy> {
+        let retention_secs = self
+            .retention_time
+            .map(|d| d.as_secs() as u32)
+            .unwrap_or(streamfy_types::defaults::STORAGE_RETENTION_SECONDS);
+
+        match self.cleanup_policy.as_ref()? {
+            CleanupPolicyArg::Segment => Some(CleanupPolicy::Segment(SegmentBasedPolicy {
+                time_in_seconds: retention_secs,
+            })),
+            CleanupPolicyArg::Compact => Some(CleanupPolicy::Compact(CompactPolicy::default())),
+            CleanupPolicyArg::CompactAndDelete => {
+                Some(CleanupPolicy::CompactAndDelete(CompactAndDeletePolicy {
+                    compact: CompactPolicy::default(),
+                    segment: SegmentBasedPolicy {
+                        time_in_seconds: retention_secs,
+                    },
+                }))
+            }
+        }
+    }
 }
 
 /// module to load partitions maps from file

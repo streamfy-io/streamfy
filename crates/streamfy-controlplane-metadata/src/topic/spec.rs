@@ -941,9 +941,21 @@ impl RemoteMirrorConfig {
 #[derive(Decoder, Encoder, Debug, Clone, Eq, PartialEq)]
 #[cfg_attr(feature = "use_serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum CleanupPolicy {
+    /// Delete whole sealed segments by age/size (historical default).
     #[cfg_attr(feature = "use_serde", serde(rename = "segment"))]
     #[streamfy(tag = 0)]
     Segment(SegmentBasedPolicy),
+    /// Key-based log compaction: retain latest record per key.
+    #[cfg_attr(feature = "use_serde", serde(rename = "compact"))]
+    #[streamfy(tag = 1)]
+    Compact(CompactPolicy),
+    /// Compact keys and also delete old segments by retention/size.
+    #[cfg_attr(
+        feature = "use_serde",
+        serde(rename = "compact,delete", alias = "compact_and_delete")
+    )]
+    #[streamfy(tag = 2)]
+    CompactAndDelete(CompactAndDeletePolicy),
 }
 
 impl Default for CleanupPolicy {
@@ -953,9 +965,34 @@ impl Default for CleanupPolicy {
 }
 
 impl CleanupPolicy {
+    /// Segment TTL retention when delete-based cleanup applies.
     pub fn retention_secs(&self) -> u32 {
         match self {
             CleanupPolicy::Segment(policy) => policy.retention_secs(),
+            CleanupPolicy::Compact(_) => STORAGE_RETENTION_SECONDS,
+            CleanupPolicy::CompactAndDelete(policy) => policy.segment.retention_secs(),
+        }
+    }
+
+    pub fn is_compact_enabled(&self) -> bool {
+        matches!(
+            self,
+            CleanupPolicy::Compact(_) | CleanupPolicy::CompactAndDelete(_)
+        )
+    }
+
+    pub fn is_delete_enabled(&self) -> bool {
+        matches!(
+            self,
+            CleanupPolicy::Segment(_) | CleanupPolicy::CompactAndDelete(_)
+        )
+    }
+
+    pub fn compact_policy(&self) -> Option<&CompactPolicy> {
+        match self {
+            CleanupPolicy::Compact(p) => Some(p),
+            CleanupPolicy::CompactAndDelete(p) => Some(&p.compact),
+            CleanupPolicy::Segment(_) => None,
         }
     }
 }
@@ -974,6 +1011,63 @@ impl SegmentBasedPolicy {
     pub fn retention_secs(&self) -> u32 {
         self.time_in_seconds
     }
+}
+
+/// Key-based log compaction settings.
+#[derive(Decoder, Encoder, Debug, Clone, Eq, PartialEq)]
+#[cfg_attr(
+    feature = "use_serde",
+    derive(serde::Serialize, serde::Deserialize),
+    serde(rename_all = "camelCase")
+)]
+pub struct CompactPolicy {
+    /// Compact when dirty (superseded) records exceed this percent of total (0–100).
+    #[cfg_attr(
+        feature = "use_serde",
+        serde(default = "default_min_cleanable_dirty_ratio")
+    )]
+    pub min_cleanable_dirty_ratio: u32,
+    /// How long to retain tombstones (empty-value deletes) before removing the key.
+    #[cfg_attr(
+        feature = "use_serde",
+        serde(default = "default_delete_retention_secs")
+    )]
+    pub delete_retention_secs: u32,
+    /// Minimum age of a record before it may be removed by compaction.
+    #[cfg_attr(feature = "use_serde", serde(default))]
+    pub min_compaction_lag_secs: u32,
+}
+
+impl Default for CompactPolicy {
+    fn default() -> Self {
+        Self {
+            min_cleanable_dirty_ratio: default_min_cleanable_dirty_ratio(),
+            delete_retention_secs: default_delete_retention_secs(),
+            min_compaction_lag_secs: 0,
+        }
+    }
+}
+
+const fn default_min_cleanable_dirty_ratio() -> u32 {
+    50
+}
+
+const fn default_delete_retention_secs() -> u32 {
+    86_400
+}
+
+/// Compaction plus segment-based delete retention.
+#[derive(Decoder, Encoder, Default, Debug, Clone, Eq, PartialEq)]
+#[cfg_attr(
+    feature = "use_serde",
+    derive(serde::Serialize, serde::Deserialize),
+    serde(rename_all = "camelCase")
+)]
+pub struct CompactAndDeletePolicy {
+    #[cfg_attr(feature = "use_serde", serde(default))]
+    pub compact: CompactPolicy,
+    #[cfg_attr(feature = "use_serde", serde(default))]
+    pub segment: SegmentBasedPolicy,
 }
 
 #[derive(Decoder, Encoder, Default, Debug, Clone, Eq, PartialEq)]

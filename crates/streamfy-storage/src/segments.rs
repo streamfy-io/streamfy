@@ -151,6 +151,40 @@ impl SharedSegments {
             }
         }
     }
+
+    /// Atomically replace sealed segments: remove `old_bases`, add `new_segments`,
+    /// then delete old segment files from disk.
+    #[instrument(skip(self, new_segments))]
+    pub(crate) async fn replace_segments(
+        &self,
+        old_bases: &[Offset],
+        new_segments: Vec<ReadSegment>,
+    ) {
+        let mut write = self.write().await;
+        let mut removed = Vec::with_capacity(old_bases.len());
+        for base in old_bases {
+            if let Some((segment, _)) = write.remove_segment(base) {
+                removed.push(segment);
+            }
+        }
+        for segment in new_segments {
+            write.add_segment(segment);
+        }
+        let min_offset = write.min_offset;
+        drop(write);
+        self.min_offset.store(min_offset, MEM_ORDER);
+
+        for old in removed {
+            if let Err(err) = old.remove().await {
+                error!("failed to remove compacted-out segment: {:#?}", err);
+            }
+        }
+    }
+
+    /// All base offsets currently held (sorted ascending via BTreeMap).
+    pub(crate) async fn base_offsets(&self) -> Vec<Offset> {
+        self.read().await.base_offsets()
+    }
 }
 
 #[derive(Debug)]
@@ -261,6 +295,14 @@ impl SegmentList {
     #[instrument(skip(self))]
     pub(crate) fn find_first(&self, count: usize) -> Vec<Offset> {
         self.segments.keys().take(count).copied().collect()
+    }
+
+    pub(crate) fn base_offsets(&self) -> Vec<Offset> {
+        self.segments.keys().copied().collect()
+    }
+
+    pub(crate) fn segments_in_order(&self) -> impl Iterator<Item = &ReadSegment> {
+        self.segments.values()
     }
 }
 

@@ -9,6 +9,7 @@ use streamfy_future::task::spawn;
 use streamfy_future::timer::sleep;
 use streamfy_types::event::StickyEvent;
 
+use crate::compact;
 use crate::config::{SharedReplicaConfig, StorageConfig};
 use crate::replica::ReplicaSize;
 use crate::segments::SharedSegments;
@@ -72,13 +73,33 @@ impl Cleaner {
                     break;
                 },
                 _ = sleep(sleep_period) => {
-                    self.enforce_size().await;
-                    self.enforce_ttl().await;
+                    self.enforce_compaction().await;
+                    if self.replica_config.delete_enabled() {
+                        self.enforce_size().await;
+                        self.enforce_ttl().await;
+                    }
                 }
             }
         }
 
         info!("cleaner end");
+    }
+
+    #[instrument(skip(self))]
+    async fn enforce_compaction(&self) {
+        match compact::maybe_compact(&self.replica_config, &self.segments).await {
+            Ok(true) => {
+                let read = self.segments.read().await;
+                self.replica_size.store_prev(read.occupied_memory());
+                info!("compaction completed; replica size updated");
+            }
+            Ok(false) => {
+                debug!("compaction skipped");
+            }
+            Err(err) => {
+                tracing::error!(?err, "compaction failed");
+            }
+        }
     }
 
     #[instrument(skip(self))]
