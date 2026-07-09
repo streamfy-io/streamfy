@@ -1,20 +1,23 @@
 <div align="center">
+  <img src="docs/assets/streamfy-logo.png" alt="Streamfy" width="400" />
   <h1>Streamfy</h1>
   <p><em>A fork of <a href="https://github.com/fluvio-community/fluvio">Fluvio</a> by InfinyOn</em></p>
   <!-- <br> -->
   <!-- <br> -->
 
-<!-- [![CI Status](https://github.com/streamfy-community/streamfy/actions/workflows/hourly.yml/badge.svg)](https://github.com/streamfy-community/streamfy/actions/workflows/hourly.yml) -->
-<!--   [![CD Status](https://github.com/streamfy-community/streamfy/workflows/CD_Dev/badge.svg)](https://github.com/streamfy-community/streamfy/actions/workflows/cd_dev.yaml) -->
+<!-- [![CI Status](https://github.com/streamfy-io/streamfy/actions/workflows/hourly.yml/badge.svg)](https://github.com/streamfy-community/streamfy/actions/workflows/hourly.yml) -->
+<!--   [![CD Status](https://github.com/streamfy-io/streamfy/workflows/CD_Dev/badge.svg)](https://github.com/streamfy-community/streamfy/actions/workflows/cd_dev.yaml) -->
 <!--   [![streamfy Crates.io version](https://img.shields.io/crates/v/streamfy?style=flat)](https://crates.io/crates/streamfy) -->
 <!--   [![Streamfy Rust documentation](https://docs.rs/streamfy/badge.svg)](https://docs.rs/streamfy) -->
-<!--   [![Streamfy dependency status](https://deps.rs/repo/github/streamfy-community/streamfy/status.svg)](https://deps.rs/repo/github/streamfy-community/streamfy) -->
+<!--   [![Streamfy dependency status](https://deps.rs/repo/github/streamfy-io/streamfy/status.svg)](https://deps.rs/repo/github/streamfy-community/streamfy) -->
 <!--   [![Streamfy Discord](https://img.shields.io/discord/695712741381636168.svg?logo=discord&style=flat)](https://discordapp.com/invite/bBG2dTz) -->
 
 <!-- <br> -->
 
   <!-- <br> -->
 </div>
+
+## What is Streamfy?
 
 **Streamfy** is a distributed streaming engine plataform written in Rust. 
 
@@ -27,7 +30,7 @@ Streamfy is installed via the **Streamfy Version Manager**, shortened to `svm`.
 To install `svm`, run the following command:
 
 ```bash
-curl -fsS https://raw.githubusercontent.com/streamfy-community/streamfy/master/install.sh | bash
+curl -fsS https://raw.githubusercontent.com/streamfy-io/streamfy/main/install.sh | bash
 ```
 
 
@@ -78,8 +81,8 @@ Just like that! You have a local cluster running.
 <!-- [Contributing guide](CONTRIBUTING.md). -->
 <!---->
 <!-- ### Contributors are awesome -->
-<!-- <a href="https://github.com/streamfy-community/streamfy/graphs/contributors"> -->
-<!--   <img src="https://contrib.rocks/image?repo=streamfy-community/streamfy" /> -->
+<!-- <a href="https://github.com/streamfy-io/streamfy/graphs/contributors"> -->
+<!--   <img src="https://contrib.rocks/image?repo=streamfy-io/streamfy" /> -->
 <!-- </a> -->
 <!---->
 <!-- Made with [contrib.rocks](https://contrib.rocks). -->

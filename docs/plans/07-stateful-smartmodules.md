@@ -12,7 +12,7 @@ SmartModules currently support stateless transforms (filter, map, filter_map, ar
 - **State backend**: aggregate state is in-memory only, lost on restart.
 - **Joins**: no stream-stream or stream-table joins.
 
-The `rfc/materialize_view.md` describes an ambitious vision (columnar topics, view joins, SQL-like queries) but none of it is implemented.
+The `docs/rfc/materialize_view.md` describes an ambitious vision (columnar topics, view joins, SQL-like queries) but none of it is implemented.
 
 ## Goal
 
