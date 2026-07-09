@@ -5,7 +5,7 @@
 
 ## Problem
 
-Streamfy has basic consumer offset management (per-consumer-id offset tracking with TTL, as described in `rfc/offset-management.md`) but no consumer group coordination. Each consumer independently reads from specific partitions. There is no:
+Streamfy has basic consumer offset management (per-consumer-id offset tracking with TTL, as described in `docs/rfc/offset-management.md`) but no consumer group coordination. Each consumer independently reads from specific partitions. There is no:
 
 - Automatic partition assignment across multiple consumers in a group.
 - Rebalancing when consumers join or leave.

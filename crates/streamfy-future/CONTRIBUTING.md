@@ -29,7 +29,7 @@ Please open an Issue on GitHub with the label `question`.
 
 Follow our [Installation Guide](https://github.com/streamfy/streamfy/blob/master/doc/INSTALL.md) to get streamfy up and running.
 
-To learn about the Streamfy Architecture, please visit the [Developer](https://github.com/streamfy/streamfy/blob/master/DEVELOPER.md) section.
+To learn about the Streamfy Architecture, please visit the [Developer](https://github.com/streamfy-io/streamfy/blob/main/docs/DEVELOPER.md) section.
 
 ## Contributing
 

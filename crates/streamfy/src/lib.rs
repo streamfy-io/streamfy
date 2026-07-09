@@ -1,6 +1,6 @@
 #![cfg_attr(
     feature = "nightly",
-    doc = include_str!("../../../DEVELOPER.md")
+    doc = include_str!("../../../docs/DEVELOPER.md")
 )]
 #![doc = include_str!("../README.md")]
 
