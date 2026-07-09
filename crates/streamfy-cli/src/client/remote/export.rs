@@ -164,7 +164,8 @@ mod tests {
     #[cfg(unix)]
     #[test]
     fn test_get_tls_config_on_unix() {
-        let streamfy_config = streamfy::config::StreamfyClusterConfig::new("localhost:9003".to_owned());
+        let streamfy_config =
+            streamfy::config::StreamfyClusterConfig::new("localhost:9003".to_owned());
         let cert_dir = std::env::current_dir()
             .unwrap()
             .join("..")
@@ -221,7 +222,8 @@ mod tests {
     #[cfg(unix)]
     #[test]
     fn test_get_tls_config_no_cert_key_when_tls_on_unix() {
-        let streamfy_config = streamfy::config::StreamfyClusterConfig::new("localhost:9003".to_owned());
+        let streamfy_config =
+            streamfy::config::StreamfyClusterConfig::new("localhost:9003".to_owned());
         let cert_dir = std::env::current_dir()
             .unwrap()
             .join("..")
@@ -256,7 +258,8 @@ mod tests {
     #[cfg(unix)]
     #[test]
     fn test_get_tls_config_wrong_cn_on_unix() {
-        let streamfy_config = streamfy::config::StreamfyClusterConfig::new("localhost:9003".to_owned());
+        let streamfy_config =
+            streamfy::config::StreamfyClusterConfig::new("localhost:9003".to_owned());
         let cert_dir = std::env::current_dir()
             .unwrap()
             .join("..")

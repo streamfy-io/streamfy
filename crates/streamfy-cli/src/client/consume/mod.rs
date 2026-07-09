@@ -375,9 +375,11 @@ mod cmd {
                 eprintln!(
                     "Argument end-offset must be greater than or equal to specified start offset"
                 );
-                return Err(
-                    CliError::from(StreamfyError::CrossingOffsets(start_offset, end_offset)).into(),
-                );
+                return Err(CliError::from(StreamfyError::CrossingOffsets(
+                    start_offset,
+                    end_offset,
+                ))
+                .into());
             }
 
             if let Some(isolation) = self.isolation {

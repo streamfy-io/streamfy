@@ -4,7 +4,9 @@ use crate::{config::ConnectorConfig, Result};
 
 use crate::{ensure_topic_exists, smartmodule::smartmodule_chain_from_config};
 
-pub async fn producer_from_config(config: &ConnectorConfig) -> Result<(Streamfy, TopicProducerPool)> {
+pub async fn producer_from_config(
+    config: &ConnectorConfig,
+) -> Result<(Streamfy, TopicProducerPool)> {
     let mut cluster_config = StreamfyClusterConfig::load()?;
     cluster_config.client_id = Some(format!("streamfy_connector_{}", &config.meta().name()));
 

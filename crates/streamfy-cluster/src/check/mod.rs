@@ -615,7 +615,9 @@ impl ClusterCheck for AlreadyInstalled {
                 UnrecoverableCheckStatus::AlreadyInstalled,
             ));
         }
-        Ok(CheckStatus::pass("Previous streamfy installation not found"))
+        Ok(CheckStatus::pass(
+            "Previous streamfy installation not found",
+        ))
     }
 
     fn required_components(&self) -> Vec<StreamfyClusterComponent> {
@@ -696,7 +698,12 @@ impl ClusterCheck for LocalClusterCheck {
         sys.refresh_processes(sysinfo::ProcessesToUpdate::All, true); // Only load what we need.
         let proc_count = sys
             .processes_by_exact_name("streamfy-run".as_ref())
-            .map(|x| println!("       found existing streamfy-run process. pid: {}", x.pid()))
+            .map(|x| {
+                println!(
+                    "       found existing streamfy-run process. pid: {}",
+                    x.pid()
+                )
+            })
             .count();
         if proc_count > 0 {
             return Ok(CheckStatus::Unrecoverable(

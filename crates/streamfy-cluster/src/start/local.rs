@@ -30,8 +30,9 @@ use crate::progress::{InstallProgressMessage, ProgressBarFactory};
 use super::constants::MAX_PROVISION_TIME_SEC;
 use super::common::check_crd;
 
-pub static LOCAL_CONFIG_PATH: Lazy<Option<PathBuf>> =
-    Lazy::new(|| directories::BaseDirs::new().map(|it| it.home_dir().join(".streamfy/local-config")));
+pub static LOCAL_CONFIG_PATH: Lazy<Option<PathBuf>> = Lazy::new(|| {
+    directories::BaseDirs::new().map(|it| it.home_dir().join(".streamfy/local-config"))
+});
 pub static DEFAULT_DATA_DIR: Lazy<Option<PathBuf>> =
     Lazy::new(|| directories::BaseDirs::new().map(|it| it.home_dir().join(".streamfy/data")));
 pub const DEFAULT_METADATA_SUB_DIR: &str = "metadata";

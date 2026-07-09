@@ -15,10 +15,13 @@ use anyhow::{anyhow, Result};
 
 use streamfy_future::task::run_block_on;
 use streamfy_channel::{
-    StreamfyChannelConfig, StreamfyChannelInfo, StreamfyBinVersion, DEV_CHANNEL_NAME, STABLE_CHANNEL_NAME,
+    StreamfyChannelConfig, StreamfyChannelInfo, StreamfyBinVersion, DEV_CHANNEL_NAME,
+    STABLE_CHANNEL_NAME,
 };
 use streamfy_channel::ImageTagStrategy;
-use streamfy_cli_common::{STREAMFY_RELEASE_CHANNEL, STREAMFY_EXTENSIONS_DIR, STREAMFY_IMAGE_TAG_STRATEGY};
+use streamfy_cli_common::{
+    STREAMFY_RELEASE_CHANNEL, STREAMFY_EXTENSIONS_DIR, STREAMFY_IMAGE_TAG_STRATEGY,
+};
 
 use streamfy_channel_cli::cli::create::CreateOpt;
 use streamfy_channel_cli::cli::delete::DeleteOpt;

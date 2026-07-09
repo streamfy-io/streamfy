@@ -216,10 +216,12 @@ mod extended {
                     Ok(config) => match k8_obj.metadata.try_into() {
                         Ok(ctx_item) => {
                             let ctx = MetadataContext::new(ctx_item);
-                            Ok(
-                                MetadataStoreObject::new("streamfy", config, StreamfyConfigStatus {})
-                                    .with_context(ctx),
+                            Ok(MetadataStoreObject::new(
+                                "streamfy",
+                                config,
+                                StreamfyConfigStatus {},
                             )
+                            .with_context(ctx))
                         }
                         Err(err) => Err(K8ConvertError::KeyConvertionError(IoError::new(
                             ErrorKind::InvalidData,

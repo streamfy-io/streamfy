@@ -267,7 +267,9 @@ impl GenerateCmd {
         } else if let Some(path) = self.template_path {
             SmdkTemplate::source(SmdkTemplateSource::LocalPath(path.into()))?
         } else if self.develop {
-            SmdkTemplate::source(SmdkTemplateSource::Git(STREAMFY_SMARTMODULE_REPO.to_string()))?
+            SmdkTemplate::source(SmdkTemplateSource::Git(
+                STREAMFY_SMARTMODULE_REPO.to_string(),
+            ))?
         } else {
             SmdkTemplate::default()?
         };

@@ -19,7 +19,8 @@ pub struct VersionOpt {
 
 impl VersionOpt {
     pub async fn process(self, target: ClusterTarget) -> Result<()> {
-        let mut version_printer = StreamfyVersionPrinter::new("Streamfy CLI", crate::VERSION.trim());
+        let mut version_printer =
+            StreamfyVersionPrinter::new("Streamfy CLI", crate::VERSION.trim());
 
         if let Ok(channel_name) = std::env::var(STREAMFY_RELEASE_CHANNEL) {
             version_printer.append_extra("Release Channel", channel_name);

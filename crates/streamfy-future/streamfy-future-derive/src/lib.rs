@@ -51,7 +51,6 @@ pub fn main_async(_attr: TokenStream, item: TokenStream) -> TokenStream {
 
 #[proc_macro_attribute]
 pub fn test_async(args: TokenStream, item: TokenStream) -> TokenStream {
-
     let attribute_args = syn::parse_macro_input!(args with syn::punctuated::Punctuated::<syn::Meta, syn::Token![,]>::parse_terminated);
     let input = syn::parse_macro_input!(item as ItemFn);
     let name = &input.sig.ident;
@@ -86,7 +85,6 @@ pub fn test_async(args: TokenStream, item: TokenStream) -> TokenStream {
 
 #[proc_macro_attribute]
 pub fn test(args: TokenStream, item: TokenStream) -> TokenStream {
-
     let attribute_args = syn::parse_macro_input!(args with syn::punctuated::Punctuated::<syn::Meta, syn::Token![,]>::parse_terminated);
     let input = syn::parse_macro_input!(item as ItemFn);
     let name = &input.sig.ident;
@@ -122,7 +120,9 @@ mod generate {
     use proc_macro2::TokenStream;
     use quote::quote;
 
-    pub fn generate_test_attributes(attributes: &syn::punctuated::Punctuated<syn::Meta, syn::Token![,]>) -> TokenStream {
+    pub fn generate_test_attributes(
+        attributes: &syn::punctuated::Punctuated<syn::Meta, syn::Token![,]>,
+    ) -> TokenStream {
         let args = attributes.iter().map(|meta| {
             quote! {
                 #[#meta]

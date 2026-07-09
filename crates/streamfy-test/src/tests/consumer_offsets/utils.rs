@@ -21,7 +21,11 @@ use futures_lite::StreamExt;
 
 pub(crate) const RECORDS_COUNT: usize = 100;
 
-pub(crate) async fn produce_records(client: &Streamfy, topic: &str, partitions: usize) -> Result<()> {
+pub(crate) async fn produce_records(
+    client: &Streamfy,
+    topic: &str,
+    partitions: usize,
+) -> Result<()> {
     let producer = client
         .topic_producer(topic)
         .await

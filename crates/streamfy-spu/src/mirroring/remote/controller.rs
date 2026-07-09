@@ -466,7 +466,11 @@ where
     }
 
     #[instrument]
-    async fn update_remote_as_source(&self, sink: &mut StreamfySink, home_leo: Offset) -> Result<()> {
+    async fn update_remote_as_source(
+        &self,
+        sink: &mut StreamfySink,
+        home_leo: Offset,
+    ) -> Result<()> {
         debug!("updating home cluster");
         if let Some(sync_request) = self.geneate_remote_record_as_source(home_leo).await? {
             debug!(?sync_request, "home sync");

@@ -404,7 +404,9 @@ pub(crate) fn generate_default_trait_impls(input: &DeriveItem) -> TokenStream {
 
 pub(crate) fn generate_default_impls(props: &StreamfyStructProps) -> TokenStream {
     match props {
-        StreamfyStructProps::Named(named_fields) => generate_default_impls_named_fields(named_fields),
+        StreamfyStructProps::Named(named_fields) => {
+            generate_default_impls_named_fields(named_fields)
+        }
         StreamfyStructProps::Unnamed(unnamed_fields) => {
             generate_default_impls_unnamed_fields(unnamed_fields)
         }

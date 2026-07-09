@@ -14,7 +14,8 @@ pub async fn smartmodule_chain_from_config(
     }
 
     let api_client =
-        SmartModuleApiClient::connect_with_config(StreamfyClusterConfig::load()?.try_into()?).await?;
+        SmartModuleApiClient::connect_with_config(StreamfyClusterConfig::load()?.try_into()?)
+            .await?;
     let mut builder = streamfy::SmartModuleChainBuilder::default();
 
     for step in transforms {

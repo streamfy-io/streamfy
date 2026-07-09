@@ -505,7 +505,8 @@ mod tests {
             },
             ..Default::default()
         });
-        let deployment1 = Deployment::from_image_name("streamfy/streamfy-connect-http_source:latest");
+        let deployment1 =
+            Deployment::from_image_name("streamfy/streamfy-connect-http_source:latest");
         let deployment2 = Deployment::from_image_name("streamfy/streamfy-connect-http_sink:latest");
         let deployment3 = Deployment::from_binary_name("http_sink_bin");
 

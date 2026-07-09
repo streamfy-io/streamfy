@@ -99,7 +99,10 @@ impl StreamfyVersionPrinter {
         let with_extras = self.with_dynamic_extras();
 
         serde_json::to_string(&with_extras).map_err(|err| {
-            anyhow::anyhow!("Failed to serialize StreamfyVersionPrinter to JSON: {}", err)
+            anyhow::anyhow!(
+                "Failed to serialize StreamfyVersionPrinter to JSON: {}",
+                err
+            )
         })
     }
 
@@ -108,7 +111,10 @@ impl StreamfyVersionPrinter {
         let with_extras = self.with_dynamic_extras();
 
         serde_json::to_string_pretty(&with_extras).map_err(|err| {
-            anyhow::anyhow!("Failed to serialize StreamfyVersionPrinter to JSON: {}", err)
+            anyhow::anyhow!(
+                "Failed to serialize StreamfyVersionPrinter to JSON: {}",
+                err
+            )
         })
     }
 

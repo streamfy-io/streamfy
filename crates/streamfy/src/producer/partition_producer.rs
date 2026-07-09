@@ -11,7 +11,9 @@ use tracing::{debug, info, instrument, error, trace};
 
 use streamfy_protocol::record::ReplicaKey;
 use streamfy_protocol::record::{RawRecords, Batch};
-use streamfy_spu_schema::produce::{DefaultPartitionRequest, DefaultTopicRequest, DefaultProduceRequest};
+use streamfy_spu_schema::produce::{
+    DefaultPartitionRequest, DefaultTopicRequest, DefaultProduceRequest,
+};
 use streamfy_future::timer::sleep;
 use streamfy_types::SpuId;
 use streamfy_types::event::StickyEvent;

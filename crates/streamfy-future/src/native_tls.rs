@@ -333,9 +333,7 @@ mod test {
     use crate::test_async;
     use crate::timer::sleep;
 
-    use super::{
-        AcceptorBuilder, ConnectorBuilder, IdentityBuilder, PrivateKeyBuilder, X509PemBuilder,
-    };
+    use super::{AcceptorBuilder, ConnectorBuilder, IdentityBuilder, PrivateKeyBuilder, X509PemBuilder};
 
     const CA_PATH: &str = "certs/test-certs/ca.crt";
     const SERVER_IDENTITY: &str = "certs/test-certs/server.pfx";
