@@ -1,6 +1,12 @@
 RUST_DOCKER_IMAGE=rust:latest
 CERT_OPTS ?=
-PFX_OPTS ?= ""
+# Detect OpenSSL 3 (needs -legacy for pkcs12); LibreSSL/macOS system openssl does not.
+OPENSSL_VERSION_STR := $(shell openssl version 2>/dev/null)
+ifeq ($(findstring OpenSSL 3,$(OPENSSL_VERSION_STR)),OpenSSL 3)
+PFX_OPTS ?= -legacy
+else
+PFX_OPTS ?=
+endif
 CARGO_TEST_OPTS ?= ""
 
 build-all:
@@ -8,7 +14,7 @@ build-all:
 
 .PHONY: certs
 certs:
-	make -C certs generate-certs PFX_OPTS=${PFX_OPTS}
+	$(MAKE) -C certs generate-certs PFX_OPTS="$(PFX_OPTS)"
 
 cert-patch-macos:
 	sed -i '' 's/RSA PRIVATE KEY/PRIVATE KEY/' certs/test-certs/server-hs.key

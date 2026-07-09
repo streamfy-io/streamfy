@@ -1,6 +1,6 @@
-# -legacy is an openssl3 option for pkcs12 formats whose default
-# has shifted
-PFX_OPTS ?= "-legacy"
+# -legacy is an openssl3 option for pkcs12 formats whose default has shifted.
+# Leave empty for LibreSSL (macOS system openssl). CI/Ubuntu OpenSSL 3 needs -legacy.
+PFX_OPTS ?=
 
 clean:
 	rm -rf test-certs
