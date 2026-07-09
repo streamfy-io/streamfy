@@ -39,7 +39,12 @@ build_smartmodules:
 generate-streamfy-future-certs:
 	$(MAKE) -C crates/streamfy-future certs
 
-run-all-unit-test: install_rustup_target generate-streamfy-future-certs
+# Inline helm charts (include_dir!) are built from gitignored pkg_{sys,app} dirs.
+.PHONY: package-helm-charts
+package-helm-charts:
+	$(MAKE) -C k8-util/helm package
+
+run-all-unit-test: install_rustup_target generate-streamfy-future-certs package-helm-charts
 	cargo test --lib --all-features $(BUILD_FLAGS)
 	cargo test -p streamfy-smartmodule $(BUILD_FLAGS)
 	cargo test -p streamfy-storage $(BUILD_FLAGS)

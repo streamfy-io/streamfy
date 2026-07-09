@@ -40,6 +40,8 @@ jobs:
           toolchain: "1.96.0"
       - name: Install zig
         run: ./actions/zig-install.sh
+      - name: Install Helm
+        run: curl -fsSL https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
       - name: Free disk space
         run: rm -rf /opt/hostedtoolcache
       - uses: Swatinem/rust-cache@v2
