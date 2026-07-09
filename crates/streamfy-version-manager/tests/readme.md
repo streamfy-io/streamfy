@@ -1,6 +1,6 @@
 
-# install-fvm.sh Notes
+# install-svm.sh Notes
 
-Trial download script for fvm
+Trial download script for svm
 
 

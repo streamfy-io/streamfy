@@ -294,7 +294,7 @@ fn main() -> Result<()> {
         && args.contains(&"update".to_string())
         && streamfy_channel::is_pinned_version_channel(channel_name.as_str())
     {
-        println!("Unsupported Feature: The `streamfy update` command is not supported use fvm");
+        println!("Unsupported Feature: The `streamfy update` command is not supported use svm");
         std::process::exit(1);
     }
 

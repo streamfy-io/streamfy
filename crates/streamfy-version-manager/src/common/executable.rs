@@ -4,14 +4,14 @@ use std::fs::remove_file;
 
 use anyhow::Result;
 
-use super::workdir::fvm_bin_path;
+use super::workdir::svm_bin_path;
 
-/// Removes FVM Binary if present in the FVM home directory
-pub fn remove_fvm_binary_if_exists() -> Result<()> {
-    let fvm_binary_path = fvm_bin_path()?;
+/// Removes SVM Binary if present in the SVM home directory
+pub fn remove_svm_binary_if_exists() -> Result<()> {
+    let svm_binary_path = svm_bin_path()?;
 
-    if fvm_binary_path.exists() {
-        remove_file(fvm_binary_path)?;
+    if svm_binary_path.exists() {
+        remove_file(svm_binary_path)?;
     }
 
     Ok(())

@@ -4,10 +4,10 @@ use anyhow::{Result, Error};
 use clap::Args;
 use colored::Colorize;
 
-use streamfy_artifacts_util::fvm::{Client, Channel, PackageSet};
+use streamfy_artifacts_util::svm::{Client, Channel, PackageSet};
 
 use crate::common::version_directory::VersionDirectory;
-use crate::common::workdir::fvm_versions_path;
+use crate::common::workdir::svm_versions_path;
 use crate::common::TARGET;
 use crate::common::notify::Notify;
 use crate::common::settings::Settings;
@@ -20,7 +20,7 @@ impl UpdateOpt {
     pub async fn process(self, notify: Notify) -> Result<()> {
         let settings = Settings::open()?;
         let Some(channel) = settings.channel else {
-            notify.info("No channel set, please set a channel first using `fvm switch`");
+            notify.info("No channel set, please set a channel first using `svm switch`");
             return Ok(());
         };
 
@@ -34,7 +34,7 @@ impl UpdateOpt {
         let latest_pkgset = self.fetch_latest_version(&channel).await?;
         let Some(version) = settings.version else {
             notify.info(
-                "No installed version detected, please install a version first using `fvm install`",
+                "No installed version detected, please install a version first using `svm install`",
             );
             return Ok(());
         };
@@ -58,7 +58,7 @@ impl UpdateOpt {
 
                 if ps_version == ch_version {
                     // Check for patches
-                    let curr_version_path = fvm_versions_path()?.join(channel.to_string());
+                    let curr_version_path = svm_versions_path()?.join(channel.to_string());
                     let curr_version_dir = VersionDirectory::open(curr_version_path)?;
                     let curr_version_pkgset = curr_version_dir.as_package_set()?;
                     let upstream_artifacts = curr_version_pkgset.artifacts_diff(&latest_pkgset);

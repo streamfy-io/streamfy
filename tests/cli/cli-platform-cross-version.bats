@@ -15,7 +15,7 @@ setup_file() {
     CLI_VERSION="${CLI_VERSION:-latest}"
     export CLI_VERSION
     
-    STREAMFY_CLIENT_BIN="${STREAMFY_CLIENT_BIN:-$HOME/.fvm/versions/$CLI_VERSION/streamfy}"
+    STREAMFY_CLIENT_BIN="${STREAMFY_CLIENT_BIN:-$HOME/.svm/versions/$CLI_VERSION/streamfy}"
     export STREAMFY_CLIENT_BIN
 
     PAYLOAD_SIZE="${PAYLOAD_SIZE:-100}"

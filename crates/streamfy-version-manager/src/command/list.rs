@@ -7,13 +7,13 @@ use clap::Parser;
 use colored::Colorize;
 use comfy_table::{Table, Row};
 
-use streamfy_artifacts_util::fvm::Channel;
+use streamfy_artifacts_util::svm::Channel;
 
 use crate::common::manifest::VersionManifest;
 use crate::common::notify::Notify;
 use crate::common::settings::Settings;
 use crate::common::version_directory::VersionDirectory;
-use crate::common::workdir::fvm_versions_path;
+use crate::common::workdir::svm_versions_path;
 
 #[derive(Debug, Parser)]
 pub struct ListOpt {
@@ -24,13 +24,13 @@ pub struct ListOpt {
 
 impl ListOpt {
     pub async fn process(&self, notify: Notify) -> Result<()> {
-        let versions_path = fvm_versions_path()?;
+        let versions_path = svm_versions_path()?;
 
         if !versions_path.exists() {
             notify.warn("Cannot list installed versions because there are no versions installed");
             notify.help(format!(
                 "You can install a Streamfy version using the command {}",
-                "fvm install".bold()
+                "svm install".bold()
             ));
 
             return Err(anyhow!("No versions installed"));
@@ -60,7 +60,7 @@ impl ListOpt {
                     return Ok(());
                 }
 
-                let suggested_command = format!("{} {}", "fvm install", channel);
+                let suggested_command = format!("{} {}", "svm install", channel);
 
                 notify.help(format!(
                     "No version contents recorded. You can upadate included artifact details by reinstalling this version. {}",
@@ -79,7 +79,7 @@ impl ListOpt {
             notify.warn("No installed versions found");
             notify.help(format!(
                 "You can install a Streamfy version using the command {}",
-                "fvm install".bold()
+                "svm install".bold()
             ));
 
             return Ok(());

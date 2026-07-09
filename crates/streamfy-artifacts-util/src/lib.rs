@@ -3,7 +3,7 @@ mod utils;
 
 pub mod htclient;
 
-pub mod fvm;
+pub mod svm;
 
 pub use http;
 pub use package_meta_ext::*;

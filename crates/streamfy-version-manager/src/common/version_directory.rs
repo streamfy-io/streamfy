@@ -5,7 +5,7 @@ use std::path::PathBuf;
 
 use anyhow::{bail, Result};
 
-use streamfy_artifacts_util::fvm::{Artifact, Channel, PackageSet};
+use streamfy_artifacts_util::svm::{Artifact, Channel, PackageSet};
 use semver::Version;
 
 use crate::common::manifest::{PACKAGE_SET_MANIFEST_FILENAME, VersionManifest};
@@ -13,7 +13,7 @@ use crate::common::settings::Settings;
 use crate::common::workdir::streamfy_binaries_path;
 use crate::common::TARGET;
 
-/// Represents the contents of a version directory (`~/.fvm/versions/<version>`)
+/// Represents the contents of a version directory (`~/.svm/versions/<version>`)
 /// where binaries and the manifest are stored.
 ///
 /// The `VersionDirectory` represents the contents of a version directory
@@ -201,7 +201,7 @@ mod tests {
     use streamfy_artifacts_util::sha256_digest;
 
     use crate::common::manifest::VersionedArtifact;
-    use crate::common::settings::tests::{create_fvm_dir, delete_fvm_dir};
+    use crate::common::settings::tests::{create_svm_dir, delete_svm_dir};
 
     use super::*;
 
@@ -302,7 +302,7 @@ mod tests {
 
     #[test]
     fn sets_as_active_directory() {
-        create_fvm_dir();
+        create_svm_dir();
 
         let tmpdir = make_version_directory().unwrap();
         let version_dir = VersionDirectory::open(tmpdir.path().to_path_buf()).unwrap();
@@ -346,7 +346,7 @@ mod tests {
         );
         assert_eq!(settings.channel.unwrap(), version_dir.manifest.channel);
 
-        delete_fvm_dir();
+        delete_svm_dir();
     }
 
     #[test]

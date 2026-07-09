@@ -1,5 +1,5 @@
 # Use the binary name produced by cargo
-PUBLISH_BINARIES=streamfy streamfy-run streamfy-channel streamfy-test smdk fvm
+PUBLISH_BINARIES=streamfy streamfy-run streamfy-channel streamfy-test smdk svm
 PUBLISH_BINARIES_HUB=cdk
 
 # CI has to set RELEASE=true to run commands that update public

@@ -5,18 +5,18 @@ use std::path::PathBuf;
 use anyhow::{anyhow, Result};
 use clap::Parser;
 
-use crate::common::executable::remove_fvm_binary_if_exists;
+use crate::common::executable::remove_svm_binary_if_exists;
 use crate::common::notify::Notify;
 use crate::common::settings::Settings;
-use crate::common::workdir::{fvm_bin_path, fvm_workdir_path, fvm_versions_path};
+use crate::common::workdir::{svm_bin_path, svm_workdir_path, svm_versions_path};
 
-const FVM_ENV_FILE_CONTENTS: &str = r#"
+const SVM_ENV_FILE_CONTENTS: &str = r#"
 #!/bin/sh
 case ":${PATH}:" in
-    *:"$HOME/.fvm/bin":*)
+    *:"$HOME/.svm/bin":*)
         ;;
     *)
-        export PATH="$PATH:$HOME/.fvm/bin:$HOME/.streamfy/bin"
+        export PATH="$PATH:$HOME/.svm/bin:$HOME/.streamfy/bin"
         ;;
 esac
 "#;
@@ -26,20 +26,20 @@ pub struct SelfInstallOpt;
 
 impl SelfInstallOpt {
     pub async fn process(&self, notify: Notify) -> Result<()> {
-        let fvm_installation_path = self.install_fvm()?;
+        let svm_installation_path = self.install_svm()?;
 
         Settings::open()?;
 
         notify.done(format!(
-            "FVM installed successfully at {}",
-            fvm_installation_path.display()
+            "SVM installed successfully at {}",
+            svm_installation_path.display()
         ));
-        notify.help(format!("Add FVM to PATH using {}", "source $HOME/.fvm/env"));
+        notify.help(format!("Add SVM to PATH using {}", "source $HOME/.svm/env"));
 
         Ok(())
     }
 
-    /// Creates the `~/.fvm` directory and copies the current binary to this
+    /// Creates the `~/.svm` directory and copies the current binary to this
     /// directory.
     ///
     /// # Usage of `create_dir` over `create_dir_all`
@@ -50,60 +50,60 @@ impl SelfInstallOpt {
     /// Something similar happens on `mkdir` command, even though underlaying
     /// syscalls may differ.
     ///
-    /// Consider the existent directory `~/.fvm/versions`, executing `create_dir`
+    /// Consider the existent directory `~/.svm/versions`, executing `create_dir`
     /// will fail with error:
     ///
     /// ```ignore
-    /// ~/.fvm/versions: File exists
+    /// ~/.svm/versions: File exists
     /// ```
     ///
     /// Instead by doing `create_dir_all` the error will not happen.
     ///
     /// ```ignore
-    /// mkdir -p ~/.fvm/versions
+    /// mkdir -p ~/.svm/versions
     /// ```
     ///
-    fn install_fvm(&self) -> Result<PathBuf> {
-        // Creates the directory `~/.fvm` if doesn't exists
-        let fvm_dir = fvm_workdir_path()?;
+    fn install_svm(&self) -> Result<PathBuf> {
+        // Creates the directory `~/.svm` if doesn't exists
+        let svm_dir = svm_workdir_path()?;
 
         // Creates the binaries directory
-        let bin_dir = fvm_dir.join("bin");
+        let bin_dir = svm_dir.join("bin");
         create_dir_all(bin_dir)?;
 
-        let fvm_binary_path = fvm_bin_path()?;
+        let svm_binary_path = svm_bin_path()?;
         let current_binary_path = current_exe()?;
 
-        if fvm_binary_path == current_binary_path {
-            // We cant replace ourselves, user is running `fvm self install`
+        if svm_binary_path == current_binary_path {
+            // We cant replace ourselves, user is running `svm self install`
             // from the binary itself and not from the installer script.
-            return Err(anyhow::anyhow!("FVM is already installed"));
+            return Err(anyhow::anyhow!("SVM is already installed"));
         }
 
-        remove_fvm_binary_if_exists()?;
+        remove_svm_binary_if_exists()?;
 
-        // Copies "this" binary to the FVM binary directory
-        copy(current_binary_path.clone(), fvm_binary_path.clone()).map_err(|e| {
+        // Copies "this" binary to the SVM binary directory
+        copy(current_binary_path.clone(), svm_binary_path.clone()).map_err(|e| {
             anyhow!(
-                "Couldn't copy fvm from {} to {} with error {}",
+                "Couldn't copy svm from {} to {} with error {}",
                 current_binary_path.display(),
-                fvm_binary_path.display(),
+                svm_binary_path.display(),
                 e
             )
         })?;
         tracing::debug!(
-            ?fvm_dir,
-            "Copied the FVM binary to the FVM home directory with success"
+            ?svm_dir,
+            "Copied the SVM binary to the SVM home directory with success"
         );
 
         // Creates the package set directory
-        let fvm_pkgset_dir = fvm_versions_path()?;
-        create_dir_all(fvm_pkgset_dir)?;
+        let svm_pkgset_dir = svm_versions_path()?;
+        create_dir_all(svm_pkgset_dir)?;
 
         // Creates the `env` file
-        let fvm_env_file_path = fvm_dir.join("env");
-        write(fvm_env_file_path, FVM_ENV_FILE_CONTENTS)?;
+        let svm_env_file_path = svm_dir.join("env");
+        write(svm_env_file_path, SVM_ENV_FILE_CONTENTS)?;
 
-        Ok(fvm_dir)
+        Ok(svm_dir)
     }
 }

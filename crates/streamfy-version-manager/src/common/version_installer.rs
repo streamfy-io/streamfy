@@ -4,13 +4,13 @@ use std::fs::{copy, create_dir, remove_file, rename};
 use anyhow::{anyhow, Result};
 use tempfile::TempDir;
 
-use streamfy_artifacts_util::fvm::{Artifact, Channel, Download, PackageSet};
+use streamfy_artifacts_util::svm::{Artifact, Channel, Download, PackageSet};
 
 use super::executable::set_executable_mode;
 use super::manifest::{VersionManifest, VersionedArtifact, PACKAGE_SET_MANIFEST_FILENAME};
 use super::notify::Notify;
 use super::version_directory::VersionDirectory;
-use super::workdir::fvm_versions_path;
+use super::workdir::svm_versions_path;
 
 pub struct VersionInstaller {
     channel: Channel,
@@ -135,13 +135,13 @@ impl VersionInstaller {
         Ok(tmp_dir)
     }
 
-    /// Allocates artifacts in the FVM `versions` directory for future use.
+    /// Allocates artifacts in the SVM `versions` directory for future use.
     /// Returns the path to the allocated version directory.
     ///
     /// If an artifact with the same name exists in the destination directory,
     /// it will be removed before copying the new artifact.
     async fn store_artifacts(&self, tmp_dir: &TempDir, artifacts: &[Artifact]) -> Result<PathBuf> {
-        let version_path = fvm_versions_path()?.join(self.channel.to_string());
+        let version_path = svm_versions_path()?.join(self.channel.to_string());
 
         if !version_path.exists() {
             create_dir(&version_path)?;

@@ -7,7 +7,7 @@ set -e
 set -o pipefail
 set -u
 
-readonly FVM_INSTALL_DIR=${FVM_INSTALL_DIR-"$HOME/.fvm"}
+readonly SVM_INSTALL_DIR=${SVM_INSTALL_DIR-"$HOME/.svm"}
 readonly STREAMFY_INSTALL_DIR=${STREAMFY_INSTALL_DIR-"$HOME/.streamfy"}
 readonly STREAMFY_ARCH=${STREAMFY_ARCH-}
 readonly STREAMFY_VERSION=${STREAMFY_VERSION-}
@@ -15,7 +15,7 @@ readonly VERSION=${VERSION-}
 
 _streamfy_version="${STREAMFY_VERSION:-${VERSION:-}}"
 
-# install fvm
+# install svm
 main() {
     need_cmd curl
     need_cmd unzip
@@ -34,40 +34,40 @@ main() {
     # the musl target release. The _target here is used in the URL to download
     _target=$(normalize_target ${_arch})
 
-    echo "☁️  Downloading streamfy version manager, fvm"
+    echo "☁️  Downloading streamfy version manager, svm"
     echo "   target arch ${_target}"
 
     _dir="$(mktemp -d 2>/dev/null || ensure mktemp -d -t streamfy-install)"
-    _temp_file="${_dir}/fvm.zip"
+    _temp_file="${_dir}/svm.zip"
     # todo: switch to hub/or streamfy packages download w/ checksum verification
-    _url="https://github.com/streamfy-io/streamfy/releases/download/dev/fvm-${_target}.zip"
+    _url="https://github.com/streamfy-io/streamfy/releases/download/dev/svm-${_target}.zip"
 
     # ".zip" will be removed in switch to hub/streamfypkgs
     downloader "${_url}" "${_temp_file}.zip"
     _status=$?
     if [ $_status -ne 0 ]; then
-        err "❌ Failed to download fvm!"
+        err "❌ Failed to download svm!"
         err "    Error downloading from ${_url}"
         abort_prompt_issue
     fi
 
     # ".zip" will be removed in switch to hub/streamfypkgs
     unzip -qq -d ${_dir} ${_temp_file}
-    chmod +x ${_dir}/fvm
+    chmod +x ${_dir}/svm
 
-	echo "⬇️ Installing fvm"
-    ${_dir}/fvm self install
+	echo "⬇️ Installing svm"
+    ${_dir}/svm self install
 
     #
-    # check if .streamfy exists, recommend fvm install
+    # check if .streamfy exists, recommend svm install
     echo "streamfy install dir $STREAMFY_INSTALL_DIR"
     if [ -d "$STREAMFY_INSTALL_DIR" ]; then
-        echo "A version fo streamfy is already installed, please run 'fvm install' or 'fvm switch' to change versions"
+        echo "A version fo streamfy is already installed, please run 'svm install' or 'svm switch' to change versions"
         remind_path
         exit 1
     else
         echo "☁️ Installing streamfy ${_streamfy_version}"
-        "$FVM_INSTALL_DIR"/bin/fvm install ${STREAMFY_VERSION}
+        "$SVM_INSTALL_DIR"/bin/svm install ${STREAMFY_VERSION}
     fi
 
     echo "🎉 Install complete!"
@@ -77,15 +77,15 @@ main() {
 
 # Prompts the user to add ~/.streamfy/bin to their PATH variable
 remind_path() {
-    say "💡 You'll need to add '~/.fvm/bin' and ~/.streamfy/bin/' to your PATH variable"
+    say "💡 You'll need to add '~/.svm/bin' and ~/.streamfy/bin/' to your PATH variable"
     say "    You can run the following to set your PATH on shell startup:"
 
     # shellcheck disable=SC2016,SC2155
-    local bash_hint="$(tput bold)"'echo '\''source "${HOME}/.fvm/env"'\'' >> ~/.bashrc'"$(tput sgr0)"
+    local bash_hint="$(tput bold)"'echo '\''source "${HOME}/.svm/env"'\'' >> ~/.bashrc'"$(tput sgr0)"
     # shellcheck disable=SC2016,SC2155
-    local zsh_hint="$(tput bold)"'echo '\''export PATH="${HOME}/.fvm/bin:${HOME}/.streamfy/bin:${PATH}"'\'' >> ~/.zshrc'"$(tput sgr0)"
+    local zsh_hint="$(tput bold)"'echo '\''export PATH="${HOME}/.svm/bin:${HOME}/.streamfy/bin:${PATH}"'\'' >> ~/.zshrc'"$(tput sgr0)"
     # shellcheck disable=SC2016,SC2155
-    local fish_hint="$(tput bold)"'fish_add_path "$HOME/.fvm/bin" "$HOME/.streamfy/bin"'"$(tput sgr0)"
+    local fish_hint="$(tput bold)"'fish_add_path "$HOME/.svm/bin" "$HOME/.streamfy/bin"'"$(tput sgr0)"
     case "$(basename "${SHELL}")" in
         bash)
             say "      ${bash_hint}"

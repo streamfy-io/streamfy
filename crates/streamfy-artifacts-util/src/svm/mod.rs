@@ -1,4 +1,4 @@
-//! Streamfy Version Manager (FVM) Types and HTTP Client.
+//! Streamfy Version Manager (SVM) Types and HTTP Client.
 
 mod api;
 

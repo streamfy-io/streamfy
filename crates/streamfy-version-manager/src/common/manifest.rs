@@ -12,7 +12,7 @@ use anyhow::Result;
 use serde::{Deserialize, Serialize};
 use semver::Version;
 
-use streamfy_artifacts_util::fvm::Channel;
+use streamfy_artifacts_util::svm::Channel;
 
 /// The name of the manifest file for the Package Set
 pub const PACKAGE_SET_MANIFEST_FILENAME: &str = "manifest.json";

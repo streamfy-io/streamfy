@@ -1,33 +1,33 @@
 #!/bin/bash
 # shellcheck shell=bash
 
-# Install script for fvm (Streamfy Version Manager) from GitHub releases
-# Downloads fvm directly from the streamfy repository GitHub releases
+# Install script for svm (Streamfy Version Manager) from GitHub releases
+# Downloads svm directly from the streamfy repository GitHub releases
 
 set -e
 set -o pipefail
 set -u
 
-readonly FVM_INSTALL_DIR=${FVM_INSTALL_DIR-"$HOME/.fvm"}
+readonly SVM_INSTALL_DIR=${SVM_INSTALL_DIR-"$HOME/.svm"}
 readonly STREAMFY_INSTALL_DIR=${STREAMFY_INSTALL_DIR-"$HOME/.streamfy"}
 readonly STREAMFY_ARCH=${STREAMFY_ARCH-}
 STREAMFY_VERSION=${STREAMFY_VERSION-}
 
 readonly VERSION=${VERSION-}
-readonly FVM_VERSION=${FVM_VERSION-}
+readonly SVM_VERSION=${SVM_VERSION-}
 
 # GitHub repository for streamfy releases
 readonly GITHUB_REPO=${GITHUB_REPO-"streamfy/streamfy"}
 
 _streamfy_version="${STREAMFY_VERSION:-${VERSION:-}}"
 
-# install fvm from GitHub releases
+# install svm from GitHub releases
 main() {
     need_cmd curl
     need_cmd unzip
 
-    local _fvmver
-    _fvmver=$(get_fvm_version)
+    local _svmver
+    _svmver=$(get_svm_version)
 
     # Detect architecture and ensure it's supported
     get_architecture || return 1
@@ -42,46 +42,46 @@ main() {
     # Normalize the target for GitHub release asset naming
     _target=$(normalize_target "${_arch}")
 
-    echo "Downloading streamfy version manager (fvm) from GitHub releases"
-    echo "   Version: ${_fvmver}"
+    echo "Downloading streamfy version manager (svm) from GitHub releases"
+    echo "   Version: ${_svmver}"
     echo "   Target:  ${_target}"
 
     _dir="$(mktemp -d 2>/dev/null || ensure mktemp -d -t streamfy-install)"
-    _zipfile="${_dir}/fvm.zip"
-    _url="https://github.com/${GITHUB_REPO}/releases/download/${_fvmver}/fvm-${_target}.zip"
+    _zipfile="${_dir}/svm.zip"
+    _url="https://github.com/${GITHUB_REPO}/releases/download/${_svmver}/svm-${_target}.zip"
 
     downloader "${_url}" "${_zipfile}"
     _status=$?
     if [ $_status -ne 0 ]; then
-        err "Failed to download fvm!"
+        err "Failed to download svm!"
         err "    Error downloading from ${_url}"
         abort_prompt_issue
     fi
 
-    echo "Installing fvm"
+    echo "Installing svm"
     unzip -q -o "${_zipfile}" -d "${_dir}"
 
-    # Find the extracted fvm binary
-    local _fvm_binary="${_dir}/fvm"
-    if [ ! -f "${_fvm_binary}" ]; then
-        err "fvm binary not found after extraction"
+    # Find the extracted svm binary
+    local _svm_binary="${_dir}/svm"
+    if [ ! -f "${_svm_binary}" ]; then
+        err "svm binary not found after extraction"
         abort_prompt_issue
     fi
 
-    chmod +x "${_fvm_binary}"
-    "${_fvm_binary}" self install
+    chmod +x "${_svm_binary}"
+    "${_svm_binary}" self install
 
-    # Check if .streamfy exists, recommend fvm install
+    # Check if .streamfy exists, recommend svm install
     if [ -d "$STREAMFY_INSTALL_DIR" ]; then
-        echo "If a version of streamfy is already installed, you can run 'fvm install' or 'fvm switch' to change versions"
+        echo "If a version of streamfy is already installed, you can run 'svm install' or 'svm switch' to change versions"
     fi
 
     if [ -n "${_streamfy_version}" ]; then
         echo "Installing streamfy ${_streamfy_version}"
-        "$FVM_INSTALL_DIR"/bin/fvm install "${STREAMFY_VERSION}"
+        "$SVM_INSTALL_DIR"/bin/svm install "${STREAMFY_VERSION}"
     else
         echo "Installing latest streamfy"
-        "$FVM_INSTALL_DIR"/bin/fvm install
+        "$SVM_INSTALL_DIR"/bin/svm install
     fi
 
     # Cleanup
@@ -91,11 +91,11 @@ main() {
     remind_path
 }
 
-# Get fvm version to download
-# Uses FVM_VERSION env var if set, otherwise fetches the latest release tag
-get_fvm_version() {
-    if [ -n "${FVM_VERSION}" ]; then
-        echo "${FVM_VERSION}"
+# Get svm version to download
+# Uses SVM_VERSION env var if set, otherwise fetches the latest release tag
+get_svm_version() {
+    if [ -n "${SVM_VERSION}" ]; then
+        echo "${SVM_VERSION}"
         return 0
     fi
 
@@ -110,7 +110,7 @@ get_fvm_version() {
     if [ $_status -ne 0 ]; then
         err "Failed to fetch latest release information from GitHub"
         err "    URL: ${_url}"
-        err "You can set FVM_VERSION environment variable to specify a version manually"
+        err "You can set SVM_VERSION environment variable to specify a version manually"
         abort_prompt_issue
     fi
 
@@ -126,17 +126,17 @@ get_fvm_version() {
     echo "${_tag}"
 }
 
-# Prompts the user to add ~/.fvm/bin and ~/.streamfy/bin to their PATH variable
+# Prompts the user to add ~/.svm/bin and ~/.streamfy/bin to their PATH variable
 remind_path() {
-    say "You'll need to add '~/.fvm/bin' and '~/.streamfy/bin' to your PATH variable"
+    say "You'll need to add '~/.svm/bin' and '~/.streamfy/bin' to your PATH variable"
     say "    You can run the following to set your PATH on shell startup:"
 
     # shellcheck disable=SC2016,SC2155
-    local bash_hint="$(tput bold 2>/dev/null || true)"'echo '\''source "${HOME}/.fvm/env"'\'' >> ~/.bashrc'"$(tput sgr0 2>/dev/null || true)"
+    local bash_hint="$(tput bold 2>/dev/null || true)"'echo '\''source "${HOME}/.svm/env"'\'' >> ~/.bashrc'"$(tput sgr0 2>/dev/null || true)"
     # shellcheck disable=SC2016,SC2155
-    local zsh_hint="$(tput bold 2>/dev/null || true)"'echo '\''export PATH="${HOME}/.fvm/bin:${HOME}/.streamfy/bin:${PATH}"'\'' >> ~/.zshrc'"$(tput sgr0 2>/dev/null || true)"
+    local zsh_hint="$(tput bold 2>/dev/null || true)"'echo '\''export PATH="${HOME}/.svm/bin:${HOME}/.streamfy/bin:${PATH}"'\'' >> ~/.zshrc'"$(tput sgr0 2>/dev/null || true)"
     # shellcheck disable=SC2016,SC2155
-    local fish_hint="$(tput bold 2>/dev/null || true)"'fish_add_path "$HOME/.fvm/bin" "$HOME/.streamfy/bin"'"$(tput sgr0 2>/dev/null || true)"
+    local fish_hint="$(tput bold 2>/dev/null || true)"'fish_add_path "$HOME/.svm/bin" "$HOME/.streamfy/bin"'"$(tput sgr0 2>/dev/null || true)"
 
     case "$(basename "${SHELL}")" in
         bash)

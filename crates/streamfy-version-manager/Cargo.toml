@@ -9,7 +9,7 @@ license.workspace = true
 authors.workspace = true
 
 [[bin]]
-name = "fvm"
+name = "svm"
 path = "src/main.rs"
 
 [dependencies]

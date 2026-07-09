@@ -1,4 +1,4 @@
-//! Hub FVM API Client
+//! Hub SVM API Client
 
 use anyhow::{Result};
 use octocrab::Octocrab;
@@ -6,19 +6,19 @@ use semver::Version;
 
 use crate::{
     REPO_OWNER, REPO_NAME,
-    fvm::{Artifact, Channel, PackageSet},
+    svm::{Artifact, Channel, PackageSet},
 };
 
-// List of binaries that are installable via FVM
+// List of binaries that are installable via SVM
 // We may consider a more flexible approach in the future
-const FVM_INSTALLABLE_BINARIES: &[&str] = &["streamfy", "streamfy-run", "cdk", "smdk"];
-/// HTTP Client for interacting with the Hub FVM API
+const SVM_INSTALLABLE_BINARIES: &[&str] = &["streamfy", "streamfy-run", "cdk", "smdk"];
+/// HTTP Client for interacting with the Hub SVM API
 #[derive(Debug, Default)]
 pub struct Client;
 
 impl Client {
     /// Internal helper: resolves the GitHub release and semantic version for
-    /// a given FVM channel.
+    /// a given SVM channel.
     async fn fetch_release_and_version(
         &self,
         channel: &Channel,
@@ -124,7 +124,7 @@ impl Client {
         let mut pkgset = self.fetch_package_set(channel, arch).await?;
 
         pkgset.artifacts.retain(|artifact| {
-            FVM_INSTALLABLE_BINARIES
+            SVM_INSTALLABLE_BINARIES
                 .iter()
                 .any(|bin| artifact.name == *bin || artifact.name == format!("{bin}.exe"))
         });
@@ -140,7 +140,7 @@ impl Client {
     }
 
     /// Fetches a [`PackageSet`] from GitHub without filtering binaries by the
-    /// `FVM_INSTALLABLE_BINARIES` list.
+    /// `SVM_INSTALLABLE_BINARIES` list.
     pub async fn fetch_package_set(&self, channel: &Channel, arch: &str) -> Result<PackageSet> {
         let (release, version) = self.fetch_release_and_version(channel).await?;
 

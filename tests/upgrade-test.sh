@@ -34,7 +34,7 @@ readonly STABLE_TOPIC=${STABLE_TOPIC:-stable}
 readonly PRERELEASE_TOPIC=${PRERELEASE_TOPIC:-prerelease}
 readonly USE_LATEST=${USE_LATEST:-}
 readonly STREAMFY_BIN=$(${READLINK} -f ${STREAMFY_BIN:-"$(which streamfy)"})
-readonly FVM_BIN=$(${READLINK} -f ${FVM_BIN:-"~/.fvm/bin/fvm"})
+readonly SVM_BIN=$(${READLINK} -f ${SVM_BIN:-"~/.svm/bin/svm"})
 readonly STREAMFY_MODE=${STREAMFY_MODE:-"k8"}
 
 # Change to this script's directory 
@@ -66,14 +66,14 @@ function validate_cluster_stable() {
 
     curl -fsS https://raw.githubusercontent.com/streamfy-io/streamfy/master/install.sh | bash
     
-    ~/.fvm/bin/fvm install stable | tee /tmp/installer.output 
+    ~/.svm/bin/svm install stable | tee /tmp/installer.output 
     STABLE_VERSION=$(cat /tmp/installer.output | grep "streamfy@" | awk '{print $4}' | cut -b 8-)
 
     local STABLE_STREAMFY=${HOME}/.streamfy/bin/streamfy
 
     # This is more for ensuring local dev will pass this test if you've changed your channel
     echo "Switch to \"stable\" channel CLI"
-    ~/.fvm/bin/fvm switch stable
+    ~/.svm/bin/svm switch stable
 
     echo "Installing stable streamfy cluster"
     if [[ "$STREAMFY_MODE" == "local" ]]; then
@@ -150,9 +150,9 @@ function validate_upgrade_cluster_to_prerelease() {
         echo "Switch to \"latest\" channel CLI"
         STREAMFY_BIN_ABS_PATH=${HOME}/.streamfy/bin/streamfy
 
-        ~/.fvm/bin/fvm install latest | tee /tmp/installer.output 
-        # expectd output fvm current => 0.11.0-dev-1+hash (latest)
-        DEV_VERSION=$(~/.fvm/bin/fvm current | awk '{print $1}')
+        ~/.svm/bin/svm install latest | tee /tmp/installer.output 
+        # expectd output svm current => 0.11.0-dev-1+hash (latest)
+        DEV_VERSION=$(~/.svm/bin/svm current | awk '{print $1}')
         TARGET_VERSION=${DEV_VERSION:0:${#DEV_VERSION}-41}
 
         echo "Installed CLI version ${DEV_VERSION}"

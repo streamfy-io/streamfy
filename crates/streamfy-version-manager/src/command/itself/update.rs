@@ -13,13 +13,13 @@ use crate::{
     VERSION,
 };
 
-/// Environment variable to store the version of FVM to fetch
-const FVM_UPDATE_VERSION: &str = "FVM_UPDATE_VERSION";
+/// Environment variable to store the version of SVM to fetch
+const SVM_UPDATE_VERSION: &str = "SVM_UPDATE_VERSION";
 
 #[derive(Clone, Debug, Parser)]
 pub struct SelfUpdateOpt;
 
-// https://packages.streamfy.io/v1/packages/streamfy/fvm/0.11.0/aarch64-apple-darwin/fvm
+// https://packages.streamfy.io/v1/packages/streamfy/svm/0.11.0/aarch64-apple-darwin/svm
 impl SelfUpdateOpt {
     pub async fn process(&self, notify: Notify) -> Result<()> {
         let update_manager = UpdateManager::new(&notify);
@@ -27,7 +27,7 @@ impl SelfUpdateOpt {
 
         if next_version.to_string() != VERSION {
             notify.info(format!(
-                "Updating FVM from {} to {}",
+                "Updating SVM from {} to {}",
                 VERSION.red(),
                 next_version.to_string().green(),
             ));
@@ -39,10 +39,10 @@ impl SelfUpdateOpt {
         Ok(())
     }
 
-    /// Determines the version of FVM to fetch taking into account
-    /// the environment variable `FVM_UPDATE_VERSION` and the `stable` channel
+    /// Determines the version of SVM to fetch taking into account
+    /// the environment variable `SVM_UPDATE_VERSION` and the `stable` channel
     async fn resolve_version(&self) -> Result<Version> {
-        if let Ok(version) = var(FVM_UPDATE_VERSION) {
+        if let Ok(version) = var(SVM_UPDATE_VERSION) {
             return Ok(Version::parse(&version)?);
         }
 
@@ -59,7 +59,7 @@ impl SelfUpdateOpt {
             .releases()
             .get_latest()
             .await
-            .map_err(|e| anyhow::anyhow!("Unable to retrieve stable release for FVM: {e}"))?;
+            .map_err(|e| anyhow::anyhow!("Unable to retrieve stable release for SVM: {e}"))?;
 
         let tag = release.tag_name;
 
