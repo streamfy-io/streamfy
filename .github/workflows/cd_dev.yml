@@ -82,7 +82,6 @@ jobs:
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@master
         with:
-          toolchain: "1.96.0"
           targets: ${{ matrix.rust-target }}
       - name: Install zig
         run: ./actions/zig-install.sh

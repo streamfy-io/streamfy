@@ -37,7 +37,6 @@ jobs:
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@master
         with:
-          toolchain: "1.96.0"
           components: rustfmt
       - name: Check formatting
         run: make check-fmt
@@ -50,7 +49,6 @@ jobs:
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@master
         with:
-          toolchain: "1.96.0"
           components: clippy
       - name: Install zig
         run: ./actions/zig-install.sh
