@@ -17,8 +17,8 @@ use self::common::notify::Notify;
 /// Binary name is read from `Cargo.toml` `[[bin]]` section
 pub const BINARY_NAME: &str = env!("CARGO_BIN_NAME");
 
-/// Binary version is read from `VERSION` file, which is the same as Streamfy version
-pub const VERSION: &str = include_str!("../../../VERSION");
+/// Binary version is read from workspace `VERSION` file (same as Streamfy version)
+pub const VERSION: &str = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../VERSION"));
 
 #[streamfy_future::main_async]
 async fn main() -> Result<()> {
