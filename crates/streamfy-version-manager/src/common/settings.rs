@@ -4,16 +4,16 @@ use std::path::PathBuf;
 use anyhow::{Error, Result};
 use serde::{Deserialize, Serialize};
 
-use streamfy_artifacts_util::fvm::Channel;
+use streamfy_artifacts_util::svm::Channel;
 
 use super::manifest::VersionManifest;
-use super::workdir::fvm_workdir_path;
+use super::workdir::svm_workdir_path;
 
 pub const SETTINGS_TOML_FILENAME: &str = "settings.toml";
 
 /// The `settings.toml` is in charge of keeping track of the active version
 /// through the default key, which holds the name of the directory under
-/// `~/.fvm/pkgset/default/versions` for the desired default version.
+/// `~/.svm/pkgset/default/versions` for the desired default version.
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Settings {
     /// The active `channel` for the Streamfy Installation
@@ -24,7 +24,7 @@ pub struct Settings {
 
 impl Settings {
     /// Used to create an empty `settings.toml` file. This is used when the user
-    /// installs FVM but no version is set yet.
+    /// installs SVM but no version is set yet.
     pub fn init() -> Result<Self> {
         let settings_path = Self::settings_file_path()?;
 
@@ -83,8 +83,8 @@ impl Settings {
 
     /// Retrieves the path to the `settings.toml` file for this host
     fn settings_file_path() -> Result<PathBuf> {
-        let fvm_path = fvm_workdir_path()?;
-        let settings_path = fvm_path.join(SETTINGS_TOML_FILENAME);
+        let svm_path = svm_workdir_path()?;
+        let settings_path = svm_path.join(SETTINGS_TOML_FILENAME);
 
         Ok(settings_path)
     }
@@ -100,19 +100,19 @@ pub mod tests {
 
     use super::*;
 
-    pub fn create_fvm_dir() {
-        let fvm_dir = fvm_workdir_path().unwrap();
+    pub fn create_svm_dir() {
+        let svm_dir = svm_workdir_path().unwrap();
 
-        if !fvm_dir.exists() {
-            create_dir(&fvm_dir).unwrap();
+        if !svm_dir.exists() {
+            create_dir(&svm_dir).unwrap();
         }
     }
 
-    pub fn delete_fvm_dir() {
-        let fvm_dir = fvm_workdir_path().unwrap();
+    pub fn delete_svm_dir() {
+        let svm_dir = svm_workdir_path().unwrap();
 
-        if fvm_dir.exists() {
-            remove_dir_all(&fvm_dir).unwrap();
+        if svm_dir.exists() {
+            remove_dir_all(&svm_dir).unwrap();
         }
     }
 
@@ -129,7 +129,7 @@ pub mod tests {
 
     #[test]
     fn creates_settings_file() {
-        create_fvm_dir();
+        create_svm_dir();
 
         let _settings = Settings::init().expect("Failed to create settings.toml file");
         let settings_path =
@@ -141,7 +141,7 @@ pub mod tests {
         );
 
         remove_file(settings_path).expect("Failed to remove settings.toml file");
-        delete_fvm_dir();
+        delete_svm_dir();
     }
 
     #[test]
@@ -150,7 +150,7 @@ pub mod tests {
 version = "0.11.0"
 "#;
 
-        create_fvm_dir();
+        create_svm_dir();
 
         let settings_path =
             Settings::settings_file_path().expect("Failed to get settings.toml path");
@@ -165,7 +165,7 @@ version = "0.11.0"
             read_to_string(settings_path).expect("Failed to read settings.toml file");
 
         assert_eq!(settings_str, WANT);
-        delete_fvm_dir();
+        delete_svm_dir();
     }
 
     #[test]
@@ -176,7 +176,7 @@ version = "0.11.0"
         const EXPECT_SECOND: &str = r#"channel = "latest"
 version = "0.12.0"
 "#;
-        create_fvm_dir();
+        create_svm_dir();
 
         let settings_path =
             Settings::settings_file_path().expect("Failed to get settings.toml path");
@@ -200,12 +200,12 @@ version = "0.12.0"
 
         assert_eq!(settings_str, EXPECT_SECOND);
 
-        delete_fvm_dir();
+        delete_svm_dir();
     }
 
     #[test]
     fn creates_settings_file_if_not_exists_on_open() {
-        create_fvm_dir();
+        create_svm_dir();
 
         let settings_path =
             Settings::settings_file_path().expect("Failed to get settings.toml path");
@@ -226,12 +226,12 @@ version = "0.12.0"
         assert!(settings.channel.is_none());
         assert!(settings.version.is_none());
 
-        delete_fvm_dir();
+        delete_svm_dir();
     }
 
     #[test]
     fn updates_settings_toml_with_manifest_contents() {
-        create_fvm_dir();
+        create_svm_dir();
 
         const VERSION: &str = "0.10.0";
 
@@ -251,6 +251,6 @@ version = "0.12.0"
         assert_eq!(settings.channel, Some(Channel::Stable));
         assert_eq!(settings.version, Some(VERSION.to_string()));
 
-        delete_fvm_dir();
+        delete_svm_dir();
     }
 }

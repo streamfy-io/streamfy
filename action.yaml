@@ -18,8 +18,8 @@ inputs:
     required: false
     # Blank default will use stable
     default: ''
-  fvm_version:
-    description: "Use a specific version of the fvm cli (e.g. latest, 0.18.1)"
+  svm_version:
+    description: "Use a specific version of the svm cli (e.g. latest, 0.18.1)"
 runs:
   using: "composite"
   steps:
@@ -30,7 +30,7 @@ runs:
         echo "RUST_LOG=${{ inputs.rust-log }}" >> $GITHUB_ENV
         echo "VERSION=${{ inputs.version }}" >> $GITHUB_ENV
         echo "STREAMFY_VERSION=${{ inputs.version }}" >> $GITHUB_ENV
-        echo "FVM_VERSION=${{ inputs.fvm_version }}" >> $GITHUB_ENV
+        echo "SVM_VERSION=${{ inputs.svm_version }}" >> $GITHUB_ENV
         echo "OS=${{ runner.os }}" >> $GITHUB_ENV
       shell: bash
     - id: install-streamfy

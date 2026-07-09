@@ -11,8 +11,8 @@ build-cdk: install_rustup_target
 build-benchmark: install_rustup_target
 	$(CARGO_BUILDER) build --bin streamfy-benchmark -p streamfy-benchmark $(RELEASE_FLAG) $(TARGET_FLAG) $(VERBOSE_FLAG) $(SMARTENGINE_FLAG)
 
-build-fvm: install_rustup_target
-	$(CARGO_BUILDER) build --bin fvm -p streamfy-version-manager $(RELEASE_FLAG) $(TARGET_FLAG) $(VERBOSE_FLAG) $(SMARTENGINE_FLAG)
+build-svm: install_rustup_target
+	$(CARGO_BUILDER) build --bin svm -p streamfy-version-manager $(RELEASE_FLAG) $(TARGET_FLAG) $(VERBOSE_FLAG) $(SMARTENGINE_FLAG)
 
 build-cli-minimal: install_rustup_target
 	# https://github.com/streamfy-io/streamfy/issues/1255

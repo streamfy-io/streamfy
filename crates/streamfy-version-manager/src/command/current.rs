@@ -6,7 +6,7 @@ use anyhow::Result;
 use clap::Parser;
 use colored::Colorize;
 
-use streamfy_artifacts_util::fvm::Channel;
+use streamfy_artifacts_util::svm::Channel;
 
 use crate::common::notify::Notify;
 use crate::common::settings::Settings;
@@ -27,7 +27,7 @@ impl CurrentOpt {
             notify.warn("No active version set");
             notify.help(format!(
                 "You can use {} to set the active version",
-                "fvm switch".bold()
+                "svm switch".bold()
             ));
         }
 

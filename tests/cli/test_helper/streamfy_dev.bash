@@ -52,7 +52,7 @@ function random_string() {
 function setup_streamfy_cluster() {
     CLUSTER_VERSION=${1:-latest}
     # not using $STREAMFY_BIN to not conflict with the env var set in the makefile
-    NEW_STREAMFY_BIN=$HOME/.fvm/versions/$CLUSTER_VERSION/streamfy
+    NEW_STREAMFY_BIN=$HOME/.svm/versions/$CLUSTER_VERSION/streamfy
 
     echo "# Installing cluster @ VERSION: $CLUSTER_VERSION" >&3
     curl -fsS https://raw.githubusercontent.com/streamfy-io/streamfy/master/install.sh | VERSION=$CLUSTER_VERSION bash >&3
@@ -75,5 +75,5 @@ function setup_streamfy_cli() {
     CLI_VERSION=${1:-latest}
     echo "Installing CLI @ VERSION: $CLI_VERSION" >&3
     curl -fsS https://raw.githubusercontent.com/streamfy-io/streamfy/master/install.sh | VERSION=$CLI_VERSION bash >&3
-    $HOME/.fvm/versions/$CLI_VERSION/streamfy version >&3
+    $HOME/.svm/versions/$CLI_VERSION/streamfy version >&3
 }

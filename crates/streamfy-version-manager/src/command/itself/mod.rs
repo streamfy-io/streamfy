@@ -1,4 +1,4 @@
-//! FVM Management Commands
+//! SVM Management Commands
 
 pub mod install;
 pub mod uninstall;
@@ -15,12 +15,12 @@ use self::update::SelfUpdateOpt;
 
 #[derive(Debug, Parser)]
 pub enum ItselfCommand {
-    /// Install `fvm` and setup the workspace
+    /// Install `svm` and setup the workspace
     #[clap(hide = true)]
     Install(SelfInstallOpt),
-    /// Uninstall `fvm` and removes the workspace
+    /// Uninstall `svm` and removes the workspace
     Uninstall(SelfUninstallOpt),
-    /// Prints `fvm` update instructions
+    /// Prints `svm` update instructions
     Update(SelfUpdateOpt),
 }
 

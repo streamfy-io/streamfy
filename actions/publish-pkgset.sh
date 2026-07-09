@@ -5,7 +5,7 @@ echo Pkgset "$PKGSET_NAME"
 echo Streamfy Version "$STREAMFY_VERSION"
 echo Streamfy Cloud Version "$STREAMFY_CLOUD_VERSION"
 
-curl -v -X "POST" "https://hub.streamfy.cloud/hub/v1/fvm/pkgset" \
+curl -v -X "POST" "https://hub.streamfy.cloud/hub/v1/svm/pkgset" \
      -H "Authorization: $BPKG_TOKEN" \
      -H 'Content-Type: application/json; charset=utf-8' \
      --data-binary @- << EOF

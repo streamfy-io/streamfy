@@ -10,7 +10,7 @@ use http::StatusCode;
 use sha2::{Digest, Sha256};
 use tracing::instrument;
 
-use crate::fvm::Artifact;
+use crate::svm::Artifact;
 use crate::htclient;
 
 #[async_trait]

@@ -22,9 +22,9 @@
 
 ### Step 1. Download Streamfy Version Manager:
 
-Streamfy is installed via the **Streamfy Version Manager**, shortened to `fvm`.
+Streamfy is installed via the **Streamfy Version Manager**, shortened to `svm`.
 
-To install `fvm`, run the following command:
+To install `svm`, run the following command:
 
 ```bash
 curl -fsS https://raw.githubusercontent.com/streamfy-community/streamfy/master/install.sh | bash
@@ -32,7 +32,7 @@ curl -fsS https://raw.githubusercontent.com/streamfy-community/streamfy/master/i
 
 
 
-As part of the initial setup, `fvm` will also install the Streamfy CLI available in the stable channel as of the moment of installation.
+As part of the initial setup, `svm` will also install the Streamfy CLI available in the stable channel as of the moment of installation.
 
 Streamfy is stored in `$HOME/.streamfy`, with the executable binaries stored in `$HOME/.streamfy/bin`.
 

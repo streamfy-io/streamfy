@@ -40,7 +40,7 @@ async fn main() -> Result<()> {
 #[derive(Debug, Parser)]
 #[command(
     name = BINARY_NAME,
-    about = "Streamfy Version Manager (FVM)",
+    about = "Streamfy Version Manager (SVM)",
     max_term_width = 100,
     arg_required_else_help = true,
 )]
@@ -56,7 +56,7 @@ pub enum Command {
     /// Print the current active Streamfy Version
     #[command(name = "current")]
     Current(CurrentOpt),
-    /// Manage FVM
+    /// Manage SVM
     #[command(name = "self")]
     Itself(SelfOpt),
     /// Install a Streamfy Version
