@@ -33,11 +33,11 @@ To install `svm`, run the following command:
 curl -fsS https://raw.githubusercontent.com/streamfy-io/streamfy/main/install.sh | bash
 ```
 
-
-
-As part of the initial setup, `svm` will also install the Streamfy CLI available in the stable channel as of the moment of installation.
+As part of the initial setup, `svm` also installs the Streamfy CLI. When only the rolling development release is available, that is the **`latest`** channel (GitHub `dev` tag, version `VERSION+commit`). Once stable releases are published, the installer prefers **`stable`**.
 
 Streamfy is stored in `$HOME/.streamfy`, with the executable binaries stored in `$HOME/.streamfy/bin`.
+
+After install, ensure `~/.svm/bin` and `~/.streamfy/bin` are on your `PATH` (the installer prints shell-specific hints).
 
 ### Step 2. Start a cluster:
 

@@ -5,7 +5,7 @@
 set -eu -o pipefail
 echo "Installing Streamfy Local Cluster"
 
-curl -fsS https://raw.githubusercontent.com/streamfy-io/streamfy/master/install.sh | bash
+curl -fsS https://raw.githubusercontent.com/streamfy-io/streamfy/main/install.sh | bash
 echo 'export PATH="$HOME/.streamfy/bin:$PATH"' >> $HOME/.bash_profile
 . $HOME/.bash_profile
 

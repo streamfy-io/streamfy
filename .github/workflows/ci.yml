@@ -1,0 +1,147 @@
+# PR / main CI: build core binaries, unit tests, local smoke test
+name: CI
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "**"
+      - "!/**.md"
+      - "!/docs/**"
+      - "!.github/workflows/lint.yml"
+      - "!.github/workflows/cd_dev.yml"
+  push:
+    branches: [main]
+    paths:
+      - "**"
+      - "!/**.md"
+      - "!/docs/**"
+  workflow_dispatch:
+
+env:
+  CARGO_TERM_COLOR: always
+  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+jobs:
+  unit-test:
+    name: Unit tests
+    runs-on: ubuntu-latest
+    env:
+      RUST_BACKTRACE: full
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: "1.96.0"
+      - name: Install zig
+        run: ./actions/zig-install.sh
+      - name: Free disk space
+        run: rm -rf /opt/hostedtoolcache
+      - uses: Swatinem/rust-cache@v2
+        timeout-minutes: 10
+        with:
+          key: unit-test
+      - name: Run unit tests
+        run: make run-all-unit-test
+
+  build:
+    name: Build ${{ matrix.binary }} (${{ matrix.rust-target }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        rust-target:
+          - x86_64-unknown-linux-musl
+        binary: [streamfy, streamfy-run, svm]
+    env:
+      RUST_BACKTRACE: full
+      TARGET: ${{ matrix.rust-target }}
+      RUST_BIN_DIR: target/${{ matrix.rust-target }}/debug
+      RELEASE: ""
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: "1.96.0"
+          targets: ${{ matrix.rust-target }}
+      - name: Install zig
+        run: ./actions/zig-install.sh
+      - uses: Swatinem/rust-cache@v2
+        timeout-minutes: 10
+        with:
+          key: ci-${{ matrix.rust-target }}-${{ matrix.binary }}
+      - name: Build streamfy
+        if: matrix.binary == 'streamfy'
+        run: make build-cli
+      - name: Build streamfy-run
+        if: matrix.binary == 'streamfy-run'
+        run: make build-cluster
+      - name: Build svm
+        if: matrix.binary == 'svm'
+        run: make build-svm
+      - name: Upload artifact - ${{ matrix.binary }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.binary }}-${{ matrix.rust-target }}
+          path: ${{ env.RUST_BIN_DIR }}/${{ matrix.binary }}
+          retention-days: 3
+
+  local-smoke:
+    name: Local cluster smoke
+    runs-on: ubuntu-latest
+    needs: build
+    env:
+      RUST_TARGET: x86_64-unknown-linux-musl
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Helm
+        run: |
+          curl -fsSL https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+      - name: Download streamfy
+        uses: actions/download-artifact@v4
+        with:
+          name: streamfy-${{ env.RUST_TARGET }}
+          path: ~/bin
+      - name: Download streamfy-run
+        uses: actions/download-artifact@v4
+        with:
+          name: streamfy-run-${{ env.RUST_TARGET }}
+          path: ~/.streamfy/extensions
+      - name: Set up binaries
+        run: |
+          chmod +x ~/bin/streamfy ~/.streamfy/extensions/streamfy-run
+          mkdir -p ~/.streamfy/bin
+          ln -sf ~/bin/streamfy ~/.streamfy/bin/streamfy
+          echo "$HOME/bin" >> "$GITHUB_PATH"
+          echo "$HOME/.streamfy/bin" >> "$GITHUB_PATH"
+      - name: streamfy version
+        run: streamfy version
+      - name: Start local cluster
+        timeout-minutes: 10
+        run: streamfy cluster start --local --develop --spu 1
+      - name: Produce / consume
+        timeout-minutes: 5
+        run: |
+          TOPIC="ci-smoke-$$"
+          streamfy topic create "$TOPIC"
+          echo "hello-streamfy" | streamfy produce "$TOPIC"
+          streamfy consume "$TOPIC" -B -d | grep -F -w "hello-streamfy"
+          streamfy topic delete "$TOPIC"
+      - name: Diagnostics on failure
+        if: ${{ !success() }}
+        timeout-minutes: 5
+        run: streamfy cluster diagnostics || true
+      - name: Upload diagnostics
+        if: ${{ !success() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: local-smoke-diagnostics
+          path: diagnostics*.gz
+          retention-days: 5
+          if-no-files-found: ignore

@@ -1,0 +1,243 @@
+# Dev release: release-mode builds published to the rolling GitHub `dev` tag.
+# Version reported by svm's `latest` channel is VERSION+<commit-sha>.
+name: CD_Dev
+
+concurrency:
+  group: cd-dev
+  cancel-in-progress: true
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "**"
+      - "!/**.md"
+      - "!/docs/**"
+      - "!.github/workflows/lint.yml"
+      - "!.github/workflows/ci.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+env:
+  CARGO_TERM_COLOR: always
+  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  RELEASE: true
+  RELEASE_NAME: release
+
+jobs:
+  build:
+    name: Build ${{ matrix.binary }} (${{ matrix.rust-target }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # Linux musl (cross via zig on ubuntu)
+          - os: ubuntu-latest
+            rust-target: x86_64-unknown-linux-musl
+            binary: streamfy
+          - os: ubuntu-latest
+            rust-target: x86_64-unknown-linux-musl
+            binary: streamfy-run
+          - os: ubuntu-latest
+            rust-target: x86_64-unknown-linux-musl
+            binary: svm
+          - os: ubuntu-latest
+            rust-target: aarch64-unknown-linux-musl
+            binary: streamfy
+          - os: ubuntu-latest
+            rust-target: aarch64-unknown-linux-musl
+            binary: streamfy-run
+          - os: ubuntu-latest
+            rust-target: aarch64-unknown-linux-musl
+            binary: svm
+          # macOS Apple Silicon (native)
+          - os: macos-14
+            rust-target: aarch64-apple-darwin
+            binary: streamfy
+          - os: macos-14
+            rust-target: aarch64-apple-darwin
+            binary: streamfy-run
+          - os: macos-14
+            rust-target: aarch64-apple-darwin
+            binary: svm
+          # macOS Intel (cross from Apple Silicon runner when needed)
+          - os: macos-14
+            rust-target: x86_64-apple-darwin
+            binary: streamfy
+          - os: macos-14
+            rust-target: x86_64-apple-darwin
+            binary: streamfy-run
+          - os: macos-14
+            rust-target: x86_64-apple-darwin
+            binary: svm
+    env:
+      RUST_BACKTRACE: full
+      TARGET: ${{ matrix.rust-target }}
+      RUST_BIN_DIR: target/${{ matrix.rust-target }}/release
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: "1.96.0"
+          targets: ${{ matrix.rust-target }}
+      - name: Install zig
+        run: ./actions/zig-install.sh
+      - uses: Swatinem/rust-cache@v2
+        timeout-minutes: 10
+        with:
+          key: cd-dev-${{ matrix.os }}-${{ matrix.rust-target }}-${{ matrix.binary }}
+      - name: Build streamfy
+        if: matrix.binary == 'streamfy'
+        run: make build-cli
+        timeout-minutes: 90
+      - name: Build streamfy-run
+        if: matrix.binary == 'streamfy-run'
+        run: make build-cluster
+        timeout-minutes: 90
+      - name: Build svm
+        if: matrix.binary == 'svm'
+        run: make build-svm
+        timeout-minutes: 60
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.binary }}-${{ matrix.rust-target }}
+          path: ${{ env.RUST_BIN_DIR }}/${{ matrix.binary }}
+          retention-days: 3
+
+  publish:
+    name: Publish GitHub dev release
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Resolve version
+        id: ver
+        run: |
+          VERSION_BASE=$(tr -d '[:space:]' < VERSION)
+          SHA="${{ github.sha }}"
+          echo "version_base=${VERSION_BASE}" >> "$GITHUB_OUTPUT"
+          echo "sha=${SHA}" >> "$GITHUB_OUTPUT"
+          echo "version=${VERSION_BASE}+${SHA}" >> "$GITHUB_OUTPUT"
+          echo "Publishing dev release for ${VERSION_BASE}+${SHA}"
+
+      - name: Delete previous dev release (if any)
+        run: |
+          gh release delete dev -R "${{ github.repository }}" -y --cleanup-tag || true
+          git push origin :refs/tags/dev || true
+
+      - name: Create rolling dev tag pointing at this commit
+        run: |
+          git tag -f dev "${{ github.sha }}"
+          git push -f origin refs/tags/dev
+
+      - name: Create GitHub prerelease
+        run: |
+          gh release create dev \
+            -R "${{ github.repository }}" \
+            --prerelease \
+            --target "${{ github.sha }}" \
+            --title "dev (${{ steps.ver.outputs.version }})" \
+            --notes "Rolling development build from commit \`${{ github.sha }}\`.
+
+          Version: \`${{ steps.ver.outputs.version }}\`
+
+          Install:
+
+          \`\`\`bash
+          curl -fsS https://raw.githubusercontent.com/${{ github.repository }}/main/install.sh | bash
+          \`\`\`
+          "
+
+      - name: Download all build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Package and upload release assets
+        run: |
+          set -euo pipefail
+          ls -laR artifacts
+          for dir in artifacts/*; do
+            [ -d "$dir" ] || continue
+            name=$(basename "$dir")
+            # artifact name is binary-target, e.g. svm-x86_64-unknown-linux-musl
+            # binary can contain hyphens (streamfy-run); target always has form
+            # <arch>-<vendor>-<os>[-<abi>] with at least 3 hyphen-separated parts after binary.
+            case "$name" in
+              *-x86_64-unknown-linux-musl)
+                binary=${name%-x86_64-unknown-linux-musl}
+                target=x86_64-unknown-linux-musl
+                ;;
+              *-aarch64-unknown-linux-musl)
+                binary=${name%-aarch64-unknown-linux-musl}
+                target=aarch64-unknown-linux-musl
+                ;;
+              *-x86_64-apple-darwin)
+                binary=${name%-x86_64-apple-darwin}
+                target=x86_64-apple-darwin
+                ;;
+              *-aarch64-apple-darwin)
+                binary=${name%-aarch64-apple-darwin}
+                target=aarch64-apple-darwin
+                ;;
+              *)
+                echo "Skipping unrecognized artifact dir: $name"
+                continue
+                ;;
+            esac
+
+            bin_path="$dir/$binary"
+            if [ ! -f "$bin_path" ]; then
+              # windows-style or nested path fallback
+              bin_path=$(find "$dir" -type f -name "$binary" | head -1)
+            fi
+            if [ -z "${bin_path}" ] || [ ! -f "$bin_path" ]; then
+              echo "Missing binary for $name"
+              exit 1
+            fi
+
+            chmod +x "$bin_path"
+            work=$(mktemp -d)
+            cp "$bin_path" "$work/$binary"
+            echo "$target" > "$work/.target"
+            (
+              cd "$work"
+              zip -q "${binary}-${target}.zip" "$binary" .target
+            )
+            gh release upload dev \
+              -R "${{ github.repository }}" \
+              --clobber \
+              "$work/${binary}-${target}.zip"
+            rm -rf "$work"
+            echo "Uploaded ${binary}-${target}.zip"
+          done
+
+  installer-check:
+    name: Verify install.sh against dev release
+    needs: publish
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install from local install.sh (dev)
+        run: |
+          # Use the commit's install.sh so we test this change, not an older main
+          bash ./install.sh
+        env:
+          # Force the rolling dev path (also the default when no stable exists)
+          SVM_VERSION: dev
+          STREAMFY_VERSION: latest
+      - name: Smoke installed binaries
+        run: |
+          export PATH="$HOME/.svm/bin:$HOME/.streamfy/bin:$PATH"
+          svm version || true
+          streamfy version
+          which streamfy
+          which svm

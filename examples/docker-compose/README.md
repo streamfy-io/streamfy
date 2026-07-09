@@ -26,7 +26,7 @@ Then use the `streamfy` CLI to connect to the cluster running in Docker, to do
 that you must set the _Streamfy Profile_ to point to Docker's container SC:
 
 > If you dont have the Streamfy CLI installed, run the following command
-> `curl -fsS https://raw.githubusercontent.com/streamfy-io/streamfy/master/install.sh | bash`.
+> `curl -fsS https://raw.githubusercontent.com/streamfy-io/streamfy/main/install.sh | bash`.
 > Refer to [Streamfy CLI Reference][2] for more details.
 
 ```bash
