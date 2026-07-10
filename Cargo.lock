@@ -2091,21 +2091,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "fluvio-wasm-timer"
-version = "0.2.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b768c170dc045fa587a8f948c91f9bcfb87f774930477c6215addf54317f137f"
-dependencies = [
- "futures",
- "js-sys",
- "parking_lot 0.11.2",
- "pin-utils",
- "wasm-bindgen",
- "wasm-bindgen-futures",
- "web-sys",
-]
-
-[[package]]
 name = "fluvio_ws_stream_wasm"
 version = "0.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -6356,7 +6341,6 @@ dependencies = [
  "async-trait",
  "bytes",
  "cfg-if",
- "fluvio-wasm-timer",
  "futures-lite",
  "futures-rustls",
  "futures-util",
@@ -6377,6 +6361,7 @@ dependencies = [
  "streamfy-future",
  "streamfy-future-derive",
  "streamfy-util",
+ "streamfy-wasm-timer",
  "thiserror 2.0.18",
  "tokio",
  "tokio-util",
@@ -7010,6 +6995,19 @@ dependencies = [
  "tempfile",
  "toml 0.8.22",
  "tracing",
+]
+
+[[package]]
+name = "streamfy-wasm-timer"
+version = "0.2.5"
+dependencies = [
+ "futures",
+ "js-sys",
+ "parking_lot 0.11.2",
+ "pin-utils",
+ "wasm-bindgen",
+ "wasm-bindgen-futures",
+ "web-sys",
 ]
 
 [[package]]

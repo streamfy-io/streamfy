@@ -22,7 +22,7 @@ tls = ["rust_tls"]
 rust_tls = ["net", "rustls-pemfile", "futures-rustls", "pin-project", "futures-util/io"]
 native_tls = ["net", "pin-project", "async-native-tls", "dep:native-tls", "openssl/vendored", "futures-util/io"]
 openssl_tls = ["net", "openssl", "openssl-sys", "pin-project", "futures-util/io"]
-timer = ["async-io", "pin-project", "futures-lite", "fluvio-wasm-timer"]
+timer = ["async-io", "pin-project", "futures-lite", "streamfy-wasm-timer"]
 fs = ["async-fs", "futures-lite", "pin-utils", "async-trait"]
 zero_copy = ["nix", "task"]
 mmap = ["fs", "memmap2", "task"]
@@ -64,7 +64,7 @@ socket2 = { version = "0.5.10", default-features = false, features = ["all"], op
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 wasm-bindgen-futures = { version = "0.4.45" }
-fluvio-wasm-timer = { version = "0.2.5", optional = true }
+streamfy-wasm-timer = { path = "../streamfy-wasm-timer", optional = true }
 ws_stream_wasm = { version = "0.7.4", optional = true }
 
 

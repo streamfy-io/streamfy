@@ -50,6 +50,7 @@ members = [
     "crates/streamfy-test-derive",
     "crates/streamfy-test-case-derive",
     "crates/streamfy-test-util",
+    "crates/streamfy-wasm-timer",
     "crates/streamfy-util",
     "crates/streamfy-tls-proxy",
     "crates/streamfy-types",

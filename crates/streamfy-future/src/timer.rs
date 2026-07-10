@@ -56,7 +56,7 @@ mod inner {
     use std::time::Duration;
     // TODO: when https://github.com/tomaka/wasm-timer/pull/13 is merged, move this back to
     // wasm-timer
-    use fluvio_wasm_timer::Delay;
+    use streamfy_wasm_timer::Delay;
     pub fn sleep(duration: Duration) -> Delay {
         Delay::new(duration)
     }
