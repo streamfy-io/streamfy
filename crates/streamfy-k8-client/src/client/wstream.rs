@@ -54,7 +54,7 @@ where
 
     fn poll_next(mut self: Pin<&mut Self>, cx: &mut Context) -> Poll<Option<Self::Item>> {
         let mut done = self.as_ref().done;
-        let mut last_buffer = mem::replace(&mut self.as_mut().buffer, BytesMut::new());
+        let mut last_buffer = mem::take(&mut self.as_mut().buffer);
 
         trace!(
             "entering poll next with buffer: {}, done: {}",
