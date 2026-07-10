@@ -87,6 +87,9 @@ jobs:
         run: ./actions/zig-install.sh
       - name: Install Helm
         run: curl -fsSL https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+      - name: Package helm charts
+        # streamfy-cluster build.rs embeds these; package early so PATH/helm are ready
+        run: make -C k8-util/helm package
       - uses: Swatinem/rust-cache@v2
         timeout-minutes: 10
         with:

@@ -1,12 +1,16 @@
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::process::Command;
 
 fn main() {
-    let manifest_dir = Path::new(env!("CARGO_MANIFEST_DIR"));
-    let workspace_root = manifest_dir.join("../..");
+    let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+    let workspace_root = manifest_dir
+        .join("../..")
+        .canonicalize()
+        .unwrap_or_else(|_| manifest_dir.join("../.."));
     let version_path = workspace_root.join("VERSION");
-    let sys_chart = workspace_root.join("k8-util/helm/pkg_sys/streamfy-chart-sys.tgz");
-    let app_chart = workspace_root.join("k8-util/helm/pkg_app/streamfy-chart-app.tgz");
+    let helm_dir = workspace_root.join("k8-util/helm");
+    let sys_chart = helm_dir.join("pkg_sys/streamfy-chart-sys.tgz");
+    let app_chart = helm_dir.join("pkg_app/streamfy-chart-app.tgz");
 
     if version_path.exists() {
         println!("cargo:rerun-if-changed={}", version_path.display());
@@ -17,32 +21,35 @@ fn main() {
     // Also rebuild when chart sources change
     println!(
         "cargo:rerun-if-changed={}",
-        workspace_root.join("k8-util/helm/streamfy-sys").display()
+        helm_dir.join("streamfy-sys").display()
     );
     println!(
         "cargo:rerun-if-changed={}",
-        workspace_root.join("k8-util/helm/streamfy-app").display()
+        helm_dir.join("streamfy-app").display()
     );
 
     // Package helm charts into k8-util/helm/pkg_{sys,app} for include_dir!
+    // Invoke the helm makefile directly so cwd and relative paths are correct.
     let output = Command::new("make")
-        .arg("install")
-        .current_dir(manifest_dir)
+        .arg("package")
+        .current_dir(&helm_dir)
         .output()
-        .expect("failed to spawn `make install` to package helm charts");
+        .expect("failed to spawn `make package` to package helm charts");
     if !output.status.success() {
         panic!(
-            "failed to package helm charts via `make install` in {}:\nstdout:\n{}\nstderr:\n{}",
-            manifest_dir.display(),
+            "failed to package helm charts via `make package` in {}:\nstdout:\n{}\nstderr:\n{}",
+            helm_dir.display(),
             String::from_utf8_lossy(&output.stdout),
             String::from_utf8_lossy(&output.stderr),
         );
     }
-    if !sys_chart.exists() || !app_chart.exists() {
+    if !sys_chart.is_file() || !app_chart.is_file() {
         panic!(
-            "helm chart packages missing after packaging:\n  {}\n  {}",
+            "helm chart packages missing after packaging:\n  {}\n  {}\nmake stdout:\n{}\nmake stderr:\n{}",
             sys_chart.display(),
-            app_chart.display()
+            app_chart.display(),
+            String::from_utf8_lossy(&output.stdout),
+            String::from_utf8_lossy(&output.stderr),
         );
     }
 
