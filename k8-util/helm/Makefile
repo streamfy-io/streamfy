@@ -20,14 +20,27 @@ clean:
 #
 # Important: do not use the package *directory* as the make target —
 # an empty dir would look "up to date" and skip packaging.
+#
+# Do not rename via shell globs (streamfy-app-*.tgz): when no match,
+# bash/dash pass the literal "*" to mv and fail flakily under concurrent
+# cargo build-scripts. Use Chart.yaml version for an exact path instead.
+# flock serializes concurrent `make package` from parallel build.rs runs.
 define package_chart
 	set -e; \
 	mkdir -p $(1); \
 	rm -f $(1)/$(3); \
 	if command -v helm >/dev/null 2>&1; then \
-		echo "Packaging $(2) with helm (app-version=$(APP_VERSION))"; \
+		chart_ver=$$(awk '/^version:/{print $$2; exit}' ./$(2)/Chart.yaml); \
+		test -n "$$chart_ver"; \
+		echo "Packaging $(2) with helm (chart=$$chart_ver app-version=$(APP_VERSION))"; \
 		helm package ./$(2) --app-version "$(APP_VERSION)" -d $(1); \
-		mv -f $(1)/$(2)-*.tgz $(1)/$(3); \
+		src="$(1)/$(2)-$${chart_ver}.tgz"; \
+		if [ ! -f "$$src" ]; then \
+			echo "helm package did not create $$src; dir listing:"; \
+			ls -la $(1) || true; \
+			exit 1; \
+		fi; \
+		mv -f "$$src" $(1)/$(3); \
 	else \
 		echo "helm not found; packaging $(2) with tar into $(1)/$(3)"; \
 		tar -czf $(1)/$(3) $(2); \
@@ -46,7 +59,19 @@ $(SYS_TGZ): $(SYS_SRCS) ../../VERSION
 $(APP_TGZ): $(APP_SRCS) ../../VERSION
 	$(call package_chart,pkg_app,streamfy-app,streamfy-chart-app.tgz)
 
-package: $(SYS_TGZ) $(APP_TGZ)
+# Serial package entrypoint (used by streamfy-cluster build.rs).
+# flock avoids races when cargo runs multiple build scripts that each
+# invoke `make package` against the same pkg_{sys,app} directories.
+package:
+	@lock=$${TMPDIR:-/tmp}/streamfy-helm-package.lock; \
+	if command -v flock >/dev/null 2>&1; then \
+		flock "$$lock" $(MAKE) -j1 package-unlocked; \
+	else \
+		$(MAKE) -j1 package-unlocked; \
+	fi
+
+.PHONY: package-unlocked
+package-unlocked: $(SYS_TGZ) $(APP_TGZ)
 	@echo "Packaged charts are in pkg_sys and pkg_app"
 	@ls -la pkg_sys pkg_app
 	@test -s $(SYS_TGZ)

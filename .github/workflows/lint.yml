@@ -58,6 +58,10 @@ jobs:
           components: clippy
       - name: Install zig
         run: ./actions/zig-install.sh
+      - name: Install Helm
+        run: curl -fsSL https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+      - name: Package helm charts
+        run: make -C k8-util/helm package
       - uses: Swatinem/rust-cache@v2
         timeout-minutes: 10
         with:

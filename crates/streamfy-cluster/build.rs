@@ -31,14 +31,16 @@ fn main() {
     // Package helm charts into k8-util/helm/pkg_{sys,app} for include_dir!
     // Invoke the helm makefile directly so cwd and relative paths are correct.
     // Cargo injects MAKEFLAGS=-jN into build scripts; that races directory-based
-    // packaging and can leave empty pkg_* dirs looking "up to date". Force a
-    // serial, isolated make invocation.
+    // packaging (and concurrent build.rs can stomp pkg_*). Force a serial,
+    // isolated make; helm/Makefile `package` also flock-serializes.
     let output = Command::new("make")
         .arg("package")
+        .arg("-j1")
         .current_dir(&helm_dir)
         .env_remove("MAKEFLAGS")
         .env_remove("MFLAGS")
         .env_remove("MAKELEVEL")
+        .env("MAKEFLAGS", "-j1")
         .output()
         .expect("failed to spawn `make package` to package helm charts");
     if !output.status.success() {
