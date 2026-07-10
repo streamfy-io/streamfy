@@ -35,8 +35,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@1.96.0
+        uses: actions-rs/toolchain@v1
         with:
+          profile: minimal
+          toolchain: 1.96.0
+          override: true
           components: rustfmt
       - name: Check formatting
         run: make check-fmt
@@ -47,8 +50,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@1.96.0
+        uses: actions-rs/toolchain@v1
         with:
+          profile: minimal
+          toolchain: 1.96.0
+          override: true
           components: clippy
       - name: Install zig
         run: ./actions/zig-install.sh
