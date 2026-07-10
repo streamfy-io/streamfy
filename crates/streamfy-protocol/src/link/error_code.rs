@@ -3,7 +3,7 @@
 //!
 //! Error code definitions described here.
 //!
-use flv_util::string_helper::upper_cammel_case_to_sentence;
+use streamfy_util::string_helper::upper_cammel_case_to_sentence;
 
 use crate::{api::RequestKind, record::ReplicaKey, Decoder, Encoder};
 

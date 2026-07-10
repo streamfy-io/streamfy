@@ -6,8 +6,8 @@ use indicatif::style::TemplateError;
 
 use streamfy::StreamfyError;
 use k8_config::ConfigError as K8ConfigError;
-use fluvio_helm::HelmError;
-use fluvio_command::CommandError;
+use streamfy_helm::HelmError;
+use streamfy_command::CommandError;
 
 use crate::check::{CheckResults, CheckStatuses, ClusterCheckError};
 use crate::charts::ChartInstallError;

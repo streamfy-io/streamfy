@@ -4,7 +4,7 @@ use std::process::Command;
 use clap::Parser;
 use anyhow::Result;
 
-use fluvio_command::CommandExt;
+use streamfy_command::CommandExt;
 use streamfy_extension_common::StreamfyExtensionMetadata;
 
 use crate::client::client_metadata;

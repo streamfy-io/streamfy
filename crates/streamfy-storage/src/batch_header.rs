@@ -29,7 +29,7 @@ mod tests {
     use tracing::debug;
 
     use streamfy_protocol::record::Offset;
-    use flv_util::fixture::{ensure_new_dir};
+    use streamfy_util::fixture::{ensure_new_dir};
 
     use crate::fixture::BatchProducer;
     use crate::mut_records::MutFileRecords;

@@ -148,7 +148,7 @@ mod proxy {
     pub use streamfy_future::rust_tls::TlsAcceptor;
 
     use streamfy_auth::x509::X509Authenticator;
-    use flv_tls_proxy::{
+    use streamfy_tls_proxy::{
         start as proxy_start, start_with_authenticator as proxy_start_with_authenticator,
     };
 

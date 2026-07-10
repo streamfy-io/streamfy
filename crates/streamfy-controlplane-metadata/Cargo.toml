@@ -45,7 +45,7 @@ serde_yaml = { workspace = true, optional = true }
 derive_builder = { workspace = true }
 
 # External Streamfy dependencies
-flv-util = { workspace = true }
+streamfy-util = { workspace = true }
 
 streamfy-types = { workspace = true }
 streamfy-stream-model = { workspace = true }

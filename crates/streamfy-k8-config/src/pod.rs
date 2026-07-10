@@ -1,0 +1,57 @@
+use std::fs::read_to_string;
+use std::path::Path;
+
+use tracing::debug;
+use tracing::error;
+use tracing::trace;
+
+const BASE_DIR: &str = "/var/run/secrets/kubernetes.io/serviceaccount";
+const API_SERVER: &str = "https://kubernetes.default.svc";
+
+/// Configuration as Pod
+#[derive(Debug, Default, Clone)]
+pub struct PodConfig {
+    pub namespace: String,
+    pub token: String,
+}
+
+impl PodConfig {
+    pub fn load() -> Option<Self> {
+        // first try to see if this base dir account exists, otherwise return non
+        let path = Path::new(BASE_DIR);
+        if !path.exists() {
+            debug!(
+                "pod config dir: {} is not found, skipping pod config",
+                BASE_DIR
+            );
+            return None;
+        }
+
+        let namespace = read_file("namespace")?;
+        let token = read_file("token")?;
+
+        Some(Self { namespace, token })
+    }
+
+    pub fn api_path(&self) -> &'static str {
+        API_SERVER
+    }
+
+    /// path to CA certificate
+    pub fn ca_path(&self) -> String {
+        format!("{}/{}", BASE_DIR, "ca.crt")
+    }
+}
+
+// read file
+fn read_file(name: &str) -> Option<String> {
+    let full_path = format!("{BASE_DIR}/{name}");
+    match read_to_string(&full_path) {
+        Ok(value) => Some(value),
+        Err(err) => {
+            error!("no {} found as pod in {}", name, full_path);
+            trace!("unable to read pod: {} value: {}", name, err);
+            None
+        }
+    }
+}

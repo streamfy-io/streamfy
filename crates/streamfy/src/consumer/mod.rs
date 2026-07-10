@@ -488,7 +488,9 @@ where
 
                 // update stream with received offsets
                 spawn(async move {
-                    use streamfy_spu_schema::server::update_offset::{UpdateOffsetsRequest, OffsetUpdate};
+                    use streamfy_spu_schema::server::update_offset::{
+                        UpdateOffsetsRequest, OffsetUpdate,
+                    };
 
                     loop {
                         match server_recv.recv().await {

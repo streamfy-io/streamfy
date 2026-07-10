@@ -1,0 +1,20 @@
+[package]
+name = "streamfy-k8-diff"
+version = "0.1.2"
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Diff computation for Kubernetes objects"
+publish = false
+
+[lib]
+name = "k8_diff"
+path = "src/lib.rs"
+
+[dependencies]
+serde = { workspace = true, default-features = true }
+serde_json = { workspace = true }
+
+[dev-dependencies]
+serde = { workspace = true, default-features = true, features = ["derive"] }

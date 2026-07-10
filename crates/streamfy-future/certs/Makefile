@@ -1,6 +1,6 @@
-# -legacy is an openssl3 option for pkcs12 formats whose default
-# has shifted
-PFX_OPTS ?= "-legacy"
+# -legacy is an openssl3 option for pkcs12 formats whose default has shifted.
+# Leave empty for LibreSSL (macOS system openssl). CI/Ubuntu OpenSSL 3 needs -legacy.
+PFX_OPTS ?=
 
 clean:
 	rm -rf test-certs
@@ -69,10 +69,17 @@ generate-intermediate-server-csr:	generate-intermediate-server-key
 		-out test-certs/intermediate-server.csr \
 		-config  cert.conf
 
+# PKCS#12 bag algorithms that macOS Security.framework accepts.
+# Default LibreSSL/OpenSSL export uses RC2 for cert bags, which modern
+# Darwin rejects with OSStatus -26276 (errSecUnknownFormat).
+PKCS12_MAC_COMPAT ?= -certpbe PBE-SHA1-3DES -keypbe PBE-SHA1-3DES -macalg sha1
+
 # generate anonymous pk12
 .PHONY: generate-server-pk12
 generate-server-pk12:
-	openssl pkcs12 -export -out test-certs/server.pfx ${PFX_OPTS} -inkey test-certs/server.key -in test-certs/server.crt -certfile  test-certs/ca.crt -passout pass:test
+	openssl pkcs12 -export -out test-certs/server.pfx ${PFX_OPTS} ${PKCS12_MAC_COMPAT} \
+		-inkey test-certs/server.key -in test-certs/server.crt -certfile test-certs/ca.crt \
+		-passout pass:test
 
 
 
@@ -135,7 +142,9 @@ generate-client-crt:	generate-client-csr
 		-extfile openssl.cnf
 
 generate-client-pk12:
-	openssl pkcs12 -export -out test-certs/client.pfx ${PFX_OPTS} -inkey test-certs/client.key -in test-certs/client.crt -certfile  test-certs/ca.crt -passout pass:test
+	openssl pkcs12 -export -out test-certs/client.pfx ${PFX_OPTS} ${PKCS12_MAC_COMPAT} \
+		-inkey test-certs/client.key -in test-certs/client.crt -certfile test-certs/ca.crt \
+		-passout pass:test
 
 
 # for non mac

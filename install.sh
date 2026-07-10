@@ -17,7 +17,9 @@ readonly VERSION=${VERSION-}
 readonly SVM_VERSION=${SVM_VERSION-}
 
 # GitHub repository for streamfy releases
-readonly GITHUB_REPO=${GITHUB_REPO-"streamfy/streamfy"}
+readonly GITHUB_REPO=${GITHUB_REPO-"streamfy-io/streamfy"}
+# Rolling development release tag (prerelease). Used when no stable latest exists.
+readonly DEV_RELEASE_TAG=${DEV_RELEASE_TAG-"dev"}
 
 _streamfy_version="${STREAMFY_VERSION:-${VERSION:-}}"
 
@@ -37,6 +39,7 @@ main() {
     if [ -z "${STREAMFY_VERSION}" ] && [ "${VERSION}" != "" ]; then
         echo "Warning: VERSION is deprecated in favor of STREAMFY_VERSION"
         export STREAMFY_VERSION=${VERSION}
+        _streamfy_version="${STREAMFY_VERSION}"
     fi
 
     # Normalize the target for GitHub release asset naming
@@ -61,7 +64,7 @@ main() {
     echo "Installing svm"
     unzip -q -o "${_zipfile}" -d "${_dir}"
 
-    # Find the extracted svm binary
+    # Find the extracted svm binary (zip may also contain a .target file)
     local _svm_binary="${_dir}/svm"
     if [ ! -f "${_svm_binary}" ]; then
         err "svm binary not found after extraction"
@@ -76,13 +79,21 @@ main() {
         echo "If a version of streamfy is already installed, you can run 'svm install' or 'svm switch' to change versions"
     fi
 
+    # Resolve which Streamfy channel/version to install via svm.
+    # - Explicit STREAMFY_VERSION / VERSION wins
+    # - Rolling `dev` svm builds install the `latest` channel (maps to the `dev` release)
+    # - Otherwise default to stable
+    local _install_channel
     if [ -n "${_streamfy_version}" ]; then
-        echo "Installing streamfy ${_streamfy_version}"
-        "$SVM_INSTALL_DIR"/bin/svm install "${STREAMFY_VERSION}"
+        _install_channel="${_streamfy_version}"
+    elif [ "${_svmver}" = "${DEV_RELEASE_TAG}" ]; then
+        _install_channel="latest"
     else
-        echo "Installing latest streamfy"
-        "$SVM_INSTALL_DIR"/bin/svm install
+        _install_channel="stable"
     fi
+
+    echo "Installing streamfy ${_install_channel}"
+    "$SVM_INSTALL_DIR"/bin/svm install "${_install_channel}"
 
     # Cleanup
     rm -rf "${_dir}"
@@ -91,39 +102,65 @@ main() {
     remind_path
 }
 
+# Extract "tag_name" from a GitHub release JSON body without jq.
+parse_release_tag() {
+    echo "$1" | grep -o '"tag_name"[[:space:]]*:[[:space:]]*"[^"]*"' | head -1 | sed 's/.*"tag_name"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/'
+}
+
+# Fetch a release JSON document. Returns 0 on success and prints body on stdout.
+fetch_release_json() {
+    local _url="$1"
+    curl --proto '=https' --tlsv1.2 --silent --show-error --fail --location "${_url}" 2>/dev/null
+}
+
 # Get svm version to download
-# Uses SVM_VERSION env var if set, otherwise fetches the latest release tag
+# Uses SVM_VERSION env var if set, otherwise:
+#   1) GitHub /releases/latest (stable, non-prerelease)
+#   2) rolling `dev` prerelease tag
 get_svm_version() {
     if [ -n "${SVM_VERSION}" ]; then
         echo "${SVM_VERSION}"
         return 0
     fi
 
-    # Fetch the latest release tag from GitHub API
-    set +e
-    local _url="https://api.github.com/repos/${GITHUB_REPO}/releases/latest"
     local _response
-    _response=$(curl --proto '=https' --tlsv1.2 --silent --show-error --fail --location "${_url}" 2>/dev/null)
+    local _tag
+    local _latest_url="https://api.github.com/repos/${GITHUB_REPO}/releases/latest"
+    local _dev_url="https://api.github.com/repos/${GITHUB_REPO}/releases/tags/${DEV_RELEASE_TAG}"
+
+    set +e
+    _response=$(fetch_release_json "${_latest_url}")
     local _status=$?
     set -e
 
-    if [ $_status -ne 0 ]; then
-        err "Failed to fetch latest release information from GitHub"
-        err "    URL: ${_url}"
-        err "You can set SVM_VERSION environment variable to specify a version manually"
-        abort_prompt_issue
+    if [ $_status -eq 0 ]; then
+        _tag=$(parse_release_tag "${_response}")
+        if [ -n "${_tag}" ]; then
+            echo "${_tag}"
+            return 0
+        fi
     fi
 
-    # Extract tag_name from JSON response (simple parsing without jq dependency)
-    local _tag
-    _tag=$(echo "${_response}" | grep -o '"tag_name"[[:space:]]*:[[:space:]]*"[^"]*"' | head -1 | sed 's/.*"tag_name"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/')
+    # No stable/latest release (common for new forks) — fall back to rolling dev
+    set +e
+    _response=$(fetch_release_json "${_dev_url}")
+    _status=$?
+    set -e
 
-    if [ -z "${_tag}" ]; then
-        err "Failed to parse release tag from GitHub API response"
-        abort_prompt_issue
+    if [ $_status -eq 0 ]; then
+        _tag=$(parse_release_tag "${_response}")
+        if [ -n "${_tag}" ]; then
+            echo "${_tag}"
+            return 0
+        fi
     fi
 
-    echo "${_tag}"
+    err "Failed to fetch release information from GitHub"
+    err "    Tried: ${_latest_url}"
+    err "    Tried: ${_dev_url}"
+    err "You can set SVM_VERSION environment variable to specify a version manually"
+    err "    e.g. SVM_VERSION=dev"
+    abort_prompt_issue
 }
 
 # Prompts the user to add ~/.svm/bin and ~/.streamfy/bin to their PATH variable

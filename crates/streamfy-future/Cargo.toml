@@ -17,12 +17,12 @@ subscriber = ["tracing-subscriber", "tracing-subscriber/std", "tracing-subscribe
 fixture = ["subscriber", "task", "streamfy-future-derive"]
 future = ["futures-lite"]
 io = ["async-fs", "async-io"]
-net = ["futures-lite", "async-net", "async-trait", "cfg-if", "futures-util/io", "socket2", "ws_stream_wasm"]
+net = ["futures-lite", "async-net", "async-trait", "cfg-if", "futures-util/io", "socket2", "streamfy-ws-stream-wasm"]
 tls = ["rust_tls"]
 rust_tls = ["net", "rustls-pemfile", "futures-rustls", "pin-project", "futures-util/io"]
 native_tls = ["net", "pin-project", "async-native-tls", "dep:native-tls", "openssl/vendored", "futures-util/io"]
 openssl_tls = ["net", "openssl", "openssl-sys", "pin-project", "futures-util/io"]
-timer = ["async-io", "pin-project", "futures-lite", "fluvio-wasm-timer"]
+timer = ["async-io", "pin-project", "futures-lite", "streamfy-wasm-timer"]
 fs = ["async-fs", "futures-lite", "pin-utils", "async-trait"]
 zero_copy = ["nix", "task"]
 mmap = ["fs", "memmap2", "task"]
@@ -64,15 +64,15 @@ socket2 = { version = "0.5.10", default-features = false, features = ["all"], op
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 wasm-bindgen-futures = { version = "0.4.45" }
-fluvio-wasm-timer = { version = "0.2.5", optional = true }
-ws_stream_wasm = { version = "0.7.4", optional = true }
+streamfy-wasm-timer = { path = "../streamfy-wasm-timer", optional = true }
+streamfy-ws-stream-wasm = { path = "../streamfy-ws-stream-wasm", optional = true }
 
 
 [dev-dependencies]
 bytes = "1.10"
 streamfy-future = { path = ".", features = ["net", "fixture", "timer", "fs", "retry"] }
 streamfy-future-derive = { path = "streamfy-future-derive", version = "0.2.0" }
-flv-util = { version = "0.5.2", features = ["fixture"] }
+streamfy-util = { path = "../streamfy-util", features = ["fixture"] }
 futures-util = { version = "0.3.31", features = ["sink", "io"] }
 lazy_static = "1.5"
 num_cpus = "1.17"

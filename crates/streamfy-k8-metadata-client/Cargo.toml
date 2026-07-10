@@ -1,0 +1,25 @@
+[package]
+name = "streamfy-k8-metadata-client"
+version = "9.0.0"
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Trait for interfacing Kubernetes metadata service"
+publish = false
+
+[lib]
+name = "k8_metadata_client"
+path = "src/lib.rs"
+
+[dependencies]
+anyhow = { workspace = true }
+tracing = { workspace = true }
+futures-util = { workspace = true, default-features = true, features = ["std"] }
+pin-utils = "0.1.0"
+serde = { workspace = true, default-features = true, features = ["derive"] }
+serde_json = { workspace = true }
+serde_qs = "0.15.0"
+async-trait = { workspace = true }
+streamfy-k8-diff = { path = "../streamfy-k8-diff" }
+streamfy-k8-types = { path = "../streamfy-k8-types" }

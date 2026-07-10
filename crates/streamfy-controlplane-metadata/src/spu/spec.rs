@@ -10,10 +10,10 @@ use std::io::Error as IoError;
 use std::io::ErrorKind;
 use std::fmt;
 
-use flv_util::socket_helpers::EndPoint as SocketEndPoint;
-use flv_util::socket_helpers::EndPointEncryption;
+use streamfy_util::socket_helpers::EndPoint as SocketEndPoint;
+use streamfy_util::socket_helpers::EndPointEncryption;
 use streamfy_types::SpuId;
-use flv_util::socket_helpers::ServerAddress;
+use streamfy_util::socket_helpers::ServerAddress;
 
 use streamfy_protocol::{Encoder, Decoder};
 use streamfy_protocol::bytes::{Buf, BufMut};
@@ -294,7 +294,7 @@ impl TryFrom<&Endpoint> for SocketEndPoint {
     type Error = IoError;
 
     fn try_from(endpoint: &Endpoint) -> Result<Self, Self::Error> {
-        flv_util::socket_helpers::host_port_to_socket_addr(&endpoint.host, endpoint.port).map(
+        streamfy_util::socket_helpers::host_port_to_socket_addr(&endpoint.host, endpoint.port).map(
             |addr| SocketEndPoint {
                 addr,
                 encryption: EndPointEncryption::PLAINTEXT,
@@ -308,7 +308,7 @@ impl TryFrom<&Endpoint> for std::net::SocketAddr {
     type Error = IoError;
 
     fn try_from(endpoint: &Endpoint) -> Result<Self, Self::Error> {
-        flv_util::socket_helpers::host_port_to_socket_addr(&endpoint.host, endpoint.port)
+        streamfy_util::socket_helpers::host_port_to_socket_addr(&endpoint.host, endpoint.port)
     }
 }
 

@@ -6,7 +6,9 @@ use dirs::home_dir;
 use anyhow::{anyhow, Result};
 
 use streamfy_types::defaults::CLI_CONFIG_PATH;
-use streamfy_channel::{StreamfyChannelConfig, StreamfyChannelInfo, StreamfyBinVersion, ImageTagStrategy};
+use streamfy_channel::{
+    StreamfyChannelConfig, StreamfyChannelInfo, StreamfyBinVersion, ImageTagStrategy,
+};
 
 use crate::install_channel_streamfy_bin;
 

@@ -22,7 +22,7 @@ use streamfy_spu_schema::{
     },
     Isolation,
 };
-use flv_util::fixture::ensure_clean_dir;
+use streamfy_util::fixture::ensure_clean_dir;
 
 use crate::{
     config::SpuConfig,
@@ -238,8 +238,11 @@ async fn test_produce_request_timed_out() {
     // wait for stream controller async to start
     sleep(Duration::from_millis(100)).await;
 
-    let client_socket =
-        MultiplexerSocket::new(StreamfySocket::connect(&public_addr).await.expect("connect"));
+    let client_socket = MultiplexerSocket::new(
+        StreamfySocket::connect(&public_addr)
+            .await
+            .expect("connect"),
+    );
     let topic = "test";
 
     let records_per_request = 5;
@@ -301,8 +304,11 @@ async fn test_produce_not_waiting_replication() {
     // wait for stream controller async to start
     sleep(Duration::from_millis(100)).await;
 
-    let client_socket =
-        MultiplexerSocket::new(StreamfySocket::connect(&public_addr).await.expect("connect"));
+    let client_socket = MultiplexerSocket::new(
+        StreamfySocket::connect(&public_addr)
+            .await
+            .expect("connect"),
+    );
     let topic = "test";
 
     let records_per_request = 5;
@@ -367,8 +373,11 @@ async fn test_produce_waiting_replication() {
     debug!("starting follower replica controller");
     config.follower_replica(0).await;
 
-    let client_socket =
-        MultiplexerSocket::new(StreamfySocket::connect(&public_addr).await.expect("connect"));
+    let client_socket = MultiplexerSocket::new(
+        StreamfySocket::connect(&public_addr)
+            .await
+            .expect("connect"),
+    );
     let topic = "test";
 
     let records_per_request = 5;

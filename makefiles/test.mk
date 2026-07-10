@@ -244,6 +244,13 @@ cli-streamfy-smoke:
 	bats ./tests/cli/streamfy_smoke_tests/non-concurrent/local-resume.bats
 	bats ./tests/cli/streamfy_smoke_tests/non-concurrent/cluster-delete.bats
 
+# Core CLI smoke for CI: exclude SmartModule suites and topic-basic
+# (topic-basic setup creates a wasm smartmodule not built in this CI path).
+cli-streamfy-smoke-ci:
+	bats -x $(shell ls -1 ./tests/cli/streamfy_smoke_tests/*.bats | grep -vE 'smartmodule|topic-basic' | sort -R)
+	bats ./tests/cli/streamfy_smoke_tests/non-concurrent/local-resume.bats
+	bats ./tests/cli/streamfy_smoke_tests/non-concurrent/cluster-delete.bats
+
 cli-streamfy-read-only-smoke:
 	bats $(shell ls -1 ./tests/cli/streamfy_read_only/*.bats | sort -R)
 

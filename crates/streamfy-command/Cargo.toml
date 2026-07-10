@@ -1,0 +1,13 @@
+[package]
+name = "streamfy-command"
+version = "0.2.1"
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Streamfy command execution helpers"
+publish = false
+
+[dependencies]
+tracing = { workspace = true }
+thiserror = { workspace = true }

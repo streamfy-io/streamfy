@@ -65,7 +65,7 @@ streamfy-spu-schema = { workspace = true, features = ["file"] }
 streamfy-future = { workspace = true, features = ["fixture"] }
 streamfy-socket = { workspace = true, features = ["file"] }
 streamfy-protocol = { workspace = true, features = ["fixture"] }
-flv-util = { workspace = true, features = ["fixture"] }
+streamfy-util = { workspace = true, features = ["fixture"] }
 
 [package.metadata.cargo-udeps.ignore]
 development = ["streamfy-socket"]

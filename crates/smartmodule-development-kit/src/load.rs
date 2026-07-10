@@ -3,7 +3,9 @@ use clap::Parser;
 use anyhow::Result;
 
 use streamfy::StreamfyClusterConfig;
-use streamfy_controlplane_metadata::smartmodule::{SmartModuleWasm, SmartModuleSpec, SmartModuleMetadata};
+use streamfy_controlplane_metadata::smartmodule::{
+    SmartModuleWasm, SmartModuleSpec, SmartModuleMetadata,
+};
 use streamfy_extension_common::target::ClusterTarget;
 use streamfy::Streamfy;
 use streamfy_future::task::run_block_on;

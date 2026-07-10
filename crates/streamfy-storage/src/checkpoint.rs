@@ -212,7 +212,7 @@ mod tests {
     use std::env::temp_dir;
 
     use streamfy_future::timer::sleep;
-    use flv_util::fixture::ensure_clean_file;
+    use streamfy_util::fixture::ensure_clean_file;
 
     use crate::config::ReplicaConfig;
     use super::CheckPoint;

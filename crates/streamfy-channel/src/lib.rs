@@ -254,7 +254,8 @@ impl StreamfyChannelInfo {
             (binary_location, extensions)
         } else {
             // No home directory
-            let binary_location = PathBuf::from(format!("{CLI_CONFIG_PATH}/bin/{streamfy_bin_name}"));
+            let binary_location =
+                PathBuf::from(format!("{CLI_CONFIG_PATH}/bin/{streamfy_bin_name}"));
             let extensions = PathBuf::from(format!("{CLI_CONFIG_PATH}/{extensions_dir_name}"));
 
             (binary_location, extensions)

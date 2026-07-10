@@ -529,9 +529,10 @@ mod tests {
     #[test]
     fn test_parse_package_id_custom_registry() {
         let registry_url = "https://other.registry.io/v2/";
-        let package_id: PackageId<WithVersion> = format!("{registry_url}/streamfy.io/streamfy:0.6.0")
-            .parse()
-            .unwrap();
+        let package_id: PackageId<WithVersion> =
+            format!("{registry_url}/streamfy.io/streamfy:0.6.0")
+                .parse()
+                .unwrap();
         assert_eq!(package_id.registry(), &registry_url.parse().unwrap());
         assert_eq!(package_id.group().as_str(), "streamfy.io");
         assert_eq!(package_id.name().as_str(), "streamfy");

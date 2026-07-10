@@ -22,8 +22,9 @@ mod cmd {
     use anyhow::{bail, Result};
 
     use streamfy::{
-        Compression, Streamfy, StreamfyError, TopicProducerPool, TopicProducerConfigBuilder, RecordKey,
-        ProduceOutput, DeliverySemantic, SmartModuleContextData, Isolation, SmartModuleInvocation,
+        Compression, Streamfy, StreamfyError, TopicProducerPool, TopicProducerConfigBuilder,
+        RecordKey, ProduceOutput, DeliverySemantic, SmartModuleContextData, Isolation,
+        SmartModuleInvocation,
     };
     use streamfy_extension_common::Terminal;
     use streamfy_types::{print_cli_ok, PartitionId};

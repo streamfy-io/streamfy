@@ -16,8 +16,8 @@ use tracing::instrument;
 use streamfy_controlplane_metadata::message::*;
 use streamfy_protocol::{Decoder, Encoder};
 
-use flv_util::actions::Actions;
-use flv_util::SimpleConcurrentBTreeMap;
+use streamfy_util::actions::Actions;
+use streamfy_util::SimpleConcurrentBTreeMap;
 
 pub trait Spec {
     const LABEL: &'static str;

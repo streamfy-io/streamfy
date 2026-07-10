@@ -67,7 +67,8 @@ impl Client {
 
                 // Derive the version for the `latest` (dev) channel from the
                 // VERSION file in the streamfy repository at the same ref as the
-                // dev release tag
+                // dev release tag, with the release commit as build metadata:
+                //   e.g. 0.18.2-dev-1+<git-sha>
                 let content_items = octocrab
                     .repos(REPO_OWNER, REPO_NAME)
                     .get_content()
@@ -88,8 +89,20 @@ impl Client {
                         anyhow::anyhow!("VERSION file for dev release is missing or empty")
                     })?;
 
-                let version = Version::parse(version_str.trim()).map_err(|e| {
-                    anyhow::anyhow!("Invalid version string in VERSION file for dev release: {e}")
+                let base = version_str.trim();
+                // Prefer a full commit SHA from target_commitish when the release
+                // was created with --target <sha>; otherwise use the raw value.
+                let commit = release.target_commitish.trim();
+                let version_with_commit = if !commit.is_empty() {
+                    format!("{base}+{commit}")
+                } else {
+                    base.to_string()
+                };
+
+                let version = Version::parse(&version_with_commit).map_err(|e| {
+                    anyhow::anyhow!(
+                        "Invalid version string for dev release \"{version_with_commit}\": {e}"
+                    )
                 })?;
 
                 (release, version)

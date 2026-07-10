@@ -19,7 +19,7 @@ use url::ParseError;
 
 use streamfy_future::timer::sleep;
 use streamfy_types::config_file::SaveLoadConfig;
-use fluvio_helm::{HelmClient, HelmError};
+use streamfy_helm::{HelmClient, HelmError};
 use k8_config::{ConfigError as K8ConfigError, K8Config};
 
 use crate::charts::{DEFAULT_HELM_VERSION, APP_CHART_NAME};
@@ -615,7 +615,9 @@ impl ClusterCheck for AlreadyInstalled {
                 UnrecoverableCheckStatus::AlreadyInstalled,
             ));
         }
-        Ok(CheckStatus::pass("Previous streamfy installation not found"))
+        Ok(CheckStatus::pass(
+            "Previous streamfy installation not found",
+        ))
     }
 
     fn required_components(&self) -> Vec<StreamfyClusterComponent> {
@@ -696,7 +698,12 @@ impl ClusterCheck for LocalClusterCheck {
         sys.refresh_processes(sysinfo::ProcessesToUpdate::All, true); // Only load what we need.
         let proc_count = sys
             .processes_by_exact_name("streamfy-run".as_ref())
-            .map(|x| println!("       found existing streamfy-run process. pid: {}", x.pid()))
+            .map(|x| {
+                println!(
+                    "       found existing streamfy-run process. pid: {}",
+                    x.pid()
+                )
+            })
             .count();
         if proc_count > 0 {
             return Ok(CheckStatus::Unrecoverable(

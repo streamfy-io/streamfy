@@ -11,7 +11,7 @@ mod error {
 
     use std::io::Error as IoError;
 
-    use fluvio_command::CommandError;
+    use streamfy_command::CommandError;
 
     #[derive(thiserror::Error, Debug)]
     pub enum LocalRuntimeError {

@@ -6,7 +6,7 @@ use tracing::{debug, info, instrument};
 
 use streamfy_controlplane_metadata::spu::{Endpoint, IngressAddr, IngressPort, SpuSpec, SpuType};
 
-use fluvio_command::CommandExt;
+use streamfy_command::CommandExt;
 use streamfy::config::TlsPolicy;
 use streamfy_types::SpuId;
 

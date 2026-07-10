@@ -220,7 +220,7 @@ mod tests {
     use streamfy_controlplane::replica::Replica;
     use streamfy_storage::config::ReplicaConfig;
     use streamfy_types::PartitionId;
-    use flv_util::fixture::ensure_clean_dir;
+    use streamfy_util::fixture::ensure_clean_dir;
 
     use crate::{
         config::ReplicationConfig, storage::SharableReplicaStorage,

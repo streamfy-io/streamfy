@@ -1,0 +1,27 @@
+[package]
+name = "streamfy-k8-types"
+version = "0.10.0"
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Kubernetes object types for Streamfy"
+publish = false
+categories = ["encoding"]
+
+[lib]
+name = "k8_types"
+path = "src/lib.rs"
+
+[features]
+core = []
+app = ["core"]
+storage = []
+batch = ["core"]
+
+[dependencies]
+serde = { workspace = true, default-features = true, features = ["derive"] }
+serde_json = { workspace = true }
+
+[dev-dependencies]
+serde_qs = "0.15.0"

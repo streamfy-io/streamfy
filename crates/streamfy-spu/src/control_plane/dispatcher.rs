@@ -13,7 +13,7 @@ use streamfy_controlplane::spu_api::api::{InternalSpuRequest, InternalSpuApi};
 use streamfy_controlplane::spu_api::update_replica::UpdateReplicaRequest;
 use streamfy_controlplane::spu_api::update_smartmodule::UpdateSmartModuleRequest;
 use streamfy_controlplane::spu_api::update_spu::UpdateSpuRequest;
-use flv_util::print_cli_err;
+use streamfy_util::print_cli_err;
 use streamfy_future::task::spawn;
 use streamfy_future::timer::sleep;
 use streamfy_protocol::api::RequestMessage;

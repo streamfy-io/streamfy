@@ -6,7 +6,7 @@ use tracing::{info, debug};
 use streamfy_test_util::test_runner::test_driver::{TestDriver};
 use streamfy_test_util::test_meta::environment::EnvDetail;
 use streamfy::RecordKey;
-use fluvio_command::CommandExt;
+use streamfy_command::CommandExt;
 use streamfy::TopicProducerConfigBuilder;
 
 use super::SmokeTestCase;

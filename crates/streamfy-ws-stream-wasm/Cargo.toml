@@ -1,0 +1,41 @@
+[package]
+name = "streamfy-ws-stream-wasm"
+version = "0.7.4"
+edition = "2018"
+authors = ["Streamfy Contributors <team@streamfy.io>"]
+description = "A convenience library for using websockets in WASM"
+license = "Unlicense"
+repository = "https://github.com/streamfy-io/streamfy"
+publish = false
+categories = ["asynchronous", "network-programming", "api-bindings", "wasm", "web-programming::websocket"]
+keywords = ["wasm", "websocket", "tokio", "stream", "async"]
+
+[lib]
+name = "streamfy_ws_stream_wasm"
+path = "src/lib.rs"
+
+[features]
+tokio_io = ["async_io_stream/tokio_io"]
+
+[dependencies]
+js-sys = "0.3"
+log = "0.4"
+send_wrapper = "0.6"
+thiserror = "1"
+wasm-bindgen = "0.2"
+wasm-bindgen-futures = "0.4"
+async_io_stream = { version = "0.3", features = ["map_pharos"] }
+futures = { version = "0.3", default-features = false }
+pharos = "0.5"
+web-sys = { version = "0.3", features = [
+  "BinaryType",
+  "Blob",
+  "console",
+  "MessageEvent",
+  "WebSocket",
+  "CloseEvent",
+  "DomException",
+] }
+
+[build-dependencies]
+rustc_version = "0.4"

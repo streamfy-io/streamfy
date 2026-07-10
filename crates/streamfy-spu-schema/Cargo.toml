@@ -38,7 +38,7 @@ streamfy-smartmodule = { workspace = true }
 futures-util = { workspace = true }
 streamfy-socket = { workspace = true, features = ["file"] }
 streamfy-future = { workspace = true, features = ["fixture", "fs"] }
-flv-util = { workspace = true, features = ["fixture"] }
+streamfy-util = { workspace = true, features = ["fixture"] }
 streamfy-protocol = { workspace = true,  features = [
     "compress"
 ] }

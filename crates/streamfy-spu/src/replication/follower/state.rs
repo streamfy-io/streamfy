@@ -280,7 +280,7 @@ mod follower_tests {
 
     use std::path::PathBuf;
 
-    use flv_util::fixture::ensure_clean_dir;
+    use streamfy_util::fixture::ensure_clean_dir;
     use streamfy_types::{SpuId, PartitionId};
     use streamfy_storage::config::ReplicaConfig;
 

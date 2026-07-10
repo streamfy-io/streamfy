@@ -268,7 +268,7 @@ mod tests {
     use std::path::PathBuf;
 
     use streamfy_protocol::fixture::TEST_RECORD;
-    use flv_util::fixture::ensure_new_dir;
+    use streamfy_util::fixture::ensure_new_dir;
     use streamfy_protocol::fixture::create_batch;
     use streamfy_protocol::fixture::create_batch_with_producer;
 

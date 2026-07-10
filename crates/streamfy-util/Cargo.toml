@@ -1,0 +1,16 @@
+[package]
+name = "streamfy-util"
+version = "0.5.2"
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Utilities for Streamfy projects"
+publish = false
+
+[features]
+fixture = []
+
+[dependencies]
+log = "0.4"
+tracing = { workspace = true }

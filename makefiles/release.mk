@@ -108,7 +108,7 @@ docker-push-manifest-dev: docker-create-manifest-dev docker-push-manifest
 
 # Uses $(VERSION)
 curl-install-streamfy:
-	curl -fsS https://raw.githubusercontent.com/streamfy-io/streamfy/master/install.sh | bash
+	curl -fsS https://raw.githubusercontent.com/streamfy-io/streamfy/main/install.sh | bash
 
 install-streamfy-stable: VERSION=stable
 install-streamfy-stable: curl-install-streamfy

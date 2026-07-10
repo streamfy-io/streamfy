@@ -101,8 +101,12 @@ impl SwitchOpt {
                 {
                     debug!("Installing stable channel binary for first time");
                     let version = StreamfyBinVersion::parse(channel_name)?;
-                    install_channel_streamfy_bin(channel_name.clone(), &new_config_channel, version)
-                        .await?;
+                    install_channel_streamfy_bin(
+                        channel_name.clone(),
+                        &new_config_channel,
+                        version,
+                    )
+                    .await?;
                 }
                 if channel_name == LATEST_CHANNEL_NAME
                     && !StreamfyChannelInfo::latest_channel()
@@ -111,8 +115,12 @@ impl SwitchOpt {
                 {
                     debug!("Installing latest channel binary for first time");
                     let version = StreamfyBinVersion::parse(channel_name)?;
-                    install_channel_streamfy_bin(channel_name.clone(), &new_config_channel, version)
-                        .await?;
+                    install_channel_streamfy_bin(
+                        channel_name.clone(),
+                        &new_config_channel,
+                        version,
+                    )
+                    .await?;
                 }
 
                 new_config_channel

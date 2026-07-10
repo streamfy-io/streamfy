@@ -96,9 +96,9 @@ mod proxy {
     use std::process;
     use tracing::info;
 
-    use flv_util::print_cli_err;
+    use streamfy_util::print_cli_err;
     use streamfy_future::rust_tls::TlsAcceptor;
-    use flv_tls_proxy::start as proxy_start;
+    use streamfy_tls_proxy::start as proxy_start;
 
     use crate::config::SpuConfig;
 

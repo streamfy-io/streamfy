@@ -38,7 +38,7 @@ use k8_config::K8Config;
 use k8_client::meta_client::MetadataClient;
 use k8_types::core::service::{LoadBalancerType, ServiceSpec, TargetPort};
 use k8_types::core::node::{NodeSpec, NodeAddress};
-use fluvio_command::CommandExt;
+use streamfy_command::CommandExt;
 
 use crate::InstallationType;
 use crate::check::{AlreadyInstalled, SysChartCheck};

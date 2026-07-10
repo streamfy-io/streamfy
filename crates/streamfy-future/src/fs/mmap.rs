@@ -141,7 +141,7 @@ mod tests {
     use std::io::Read;
 
     use async_fs::OpenOptions;
-    use flv_util::fixture::ensure_clean_file;
+    use streamfy_util::fixture::ensure_clean_file;
 
     use crate::test_async;
 

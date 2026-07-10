@@ -109,7 +109,10 @@ impl StatusOpt {
         }
     }
 
-    async fn check_spus(pb: &ProgressRenderer, streamfy_config: &StreamfyClusterConfig) -> Result<()> {
+    async fn check_spus(
+        pb: &ProgressRenderer,
+        streamfy_config: &StreamfyClusterConfig,
+    ) -> Result<()> {
         pb.set_message(pad_format!(format!("{} Checking {}", "📝".bold(), "SPUs")));
 
         match StreamfyAdmin::connect_with_config(streamfy_config).await {

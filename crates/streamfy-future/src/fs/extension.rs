@@ -88,7 +88,7 @@ mod tests {
     use std::io::SeekFrom;
     use std::io::Write;
 
-    use flv_util::fixture::ensure_clean_file;
+    use streamfy_util::fixture::ensure_clean_file;
 
     use super::AsyncFileExtension;
     use crate::fs::util as file_util;

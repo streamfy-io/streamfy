@@ -165,6 +165,8 @@ mod cert {
     use anyhow::{Context, Result};
     use native_tls::Certificate as NativeCertificate;
     use native_tls::Identity;
+    use openssl::hash::MessageDigest;
+    use openssl::nid::Nid;
     use openssl::pkcs12::Pkcs12;
     use openssl::pkey::Private;
 
@@ -216,7 +218,12 @@ mod cert {
     }
 
     impl IdentityBuilder {
-        /// load pk12 from x509 certs
+        /// Build a PKCS#12 identity from X.509 PEM cert + key.
+        ///
+        /// Uses legacy 3DES/SHA-1 algorithms so the resulting bag can be loaded by
+        /// macOS Security.framework (`native-tls` on Darwin). OpenSSL 3 defaults
+        /// (AES-256 + SHA-256) produce PKCS#12 that macOS rejects with
+        /// `OSStatus -26276` (errSecUnknownFormat).
         pub fn from_x509(x509: X509PemBuilder, key: PrivateKeyBuilder) -> Result<Self> {
             let server_key = key.build()?;
             let server_crt = x509.build()?;
@@ -224,6 +231,10 @@ mod cert {
                 .name("")
                 .pkey(&server_key)
                 .cert(&server_crt)
+                .key_algorithm(Nid::PBE_WITHSHA1AND3_KEY_TRIPLEDES_CBC)
+                .cert_algorithm(Nid::PBE_WITHSHA1AND3_KEY_TRIPLEDES_CBC)
+                .mac_md(MessageDigest::sha1())
+                .mac_iter(1)
                 .build2(PASSWORD)
                 .context("Failed to create Pkcs12")?;
 
@@ -333,9 +344,7 @@ mod test {
     use crate::test_async;
     use crate::timer::sleep;
 
-    use super::{
-        AcceptorBuilder, ConnectorBuilder, IdentityBuilder, PrivateKeyBuilder, X509PemBuilder,
-    };
+    use super::{AcceptorBuilder, ConnectorBuilder, IdentityBuilder, PrivateKeyBuilder, X509PemBuilder};
 
     const CA_PATH: &str = "certs/test-certs/ca.crt";
     const SERVER_IDENTITY: &str = "certs/test-certs/server.pfx";
@@ -355,34 +364,44 @@ mod test {
     async fn test_native_tls_pk12() -> Result<()> {
         const PK12_PORT: u16 = 9900;
 
-        let acceptor = AcceptorBuilder::identity(
-            IdentityBuilder::from_path(SERVER_IDENTITY).expect("identity"),
-        )
-        .expect("identity:")
-        .build()
-        .expect("acceptor");
-
-        let connector = ConnectorBuilder::identity(IdentityBuilder::from_path(CLIENT_IDENTITY)?)
-            .expect("connector")
-            .danger_accept_invalid_hostnames()
-            .no_cert_verification()
-            .build();
+        // Serialize PKCS#12 load only (macOS Security.framework race); drop
+        // before await to satisfy clippy::await_holding_lock.
+        let (acceptor, connector) = {
+            let _guard = crate::test_util::lock_tls_tests();
+            let acceptor = AcceptorBuilder::identity(
+                IdentityBuilder::from_path(SERVER_IDENTITY).expect("identity"),
+            )
+            .expect("identity:")
+            .build()
+            .expect("acceptor");
+            let connector =
+                ConnectorBuilder::identity(IdentityBuilder::from_path(CLIENT_IDENTITY)?)
+                    .expect("connector")
+                    .danger_accept_invalid_hostnames()
+                    .no_cert_verification()
+                    .build();
+            (acceptor, connector)
+        };
 
         test_tls(PK12_PORT, acceptor, connector)
             .await
             .expect("no client cert test failed");
 
-        let acceptor = AcceptorBuilder::identity(
-            IdentityBuilder::from_path(SERVER_IDENTITY).expect("identity"),
-        )
-        .expect("identity:")
-        .build()
-        .expect("acceptor");
-
-        let connector = ConnectorBuilder::identity(IdentityBuilder::from_path(CLIENT_IDENTITY)?)
-            .expect("connector")
-            .no_cert_verification()
-            .build();
+        let (acceptor, connector) = {
+            let _guard = crate::test_util::lock_tls_tests();
+            let acceptor = AcceptorBuilder::identity(
+                IdentityBuilder::from_path(SERVER_IDENTITY).expect("identity"),
+            )
+            .expect("identity:")
+            .build()
+            .expect("acceptor");
+            let connector =
+                ConnectorBuilder::identity(IdentityBuilder::from_path(CLIENT_IDENTITY)?)
+                    .expect("connector")
+                    .no_cert_verification()
+                    .build();
+            (acceptor, connector)
+        };
 
         test_tls(PK12_PORT, acceptor, connector)
             .await
@@ -396,56 +415,62 @@ mod test {
     async fn test_native_tls_x509() -> Result<()> {
         const X500_PORT: u16 = 9910;
 
-        let acceptor = AcceptorBuilder::identity(
-            IdentityBuilder::from_x509(
-                X509PemBuilder::from_path(X509_SERVER).expect("read"),
-                PrivateKeyBuilder::from_path(X509_SERVER_KEY).expect("file"),
+        let (acceptor, connector) = {
+            let _guard = crate::test_util::lock_tls_tests();
+            let acceptor = AcceptorBuilder::identity(
+                IdentityBuilder::from_x509(
+                    X509PemBuilder::from_path(X509_SERVER).expect("read"),
+                    PrivateKeyBuilder::from_path(X509_SERVER_KEY).expect("file"),
+                )
+                .expect("identity"),
             )
-            .expect("identity"),
-        )
-        .expect("identity:")
-        .build()
-        .expect("acceptor");
-
-        let connector = ConnectorBuilder::identity(
-            IdentityBuilder::from_x509(
-                X509PemBuilder::from_path(X509_CLIENT).expect("read"),
-                PrivateKeyBuilder::from_path(X509_CLIENT_KEY).expect("read"),
+            .expect("identity:")
+            .build()
+            .expect("acceptor");
+            let connector = ConnectorBuilder::identity(
+                IdentityBuilder::from_x509(
+                    X509PemBuilder::from_path(X509_CLIENT).expect("read"),
+                    PrivateKeyBuilder::from_path(X509_CLIENT_KEY).expect("read"),
+                )
+                .expect("509"),
             )
-            .expect("509"),
-        )
-        .expect("connector")
-        .danger_accept_invalid_hostnames()
-        .no_cert_verification()
-        .build();
+            .expect("connector")
+            .danger_accept_invalid_hostnames()
+            .no_cert_verification()
+            .build();
+            (acceptor, connector)
+        };
 
         test_tls(X500_PORT, acceptor, connector)
             .await
             .expect("no client cert test failed");
 
-        let acceptor = AcceptorBuilder::identity(
-            IdentityBuilder::from_x509(
-                X509PemBuilder::from_path(X509_SERVER).expect("read"),
-                PrivateKeyBuilder::from_path(X509_SERVER_KEY).expect("file"),
+        let (acceptor, connector) = {
+            let _guard = crate::test_util::lock_tls_tests();
+            let acceptor = AcceptorBuilder::identity(
+                IdentityBuilder::from_x509(
+                    X509PemBuilder::from_path(X509_SERVER).expect("read"),
+                    PrivateKeyBuilder::from_path(X509_SERVER_KEY).expect("file"),
+                )
+                .expect("identity"),
             )
-            .expect("identity"),
-        )
-        .expect("identity:")
-        .build()
-        .expect("acceptor");
-
-        let connector = ConnectorBuilder::identity(
-            IdentityBuilder::from_x509(
-                X509PemBuilder::from_path(X509_CLIENT).expect("read"),
-                PrivateKeyBuilder::from_path(X509_CLIENT_KEY).expect("read"),
+            .expect("identity:")
+            .build()
+            .expect("acceptor");
+            let connector = ConnectorBuilder::identity(
+                IdentityBuilder::from_x509(
+                    X509PemBuilder::from_path(X509_CLIENT).expect("read"),
+                    PrivateKeyBuilder::from_path(X509_CLIENT_KEY).expect("read"),
+                )
+                .expect("509"),
             )
-            .expect("509"),
-        )
-        .expect("connector")
-        .add_root_certificate(X509PemBuilder::from_path(CA_PATH).expect("cert"))
-        .expect("root")
-        .no_cert_verification() // for mac
-        .build();
+            .expect("connector")
+            .add_root_certificate(X509PemBuilder::from_path(CA_PATH).expect("cert"))
+            .expect("root")
+            .no_cert_verification() // for mac
+            .build();
+            (acceptor, connector)
+        };
 
         test_tls(X500_PORT, acceptor, connector)
             .await

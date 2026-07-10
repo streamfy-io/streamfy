@@ -9,7 +9,7 @@ use futures_lite::stream::StreamExt;
 use streamfy_test_util::test_runner::test_driver::{TestDriver};
 use streamfy_test_util::test_meta::environment::EnvDetail;
 use streamfy::{Offset};
-use fluvio_command::CommandExt;
+use streamfy_command::CommandExt;
 use crate::get_binary;
 
 use super::SmokeTestCase;

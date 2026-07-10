@@ -55,7 +55,9 @@ pub struct StreamfyApiServer<R, A, C, S> {
 
 impl<R, A, C, S> fmt::Debug for StreamfyApiServer<R, A, C, S> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        f.debug_tuple("StreamfyApiServer").field(&self.addr).finish()
+        f.debug_tuple("StreamfyApiServer")
+            .field(&self.addr)
+            .finish()
     }
 }
 
@@ -189,7 +191,9 @@ mod test {
     async fn create_client(addr: String) -> StreamfySocket {
         debug!("client wait for 1 second for 2nd server to come up");
         sleep(Duration::from_millis(200)).await;
-        StreamfySocket::connect(&addr).await.expect("connect failed")
+        StreamfySocket::connect(&addr)
+            .await
+            .expect("connect failed")
     }
 
     async fn test_client_sync_requests(addr: String) {

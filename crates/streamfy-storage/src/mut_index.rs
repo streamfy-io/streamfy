@@ -292,7 +292,7 @@ mod tests {
     use std::io::Read;
 
     use streamfy_protocol::record::Offset;
-    use flv_util::fixture::ensure_clean_file;
+    use streamfy_util::fixture::ensure_clean_file;
 
     use super::MutLogIndex;
     use crate::LogIndex;

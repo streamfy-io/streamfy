@@ -46,7 +46,7 @@ streamfy-future = { workspace = true, features = [
     "subscriber",
     "fixture",
 ] }
-fluvio-command = { version = "0.2.0" }
+streamfy-command = { workspace = true }
 streamfy-cli = { workspace = true }
 streamfy-controlplane-metadata = { workspace = true, features = ["k8"] }
 
