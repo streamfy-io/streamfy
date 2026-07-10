@@ -27,8 +27,9 @@ env:
   GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   BATS_VERSION: "1.11.0"
   SERVER_LOG: streamfy=info
-  # Fluvio-style TLS args for smoke-test-tls (certs are in-repo under tls/certs)
-  TLS_ARGS: --tls --domain streamfy.local --server-key ./tls/certs/server.key --server-cert ./tls/certs/server.crt --ca-cert ./tls/certs/ca.crt --client-cert ./tls/certs/client-root.crt --client-key ./tls/certs/client-root.key
+  # TLS smoke uses in-repo certs under tls/certs whose SAN is *.fluvio.local
+  # (certs not yet regenerated for streamfy.local). Domain must match SAN.
+  TLS_ARGS: --tls --domain fluvio.local --server-key ./tls/certs/server.key --server-cert ./tls/certs/server.crt --ca-cert ./tls/certs/ca.crt --client-cert ./tls/certs/client-root.crt --client-key ./tls/certs/client-root.key
   AUTH_FILE: crates/streamfy-sc/test-data/auth_config/policy.json
   X509_SCOPE_FILE: crates/streamfy-sc/test-data/auth_config/scopes.json
 
