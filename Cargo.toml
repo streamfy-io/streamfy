@@ -45,6 +45,8 @@ members = [
     "crates/streamfy-test-derive",
     "crates/streamfy-test-case-derive",
     "crates/streamfy-test-util",
+    "crates/streamfy-util",
+    "crates/streamfy-tls-proxy",
     "crates/streamfy-types",
     "crates/streamfy-future",
     "crates/streamfy-future/streamfy-future-derive",
@@ -192,8 +194,8 @@ fluvio_ws_stream_wasm = "0.7.0"
 streamfy-command = { path = "crates/streamfy-command" }
 streamfy-future = { path = "crates/streamfy-future", version = "0.8.3", default-features = false }
 streamfy-helm = { path = "crates/streamfy-helm" }
-flv-tls-proxy = { version = "0.12.0" }
-flv-util = { version = "0.5.2", default-features = false }
+streamfy-tls-proxy = { path = "crates/streamfy-tls-proxy" }
+streamfy-util = { path = "crates/streamfy-util", default-features = false }
 k8-client = { version = "14.0.0" }
 k8-config = { version = "3.0.0" }
 k8-types = { version = "0.9.0" }

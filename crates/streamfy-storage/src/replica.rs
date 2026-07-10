@@ -532,7 +532,7 @@ mod tests {
     use streamfy_protocol::record::MemoryRecords;
     use streamfy_protocol::fixture::{BatchProducer, create_batch, create_batch_with_producer};
     use streamfy_protocol::fixture::read_bytes_from_file;
-    use flv_util::fixture::ensure_clean_dir;
+    use streamfy_util::fixture::ensure_clean_dir;
 
     use crate::config::{ReplicaConfig, StorageConfig};
     use crate::StorageError;

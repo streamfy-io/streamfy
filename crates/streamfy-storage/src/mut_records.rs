@@ -275,7 +275,7 @@ mod tests {
     use tracing::debug;
 
     use streamfy_protocol::record::Offset;
-    use flv_util::fixture::{ensure_new_dir};
+    use streamfy_util::fixture::{ensure_new_dir};
     use streamfy_protocol::record::{Batch, MemoryRecords};
     use streamfy_protocol::{Decoder, Encoder};
     use streamfy_protocol::fixture::read_bytes_from_file;

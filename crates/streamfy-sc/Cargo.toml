@@ -57,7 +57,7 @@ k8-client = { workspace = true, features = ["memory_client"] }
 streamfy-protocol = { workspace = true }
 streamfy-socket = { workspace = true }
 streamfy-service = { workspace = true  }
-flv-tls-proxy = { workspace = true }
+streamfy-tls-proxy = { workspace = true }
 
 [dev-dependencies]
 rand = { workspace = true }

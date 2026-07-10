@@ -72,7 +72,7 @@ ws_stream_wasm = { version = "0.7.4", optional = true }
 bytes = "1.10"
 streamfy-future = { path = ".", features = ["net", "fixture", "timer", "fs", "retry"] }
 streamfy-future-derive = { path = "streamfy-future-derive", version = "0.2.0" }
-flv-util = { version = "0.5.2", features = ["fixture"] }
+streamfy-util = { path = "../streamfy-util", features = ["fixture"] }
 futures-util = { version = "0.3.31", features = ["sink", "io"] }
 lazy_static = "1.5"
 num_cpus = "1.17"

@@ -40,7 +40,7 @@ record = [
     "streamfy-types"
 ]
 types = ["streamfy-types"]
-link = ["api","record","thiserror","flv-util","semver","eyre"]
+link = ["api","record","thiserror","streamfy-util","semver","eyre"]
 fixture = ["record","derive_builder"]
 compress = ["streamfy-compression/compress"]
 
@@ -60,7 +60,7 @@ tracing = { workspace = true }
 
 streamfy-protocol-derive = { workspace = true, optional = true }
 streamfy-future = { workspace = true, optional = true }
-flv-util = { workspace = true,  optional = true }
+streamfy-util = { workspace = true,  optional = true }
 streamfy-compression = { workspace = true, default-features = false, optional = true }
 streamfy-types = { workspace = true,  optional = true }
 

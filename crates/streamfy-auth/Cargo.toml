@@ -27,5 +27,5 @@ streamfy-controlplane-metadata = { workspace = true  }
 streamfy-future = { workspace = true, features = ["net"] }
 streamfy-protocol = { workspace = true }
 streamfy-socket = { workspace = true }
-flv-tls-proxy = { workspace = true }
+streamfy-tls-proxy = { workspace = true }
 

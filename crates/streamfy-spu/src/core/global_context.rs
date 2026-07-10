@@ -208,7 +208,7 @@ mod file_replica {
     use tracing::{trace, warn};
 
     use streamfy_storage::FileReplica;
-    use flv_util::actions::Actions;
+    use streamfy_util::actions::Actions;
 
     use crate::core::SpecChange;
 

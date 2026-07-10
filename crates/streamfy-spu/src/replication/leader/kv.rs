@@ -153,7 +153,7 @@ mod tests {
     use streamfy_protocol::record::ReplicaKey;
     use streamfy_storage::{config::ReplicaConfig, FileReplica};
     use streamfy_types::PartitionId;
-    use flv_util::fixture::ensure_clean_dir;
+    use streamfy_util::fixture::ensure_clean_dir;
     use futures_util::StreamExt;
 
     use crate::{

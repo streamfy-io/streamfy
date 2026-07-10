@@ -143,7 +143,7 @@ mod tests {
     use anyhow::Result;
 
     use streamfy_future::timer::sleep;
-    use flv_util::fixture::ensure_new_dir;
+    use streamfy_util::fixture::ensure_new_dir;
     use streamfy_protocol::fixture::create_batch;
     use streamfy_protocol::record::Offset;
 

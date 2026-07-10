@@ -22,7 +22,7 @@ use streamfy_spu_schema::{
     },
     Isolation,
 };
-use flv_util::fixture::ensure_clean_dir;
+use streamfy_util::fixture::ensure_clean_dir;
 
 use crate::{
     config::SpuConfig,

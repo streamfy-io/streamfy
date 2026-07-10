@@ -6,7 +6,7 @@ use streamfy_spu_schema::server::consumer_offset::FetchConsumerOffsetsRequest;
 use streamfy_types::defaults::CONSUMER_REPLICA_KEY;
 use tracing::debug;
 
-use flv_util::fixture::ensure_clean_dir;
+use streamfy_util::fixture::ensure_clean_dir;
 
 use streamfy_future::timer::sleep;
 use streamfy_socket::{StreamfySocket, MultiplexerSocket};

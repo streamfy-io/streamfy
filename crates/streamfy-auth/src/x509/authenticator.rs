@@ -9,7 +9,7 @@ use x509_parser::{certificate::X509Certificate, parse_x509_certificate};
 use streamfy_future::net::AsConnectionFd;
 use streamfy_future::{net::TcpStream, rust_tls::DefaultServerTlsStream};
 use streamfy_protocol::api::{RequestMessage, ResponseMessage};
-use flv_tls_proxy::authenticator::Authenticator;
+use streamfy_tls_proxy::authenticator::Authenticator;
 
 use super::request::AuthRequest;
 

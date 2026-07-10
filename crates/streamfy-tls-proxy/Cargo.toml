@@ -1,0 +1,37 @@
+[package]
+name = "streamfy-tls-proxy"
+version = "0.12.0"
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Simple local TLS proxy for Streamfy"
+publish = false
+
+[features]
+default = ["rust_tls"]
+openssl_tls = ["streamfy-future/openssl_tls"]
+rust_tls = ["streamfy-future/rust_tls", "rustls"]
+
+[dependencies]
+anyhow = { workspace = true }
+async-trait = { workspace = true }
+cfg-if = { workspace = true }
+event-listener = { workspace = true }
+futures-lite = { workspace = true }
+futures-util = { workspace = true, features = ["sink", "io"] }
+tokio-util = { version = "0.7", features = ["compat"] }
+pin-project-lite = "0.2.0"
+serde = { workspace = true }
+serde_json = { workspace = true }
+rustls = { version = "0.23.28", optional = true }
+tokio = { workspace = true, features = ["macros", "io-util"] }
+tracing = { workspace = true }
+x509-parser = { workspace = true }
+
+streamfy-future = { path = "../streamfy-future", default-features = false, features = ["net", "task"] }
+
+[dev-dependencies]
+bytes = { workspace = true }
+streamfy-util = { path = "../streamfy-util", features = ["fixture"] }
+streamfy-future = { path = "../streamfy-future", default-features = false, features = ["fixture", "timer", "net", "task", "rust_tls"] }

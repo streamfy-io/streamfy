@@ -469,7 +469,7 @@ mod tests {
     use std::io::Cursor;
     use std::path::PathBuf;
 
-    use flv_util::fixture::ensure_new_dir;
+    use streamfy_util::fixture::ensure_new_dir;
     use streamfy_protocol::record::{Batch, MemoryRecords};
     use streamfy_protocol::record::Size;
     use streamfy_protocol::Decoder;

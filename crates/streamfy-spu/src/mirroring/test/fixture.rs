@@ -14,7 +14,7 @@ use streamfy_storage::FileReplica;
 
 use derive_builder::Builder;
 use streamfy_types::{SpuId, PartitionId};
-use flv_util::fixture::ensure_clean_dir;
+use streamfy_util::fixture::ensure_clean_dir;
 
 use crate::config::SpuConfig;
 use crate::core::{DefaultSharedGlobalContext, GlobalContext};

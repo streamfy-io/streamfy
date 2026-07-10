@@ -54,8 +54,8 @@ streamfy-spu-schema = { workspace = true,  features = ["file"] }
 streamfy-protocol = { workspace = true }
 streamfy-socket = { workspace = true, features = ["file",] }
 streamfy-service = { workspace = true }
-flv-tls-proxy = { workspace = true }
-flv-util = { workspace = true }
+streamfy-tls-proxy = { workspace = true }
+streamfy-util = { workspace = true }
 streamfy-future = { workspace = true,features = [
     "subscriber",
     "zero_copy",
@@ -72,6 +72,6 @@ flate2 = { workspace = true }
 portpicker = { workspace = true }
 rand = { workspace = true }
 
-flv-util = { workspace = true, features = ["fixture"] }
+streamfy-util = { workspace = true, features = ["fixture"] }
 streamfy-future = { workspace = true,features = ["fixture", "subscriber"] }
 streamfy-protocol = { workspace = true,  features = ["fixture"] }

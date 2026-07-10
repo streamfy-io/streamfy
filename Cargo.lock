@@ -2098,12 +2098,10 @@ dependencies = [
  "cfg-if",
  "fluvio-wasm-timer",
  "futures-lite",
- "futures-rustls",
  "futures-util",
  "openssl",
  "openssl-sys",
  "pin-project",
- "rustls-pemfile",
  "socket2 0.5.10",
  "thiserror 2.0.18",
  "tokio",
@@ -2143,39 +2141,6 @@ dependencies = [
  "wasm-bindgen",
  "wasm-bindgen-futures",
  "web-sys",
-]
-
-[[package]]
-name = "flv-tls-proxy"
-version = "0.12.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "75628df4ec87353f3c737b1133ce34c68dcb5a3ecda5dcdc056bdf6b52b7cbea"
-dependencies = [
- "anyhow",
- "async-trait",
- "cfg-if",
- "event-listener",
- "fluvio-future",
- "futures-lite",
- "futures-util",
- "pin-project-lite",
- "rustls 0.23.28",
- "serde",
- "serde_json",
- "tokio",
- "tokio-util",
- "tracing",
- "x509-parser",
-]
-
-[[package]]
-name = "flv-util"
-version = "0.5.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "de89447c8b4aecfa4c0614d1a7be1c6ab4a0266b59bb2713fd746901f28d124e"
-dependencies = [
- "log",
- "tracing",
 ]
 
 [[package]]
@@ -6059,7 +6024,6 @@ version = "0.0.0"
 dependencies = [
  "anyhow",
  "async-trait",
- "flv-tls-proxy",
  "futures-util",
  "serde",
  "serde_json",
@@ -6067,6 +6031,7 @@ dependencies = [
  "streamfy-future",
  "streamfy-protocol",
  "streamfy-socket",
+ "streamfy-tls-proxy",
  "thiserror 2.0.18",
  "tracing",
  "x509-parser",
@@ -6240,7 +6205,6 @@ dependencies = [
  "directories",
  "duct",
  "flate2",
- "flv-util",
  "futures-util",
  "include_dir",
  "indicatif",
@@ -6265,6 +6229,7 @@ dependencies = [
  "streamfy-sc-schema",
  "streamfy-stream-dispatcher",
  "streamfy-types",
+ "streamfy-util",
  "sysinfo",
  "tar",
  "tempfile",
@@ -6385,7 +6350,6 @@ dependencies = [
  "cfg-if",
  "derive_builder",
  "flate2",
- "flv-util",
  "humantime-serde",
  "lenient_semver",
  "schemars",
@@ -6396,6 +6360,7 @@ dependencies = [
  "streamfy-protocol",
  "streamfy-stream-model",
  "streamfy-types",
+ "streamfy-util",
  "thiserror 2.0.18",
  "toml 0.8.22",
  "tracing",
@@ -6438,7 +6403,6 @@ dependencies = [
  "bytes",
  "cfg-if",
  "fluvio-wasm-timer",
- "flv-util",
  "futures-lite",
  "futures-rustls",
  "futures-util",
@@ -6458,6 +6422,7 @@ dependencies = [
  "socket2 0.5.10",
  "streamfy-future",
  "streamfy-future-derive",
+ "streamfy-util",
  "thiserror 2.0.18",
  "tokio",
  "tokio-util",
@@ -6544,7 +6509,6 @@ dependencies = [
  "criterion",
  "derive_builder",
  "eyre",
- "flv-util",
  "futures",
  "once_cell",
  "semver 1.0.26",
@@ -6552,6 +6516,7 @@ dependencies = [
  "streamfy-future",
  "streamfy-protocol-derive",
  "streamfy-types",
+ "streamfy-util",
  "thiserror 2.0.18",
  "tokio-util",
  "tracing",
@@ -6591,7 +6556,6 @@ dependencies = [
  "async-lock",
  "async-trait",
  "clap",
- "flv-tls-proxy",
  "futures-util",
  "k8-client",
  "mimalloc",
@@ -6611,6 +6575,7 @@ dependencies = [
  "streamfy-socket",
  "streamfy-stream-dispatcher",
  "streamfy-stream-model",
+ "streamfy-tls-proxy",
  "streamfy-types",
  "sysinfo",
  "tokio",
@@ -6735,8 +6700,6 @@ dependencies = [
  "clap",
  "derive_builder",
  "flate2",
- "flv-tls-proxy",
- "flv-util",
  "futures-util",
  "mimalloc",
  "once_cell",
@@ -6758,7 +6721,9 @@ dependencies = [
  "streamfy-socket",
  "streamfy-spu-schema",
  "streamfy-storage",
+ "streamfy-tls-proxy",
  "streamfy-types",
+ "streamfy-util",
  "sysinfo",
  "thiserror 2.0.18",
  "tokio",
@@ -6773,7 +6738,6 @@ dependencies = [
  "derive_builder",
  "educe",
  "flate2",
- "flv-util",
  "futures-util",
  "serde",
  "static_assertions",
@@ -6782,6 +6746,7 @@ dependencies = [
  "streamfy-smartmodule",
  "streamfy-socket",
  "streamfy-types",
+ "streamfy-util",
  "tracing",
 ]
 
@@ -6797,7 +6762,6 @@ dependencies = [
  "bytes",
  "clap",
  "derive_builder",
- "flv-util",
  "futures-lite",
  "humantime",
  "libc",
@@ -6811,6 +6775,7 @@ dependencies = [
  "streamfy-socket",
  "streamfy-spu-schema",
  "streamfy-types",
+ "streamfy-util",
  "thiserror 2.0.18",
  "tokio",
  "tracing",
@@ -6944,6 +6909,29 @@ dependencies = [
 ]
 
 [[package]]
+name = "streamfy-tls-proxy"
+version = "0.12.0"
+dependencies = [
+ "anyhow",
+ "async-trait",
+ "bytes",
+ "cfg-if",
+ "event-listener",
+ "futures-lite",
+ "futures-util",
+ "pin-project-lite",
+ "rustls 0.23.28",
+ "serde",
+ "serde_json",
+ "streamfy-future",
+ "streamfy-util",
+ "tokio",
+ "tokio-util",
+ "tracing",
+ "x509-parser",
+]
+
+[[package]]
 name = "streamfy-types"
 version = "0.50.2"
 dependencies = [
@@ -6954,6 +6942,14 @@ dependencies = [
  "thiserror 2.0.18",
  "tokio",
  "toml 0.8.22",
+ "tracing",
+]
+
+[[package]]
+name = "streamfy-util"
+version = "0.5.2"
+dependencies = [
+ "log",
  "tracing",
 ]
 

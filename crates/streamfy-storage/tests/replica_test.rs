@@ -22,7 +22,7 @@ use streamfy_protocol::record::Offset;
 use streamfy_protocol::fixture::BatchProducer;
 
 use streamfy_socket::{StreamfySocket, SocketError};
-use flv_util::fixture::ensure_clean_dir;
+use streamfy_util::fixture::ensure_clean_dir;
 use streamfy_storage::{StorageError, ReplicaStorage, FileReplica};
 use streamfy_storage::config::ReplicaConfig;
 use streamfy_storage::fixture::storage_config;

@@ -15,7 +15,7 @@ use once_cell::sync::Lazy;
 
 use streamfy_storage::FileReplica;
 use streamfy_future::timer::sleep;
-use flv_util::fixture::ensure_clean_dir;
+use streamfy_util::fixture::ensure_clean_dir;
 use streamfy_types::SpuId;
 use streamfy_controlplane_metadata::spu::{IngressAddr, IngressPort, SpuSpec};
 use streamfy_protocol::fixture::{create_raw_recordset, create_raw_recordset_inner};

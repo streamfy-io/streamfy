@@ -11,7 +11,7 @@ use streamfy_controlplane_metadata::smartmodule::{
     SmartModuleWasm, SmartModuleWasmFormat, SmartModuleSpec,
 };
 use streamfy_storage::FileReplica;
-use flv_util::fixture::ensure_clean_dir;
+use streamfy_util::fixture::ensure_clean_dir;
 use futures_util::{Future, StreamExt};
 
 use streamfy_future::timer::sleep;

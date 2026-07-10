@@ -12,7 +12,7 @@ use anyhow::Result;
 use streamfy::Streamfy;
 use streamfy::metadata::customspu::CustomSpuSpec;
 use streamfy_controlplane_metadata::spu::Endpoint;
-use flv_util::socket_helpers::ServerAddress;
+use streamfy_util::socket_helpers::ServerAddress;
 
 #[derive(Debug, Parser)]
 pub struct RegisterCustomSpuOpt {
