@@ -31,7 +31,8 @@ pub async fn validate_consumer_listener(client_idx: u16, option: &TestOption) {
             client_cert: client_cert.cert.display().to_string(),
             client_key: client_cert.key.display().to_string(),
             ca_cert: client_cert.ca.display().to_string(),
-            domain: "streamfy.local".to_owned(),
+            // Must match SAN on checked-in tls/certs/server.crt.
+            domain: "fluvio.local".to_owned(),
         }))
     } else {
         None

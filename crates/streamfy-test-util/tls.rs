@@ -6,7 +6,8 @@ pub fn cert_dir() -> PathBuf {
 }
 
 pub fn load_tls(client_user: &str) -> (TlsPolicy, TlsPolicy) {
-    const DOMAIN: &str = "streamfy.local";
+    // Must match SAN on checked-in tls/certs/server.crt (not yet re-issued for streamfy.local).
+    const DOMAIN: &str = "fluvio.local";
     let cert_dir = cert_dir();
     let client_policy = TlsPolicy::from(TlsPaths {
         domain: DOMAIN.to_string(),
