@@ -31,60 +31,71 @@ fn to_bytes(bytes: Vec<u8>) -> Bytes {
 
 #[test_async]
 async fn test_tls() -> Result<()> {
-    let _guard = crate::test_util::lock_tls_tests();
+    // Serialize cert/key load only; drop the guard before await.
+    let (acceptor, connector) = {
+        let _guard = crate::test_util::lock_tls_tests();
+        // Test the client against a server with CA intermediary cert chain
+        // Requires X509VerifyFlags::PARTIAL_CHAIN or allow_partial: true (default)
+        (
+            TlsAcceptor::builder()?
+                .with_certifiate_and_key_from_pem_files(
+                    "certs/test-certs/intermediate-server.crt",
+                    "certs/test-certs/intermediate-server.key",
+                )?
+                .build(),
+            TlsConnector::builder()?
+                .with_hostname_verification_disabled()?
+                .with_ca_from_pem_file(INTERMEDIATE_CA_PATH)?
+                .build(),
+        )
+    };
+    run_test(acceptor, connector)
+        .await
+        .expect("no client cert test with root CA with intermediaries failed");
 
-    // Test the client against a server with CA intermediary cert chain
-    // Requires X509VerifyFlags::PARTIAL_CHAIN or allow_partial: true (default)
-    run_test(
-        TlsAcceptor::builder()?
-            .with_certifiate_and_key_from_pem_files(
-                "certs/test-certs/intermediate-server.crt",
-                "certs/test-certs/intermediate-server.key",
-            )?
-            .build(),
-        TlsConnector::builder()?
-            .with_hostname_verification_disabled()?
-            .with_ca_from_pem_file(INTERMEDIATE_CA_PATH)?
-            .build(),
-    )
-    .await
-    .expect("no client cert test with root CA with intermediaries failed");
+    let (acceptor, connector) = {
+        let _guard = crate::test_util::lock_tls_tests();
+        // Test the client against a server with CA only without intermediary certs
+        (
+            TlsAcceptor::builder()?
+                .with_certifiate_and_key_from_pem_files(
+                    "certs/test-certs/server.crt",
+                    "certs/test-certs/server.key",
+                )?
+                .build(),
+            TlsConnector::builder()?
+                .with_hostname_verification_disabled()?
+                .with_ca_from_pem_file(CA_PATH)?
+                .build(),
+        )
+    };
+    run_test(acceptor, connector)
+        .await
+        .expect("no client cert test with root CA only failed");
 
-    // Test the client against a server with CA only without intermediary certs
-    run_test(
-        TlsAcceptor::builder()?
-            .with_certifiate_and_key_from_pem_files(
-                "certs/test-certs/server.crt",
-                "certs/test-certs/server.key",
-            )?
-            .build(),
-        TlsConnector::builder()?
-            .with_hostname_verification_disabled()?
-            .with_ca_from_pem_file(CA_PATH)?
-            .build(),
-    )
-    .await
-    .expect("no client cert test with root CA only failed");
-
-    // test client authentication
-    run_test(
-        TlsAcceptor::builder()?
-            .with_certifiate_and_key_from_pem_files(
-                "certs/test-certs/server.crt",
-                "certs/test-certs/server.key",
-            )?
-            .with_ca_from_pem_file(CA_PATH)?
-            .build(),
-        TlsConnector::builder()?
-            .with_certifiate_and_key_from_pem_files(
-                "certs/test-certs/client.crt",
-                "certs/test-certs/client.key",
-            )?
-            .with_ca_from_pem_file(CA_PATH)?
-            .build(),
-    )
-    .await
-    .expect("client cert test fail");
+    let (acceptor, connector) = {
+        let _guard = crate::test_util::lock_tls_tests();
+        // test client authentication
+        (
+            TlsAcceptor::builder()?
+                .with_certifiate_and_key_from_pem_files(
+                    "certs/test-certs/server.crt",
+                    "certs/test-certs/server.key",
+                )?
+                .with_ca_from_pem_file(CA_PATH)?
+                .build(),
+            TlsConnector::builder()?
+                .with_certifiate_and_key_from_pem_files(
+                    "certs/test-certs/client.crt",
+                    "certs/test-certs/client.key",
+                )?
+                .with_ca_from_pem_file(CA_PATH)?
+                .build(),
+        )
+    };
+    run_test(acceptor, connector)
+        .await
+        .expect("client cert test fail");
 
     Ok(())
 }
