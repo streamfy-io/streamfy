@@ -59,6 +59,5 @@ pub mod test {
             upper_cammel_case_to_sentence("UnknownTopicOrPartition".to_owned(), false),
             "unknown topic or partition"
         );
-
     }
 }

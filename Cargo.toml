@@ -24,6 +24,11 @@ members = [
     "crates/streamfy-artifacts-util",
     "crates/streamfy-hub-protocol",
     "crates/streamfy-extension-common",
+    "crates/streamfy-k8-types",
+    "crates/streamfy-k8-diff",
+    "crates/streamfy-k8-config",
+    "crates/streamfy-k8-metadata-client",
+    "crates/streamfy-k8-client",
     "crates/streamfy-kv-storage",
     "crates/streamfy-package-index",
     "crates/streamfy-protocol",
@@ -196,10 +201,11 @@ streamfy-future = { path = "crates/streamfy-future", version = "0.8.3", default-
 streamfy-helm = { path = "crates/streamfy-helm" }
 streamfy-tls-proxy = { path = "crates/streamfy-tls-proxy" }
 streamfy-util = { path = "crates/streamfy-util", default-features = false }
-k8-client = { version = "14.0.0" }
-k8-config = { version = "3.0.0" }
-k8-types = { version = "0.9.0" }
-k8-diff = { version = "0.1.2" }
+k8-client = { path = "crates/streamfy-k8-client", package = "streamfy-k8-client" }
+k8-config = { path = "crates/streamfy-k8-config", package = "streamfy-k8-config" }
+k8-types = { path = "crates/streamfy-k8-types", package = "streamfy-k8-types" }
+k8-diff = { path = "crates/streamfy-k8-diff", package = "streamfy-k8-diff" }
+k8-metadata-client = { path = "crates/streamfy-k8-metadata-client", package = "streamfy-k8-metadata-client" }
 trybuild = { version = "1.0.117" }
 # trybuild = { branch = "check_option", git = "https://github.com/streamfy/trybuild" }
 

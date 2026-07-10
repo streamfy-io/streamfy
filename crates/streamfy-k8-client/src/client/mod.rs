@@ -1,0 +1,55 @@
+mod client_impl;
+mod log_stream;
+#[cfg(feature = "memory_client")]
+pub mod memory;
+
+mod list_stream;
+mod wstream;
+
+pub use client_impl::K8Client;
+pub use log_stream::LogStream;
+
+cfg_if::cfg_if! {
+    if #[cfg(feature = "openssl_tls")] {
+        mod config_openssl;
+        use config_openssl::*;
+    } else if #[cfg(feature = "native_tls")] {
+        mod config_native;
+        use config_native::*;
+    } else if #[cfg(feature = "rust_tls")] {
+        mod config_rustls;
+        use config_rustls::*;
+    }
+}
+
+use list_stream::*;
+
+pub mod http {
+    pub use ::http::header;
+    pub use ::http::status;
+    pub use ::http::Error;
+    pub use ::http::uri::InvalidUri;
+    pub use hyper::Uri;
+}
+
+pub mod prelude {
+    pub use hyper::Body;
+    pub use hyper::Request;
+}
+
+mod executor {
+
+    use futures_util::future::Future;
+    use hyper::rt::Executor;
+
+    use streamfy_future::task::spawn;
+
+    #[allow(dead_code)]
+    pub(crate) struct StreamfyHyperExecutor;
+
+    impl<F: Future + Send + 'static> Executor<F> for StreamfyHyperExecutor {
+        fn execute(&self, fut: F) {
+            spawn(async { drop(fut.await) });
+        }
+    }
+}

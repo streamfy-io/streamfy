@@ -431,7 +431,7 @@ version = "0.5.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4888bf91cce63baf1670512d0f12b5d636179a4abbad6504812ac8ab124b3efe"
 dependencies = [
- "dirs 6.0.0",
+ "dirs",
  "git2",
  "terminal-prompt",
 ]
@@ -941,6 +941,28 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "799627e6b4d27827a814e837b9d8a504832086081806d45b1afa34dc982b023b"
 dependencies = [
  "chrono",
+]
+
+[[package]]
+name = "chrono-tz"
+version = "0.9.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "93698b29de5e97ad0ae26447b344c482a7284c737d9ddc5f9e52b74a336671bb"
+dependencies = [
+ "chrono",
+ "chrono-tz-build",
+ "phf",
+]
+
+[[package]]
+name = "chrono-tz-build"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0c088aee841df9c3041febbb73934cfc39708749bf96dc827e3359cd39ef11b1"
+dependencies = [
+ "parse-zoneinfo",
+ "phf",
+ "phf_codegen",
 ]
 
 [[package]]
@@ -1685,6 +1707,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "deunicode"
+version = "1.6.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "abd57806937c9cc163efc8ea3910e00a62e2aeb0b8119f1793a978088f8f6b04"
+
+[[package]]
 name = "dialoguer"
 version = "0.11.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1726,7 +1754,7 @@ version = "6.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "16f5094c54661b38d03bd7e50df373292118db60b585c08a411c6d840017fe7d"
 dependencies = [
- "dirs-sys 0.5.0",
+ "dirs-sys",
 ]
 
 [[package]]
@@ -1741,32 +1769,11 @@ dependencies = [
 
 [[package]]
 name = "dirs"
-version = "5.0.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "44c45a9d03d6676652bcb5e724c7e988de1acad23a711b5217ab9cbecbec2225"
-dependencies = [
- "dirs-sys 0.4.1",
-]
-
-[[package]]
-name = "dirs"
 version = "6.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c3e8aa94d75141228480295a7d0e7feb620b1a5ad9f12bc40be62411e38cce4e"
 dependencies = [
- "dirs-sys 0.5.0",
-]
-
-[[package]]
-name = "dirs-sys"
-version = "0.4.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "520f05a5cbd335fae5a99ff7a6ab8627577660ee5cfd6a94a6a929b52ff0321c"
-dependencies = [
- "libc",
- "option-ext",
- "redox_users 0.4.6",
- "windows-sys 0.48.0",
+ "dirs-sys",
 ]
 
 [[package]]
@@ -2081,33 +2088,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b09cf3155332e944990140d967ff5eceb70df778b34f77d8075db46e4704e6d8"
 dependencies = [
  "num-traits",
-]
-
-[[package]]
-name = "fluvio-future"
-version = "0.8.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "404e1beb0ba16331eb7b82b4e4e586f03e7de9438368880a3b9870f53105b2b0"
-dependencies = [
- "anyhow",
- "async-global-executor",
- "async-io",
- "async-net",
- "async-task",
- "async-trait",
- "cfg-if",
- "fluvio-wasm-timer",
- "futures-lite",
- "futures-util",
- "openssl",
- "openssl-sys",
- "pin-project",
- "socket2 0.5.10",
- "thiserror 2.0.18",
- "tokio",
- "tracing",
- "wasm-bindgen-futures",
- "ws_stream_wasm",
 ]
 
 [[package]]
@@ -2691,6 +2671,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "globwalk"
+version = "0.9.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0bf760ebf69878d9fd8f110c89703d90ce35095324d1f1edcb595c63945ee757"
+dependencies = [
+ "bitflags 2.9.1",
+ "ignore",
+ "walkdir",
+]
+
+[[package]]
 name = "h2"
 version = "0.3.26"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2883,6 +2874,15 @@ name = "httpdate"
 version = "1.0.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "df3b46402a9d5adb4c86a0cf463f42e19994e3ee891101b1841f30a545cb49a9"
+
+[[package]]
+name = "humansize"
+version = "2.1.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6cb51c9a029ddc91b07a787f1d86b53ccfa49b0e86688c946ebe8d3555685dd7"
+dependencies = [
+ "libm",
+]
 
 [[package]]
 name = "humantime"
@@ -3412,91 +3412,6 @@ dependencies = [
  "serde",
  "serde_json",
  "simple_asn1",
-]
-
-[[package]]
-name = "k8-client"
-version = "14.0.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cc82268c81c303bf069b7323a29f384a0cd1411db7fd1eb00991abfdddcdd566"
-dependencies = [
- "anyhow",
- "async-channel",
- "async-lock",
- "async-trait",
- "base64 0.22.1",
- "bytes",
- "cfg-if",
- "fluvio-future",
- "futures-util",
- "http 0.2.12",
- "hyper 0.14.32",
- "k8-config",
- "k8-diff",
- "k8-metadata-client",
- "k8-types",
- "pin-utils",
- "rand 0.8.5",
- "serde",
- "serde_json",
- "serde_qs",
- "serde_yaml 0.9.34+deprecated",
- "tokio",
- "tracing",
-]
-
-[[package]]
-name = "k8-config"
-version = "3.0.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a3736cb93ace782ea0f88f586435f71d312540a6acb11d3f34bc67ebc54d04e0"
-dependencies = [
- "dirs 5.0.1",
- "hostfile",
- "serde",
- "serde_json",
- "serde_yaml 0.9.34+deprecated",
- "thiserror 1.0.69",
- "tracing",
-]
-
-[[package]]
-name = "k8-diff"
-version = "0.1.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ef435d912eeb448129d7ae11d3c497691f1f383d2d2ff1dff4365a81c7bd4f3b"
-dependencies = [
- "serde",
- "serde_json",
- "tracing",
-]
-
-[[package]]
-name = "k8-metadata-client"
-version = "8.0.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "92b4c9465417ccfae7dd534d3c3e17e457cbdc3672ae6e9279406dbe5bb58b1f"
-dependencies = [
- "anyhow",
- "async-trait",
- "futures-util",
- "k8-diff",
- "k8-types",
- "pin-utils",
- "serde",
- "serde_json",
- "serde_qs",
- "tracing",
-]
-
-[[package]]
-name = "k8-types"
-version = "0.9.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a03d75bcb5555871dcffa40538fee4e59d38e3d21457c7c19108a31a76a69122"
-dependencies = [
- "serde",
- "serde_json",
 ]
 
 [[package]]
@@ -4358,6 +4273,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "parse-zoneinfo"
+version = "0.3.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1f2a05b18d44e2957b88f96ba460715e295bc1d7510468a2f3d3b44535d26c24"
+dependencies = [
+ "regex",
+]
+
+[[package]]
 name = "partitioning-simple"
 version = "0.0.0"
 dependencies = [
@@ -4483,6 +4407,26 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1fd6780a80ae0c52cc120a26a1a42c1ae51b247a253e4e06113d23d2c2edd078"
 dependencies = [
  "phf_shared",
+]
+
+[[package]]
+name = "phf_codegen"
+version = "0.11.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "aef8048c789fa5e851558d709946d6d79a8ff88c0440c587967f8e94bfb1216a"
+dependencies = [
+ "phf_generator",
+ "phf_shared",
+]
+
+[[package]]
+name = "phf_generator"
+version = "0.11.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3c80231409c20246a13fddb31776fb942c38553c51e871f8cbd687a4cfb5843d"
+dependencies = [
+ "phf_shared",
+ "rand 0.8.5",
 ]
 
 [[package]]
@@ -5848,6 +5792,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "slug"
+version = "0.1.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "882a80f72ee45de3cc9a5afeb2da0331d58df69e4e7d8eeb5d3c7784ae67e724"
+dependencies = [
+ "deunicode",
+ "wasm-bindgen",
+]
+
+[[package]]
 name = "smallvec"
 version = "1.15.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5864,7 +5818,7 @@ dependencies = [
  "cargo-builder",
  "cargo-generate",
  "clap",
- "dirs 6.0.0",
+ "dirs",
  "enum-display",
  "include_dir",
  "lib-cargo-crate",
@@ -5962,7 +5916,7 @@ dependencies = [
  "cfg-if",
  "chrono",
  "derive_builder",
- "dirs 6.0.0",
+ "dirs",
  "event-listener",
  "fluvio_ws_stream_wasm",
  "futures-util",
@@ -6071,7 +6025,7 @@ dependencies = [
  "anyhow",
  "cfg-if",
  "clap",
- "dirs 6.0.0",
+ "dirs",
  "semver 1.0.26",
  "serde",
  "streamfy-types",
@@ -6088,7 +6042,7 @@ dependencies = [
  "assert_cmd",
  "cfg-if",
  "clap",
- "dirs 6.0.0",
+ "dirs",
  "predicates 3.1.3",
  "rand 0.8.5",
  "streamfy-channel",
@@ -6122,9 +6076,6 @@ dependencies = [
  "home",
  "humantime",
  "indicatif",
- "k8-client",
- "k8-config",
- "k8-types",
  "mimalloc",
  "semver 1.0.26",
  "serde",
@@ -6141,6 +6092,9 @@ dependencies = [
  "streamfy-controlplane-metadata",
  "streamfy-extension-common",
  "streamfy-future",
+ "streamfy-k8-client",
+ "streamfy-k8-config",
+ "streamfy-k8-types",
  "streamfy-package-index",
  "streamfy-protocol",
  "streamfy-sc-schema",
@@ -6208,9 +6162,6 @@ dependencies = [
  "futures-util",
  "include_dir",
  "indicatif",
- "k8-client",
- "k8-config",
- "k8-types",
  "once_cell",
  "portpicker",
  "rand 0.8.5",
@@ -6226,6 +6177,9 @@ dependencies = [
  "streamfy-extension-common",
  "streamfy-future",
  "streamfy-helm",
+ "streamfy-k8-client",
+ "streamfy-k8-config",
+ "streamfy-k8-types",
  "streamfy-sc-schema",
  "streamfy-stream-dispatcher",
  "streamfy-types",
@@ -6461,7 +6415,7 @@ name = "streamfy-hub-protocol"
 version = "0.0.0"
 dependencies = [
  "cargo_toml",
- "dirs 6.0.0",
+ "dirs",
  "serde",
  "serde_json",
  "serde_yaml 0.9.34+deprecated",
@@ -6471,6 +6425,85 @@ dependencies = [
  "toml 0.8.22",
  "tracing",
  "url",
+]
+
+[[package]]
+name = "streamfy-k8-client"
+version = "15.0.1"
+dependencies = [
+ "anyhow",
+ "async-channel",
+ "async-lock",
+ "async-trait",
+ "base64 0.22.1",
+ "bytes",
+ "cfg-if",
+ "futures-util",
+ "http 0.2.12",
+ "hyper 0.14.32",
+ "once_cell",
+ "pin-utils",
+ "rand 0.8.5",
+ "rustls 0.23.28",
+ "serde",
+ "serde_json",
+ "serde_qs",
+ "serde_yaml 0.9.34+deprecated",
+ "streamfy-future",
+ "streamfy-k8-config",
+ "streamfy-k8-diff",
+ "streamfy-k8-metadata-client",
+ "streamfy-k8-types",
+ "tokio",
+ "tracing",
+]
+
+[[package]]
+name = "streamfy-k8-config"
+version = "3.0.0"
+dependencies = [
+ "dirs",
+ "hostfile",
+ "serde",
+ "serde_json",
+ "serde_yaml 0.9.34+deprecated",
+ "streamfy-future",
+ "tera",
+ "thiserror 2.0.18",
+ "tracing",
+]
+
+[[package]]
+name = "streamfy-k8-diff"
+version = "0.1.2"
+dependencies = [
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "streamfy-k8-metadata-client"
+version = "9.0.0"
+dependencies = [
+ "anyhow",
+ "async-trait",
+ "futures-util",
+ "pin-utils",
+ "serde",
+ "serde_json",
+ "serde_qs",
+ "streamfy-k8-diff",
+ "streamfy-k8-types",
+ "tracing",
+]
+
+[[package]]
+name = "streamfy-k8-types"
+version = "0.10.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "serde_qs",
 ]
 
 [[package]]
@@ -6557,7 +6590,6 @@ dependencies = [
  "async-trait",
  "clap",
  "futures-util",
- "k8-client",
  "mimalloc",
  "once_cell",
  "rand 0.8.5",
@@ -6569,6 +6601,7 @@ dependencies = [
  "streamfy-controlplane",
  "streamfy-controlplane-metadata",
  "streamfy-future",
+ "streamfy-k8-client",
  "streamfy-protocol",
  "streamfy-sc-schema",
  "streamfy-service",
@@ -6791,13 +6824,13 @@ dependencies = [
  "async-trait",
  "cfg-if",
  "futures-util",
- "k8-client",
  "once_cell",
  "parking_lot 0.12.4",
  "serde",
  "serde_json",
  "serde_yaml 0.9.34+deprecated",
  "streamfy-future",
+ "streamfy-k8-client",
  "streamfy-stream-model",
  "streamfy-types",
  "tempfile",
@@ -6811,10 +6844,10 @@ version = "0.50.2"
 dependencies = [
  "async-lock",
  "event-listener",
- "k8-types",
  "once_cell",
  "serde",
  "streamfy-future",
+ "streamfy-k8-types",
  "tokio",
  "tracing",
 ]
@@ -6963,7 +6996,7 @@ dependencies = [
  "comfy-table",
  "current_platform",
  "dialoguer",
- "dirs 6.0.0",
+ "dirs",
  "fs_extra",
  "octocrab",
  "rustls 0.23.28",
@@ -7106,6 +7139,28 @@ dependencies = [
  "fastrand",
  "rustix 0.38.44",
  "windows-sys 0.52.0",
+]
+
+[[package]]
+name = "tera"
+version = "1.20.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e8004bca281f2d32df3bacd59bc67b312cb4c70cea46cbd79dbe8ac5ed206722"
+dependencies = [
+ "chrono",
+ "chrono-tz",
+ "globwalk",
+ "humansize",
+ "lazy_static",
+ "percent-encoding",
+ "pest",
+ "pest_derive",
+ "rand 0.8.5",
+ "regex",
+ "serde",
+ "serde_json",
+ "slug",
+ "unicode-segmentation",
 ]
 
 [[package]]
