@@ -1,5 +1,5 @@
 MAKE_DIR = $(dir $(realpath $(firstword $(MAKEFILE_LIST))))
-# Strip whitespace/newlines so helm --app-version is a clean semver-ish string
+# Strip whitespace/newlines so helm --app-version is a clean string
 VERSION := $(shell tr -d '[:space:]' < $(MAKE_DIR)/../../VERSION)
 APP_VERSION = $(VERSION)
 
@@ -12,8 +12,9 @@ clean:
 # Package a chart directory into a stable tgz name.
 # Prefer `helm package` when helm is installed; fall back to tar so
 # `include_dir!` embeds (and unit tests) still work without helm.
-# Use `command -v helm` at recipe time (not make-parse time) so PATH from
-# CI install steps is visible.
+#
+# Important: do not `cd` into the package dir for later relative paths —
+# stay at k8-util/helm so $(1)/$(3) remains correct.
 define package_chart
 	set -e; \
 	mkdir -p $(1); \
@@ -21,7 +22,7 @@ define package_chart
 	if command -v helm >/dev/null 2>&1; then \
 		echo "Packaging $(2) with helm (app-version=$(APP_VERSION))"; \
 		helm package ./$(2) --app-version "$(APP_VERSION)" -d $(1); \
-		cd $(1) && mv -f $(2)-*.tgz $(3); \
+		mv -f $(1)/$(2)-*.tgz $(1)/$(3); \
 	else \
 		echo "helm not found; packaging $(2) with tar into $(1)/$(3)"; \
 		tar -czf $(1)/$(3) $(2); \
