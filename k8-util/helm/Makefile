@@ -3,18 +3,23 @@ MAKE_DIR = $(dir $(realpath $(firstword $(MAKEFILE_LIST))))
 VERSION := $(shell tr -d '[:space:]' < $(MAKE_DIR)/../../VERSION)
 APP_VERSION = $(VERSION)
 
+SYS_TGZ = pkg_sys/streamfy-chart-sys.tgz
+APP_TGZ = pkg_app/streamfy-chart-app.tgz
+
+.PHONY: clean package
+
 # remove packaged charts
 # must clean if any of the contents changed due to limitation of "build.rs"
 clean:
-	rm -rf pkg_sys;
-	rm -rf pkg_app;
+	rm -rf pkg_sys
+	rm -rf pkg_app
 
 # Package a chart directory into a stable tgz name.
 # Prefer `helm package` when helm is installed; fall back to tar so
 # `include_dir!` embeds (and unit tests) still work without helm.
 #
-# Important: do not `cd` into the package dir for later relative paths —
-# stay at k8-util/helm so $(1)/$(3) remains correct.
+# Important: do not use the package *directory* as the make target —
+# an empty dir would look "up to date" and skip packaging.
 define package_chart
 	set -e; \
 	mkdir -p $(1); \
@@ -31,16 +36,18 @@ define package_chart
 	ls -la $(1)/$(3)
 endef
 
-# generate packaged chart for sys
-pkg_sys:	streamfy-sys/*.* ../../VERSION
+# Chart sources (include templates so chart changes force repackage)
+SYS_SRCS := $(wildcard streamfy-sys/*.*) $(wildcard streamfy-sys/templates/*)
+APP_SRCS := $(wildcard streamfy-app/*.*) $(wildcard streamfy-app/templates/*)
+
+$(SYS_TGZ): $(SYS_SRCS) ../../VERSION
 	$(call package_chart,pkg_sys,streamfy-sys,streamfy-chart-sys.tgz)
 
-# generate packaged chart for app
-pkg_app:	streamfy-app/*.* ../../VERSION
+$(APP_TGZ): $(APP_SRCS) ../../VERSION
 	$(call package_chart,pkg_app,streamfy-app,streamfy-chart-app.tgz)
 
-package:	pkg_sys pkg_app
-	echo "Packaged charts are in pkg_sys and pkg_app"
+package: $(SYS_TGZ) $(APP_TGZ)
+	@echo "Packaged charts are in pkg_sys and pkg_app"
 	@ls -la pkg_sys pkg_app
-	@test -s pkg_sys/streamfy-chart-sys.tgz
-	@test -s pkg_app/streamfy-chart-app.tgz
+	@test -s $(SYS_TGZ)
+	@test -s $(APP_TGZ)
