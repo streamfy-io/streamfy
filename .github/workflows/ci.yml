@@ -1,4 +1,4 @@
-# PR / main CI: unit tests, release-mode builds, local cluster + CLI bats integration
+# PR / main CI: unit/static checks, release builds, local/k8 cluster matrices, CLI bats
 name: CI
 
 concurrency:
@@ -26,7 +26,9 @@ env:
   CARGO_TERM_COLOR: always
   GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   BATS_VERSION: "1.11.0"
+  K3D_VERSION: v5.4.9
   SERVER_LOG: streamfy=info
+  K8_NAMESPACE: streamfy-test
   # TLS smoke uses in-repo certs under tls/certs (SAN: streamfy.local / *.streamfy.local).
   TLS_ARGS: --tls --domain streamfy.local --server-key ./tls/certs/server.key --server-cert ./tls/certs/server.crt --ca-cert ./tls/certs/ca.crt --client-cert ./tls/certs/client-root.crt --client-key ./tls/certs/client-root.key
   AUTH_FILE: crates/streamfy-sc/test-data/auth_config/policy.json
@@ -59,7 +61,148 @@ jobs:
       - name: Run unit tests
         run: make run-all-unit-test
 
-  # Release-mode binaries used by local cluster + bats integration tests
+  # Static / doc / feature / wasm checks (Fluvio `check` + feature/wasm matrices)
+  check:
+    name: Rust check ${{ matrix.check }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        check: [doc, doc-test, crate-audit]
+    env:
+      RUST_BACKTRACE: full
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Rust toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: 1.96.0
+          override: true
+      - name: Install zig
+        run: ./actions/zig-install.sh
+      - name: Install Helm
+        run: curl -fsSL https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+      - name: Free disk space
+        if: matrix.check == 'doc-test'
+        run: rm -rf /opt/hostedtoolcache
+      - uses: Swatinem/rust-cache@v2
+        timeout-minutes: 10
+        with:
+          key: check-${{ matrix.check }}
+      - name: Package helm charts
+        if: matrix.check == 'doc' || matrix.check == 'doc-test'
+        run: make -C k8-util/helm package
+      - name: Doc
+        if: matrix.check == 'doc'
+        run: make check-docs
+      - name: Doc test
+        if: matrix.check == 'doc-test'
+        run: make run-all-doc-test
+      - name: Audit crate licenses + advisories
+        if: matrix.check == 'crate-audit'
+        continue-on-error: true
+        uses: EmbarkStudios/cargo-deny-action@v1
+
+  check-wasm:
+    name: WASM check ${{ matrix.context.crate }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        context:
+          - crate: streamfy
+            features: "--features=openssl"
+          - crate: streamfy-socket
+            features: ""
+          - crate: streamfy-protocol
+            features: "--features=derive"
+          - crate: streamfy-spu-schema
+            features: ""
+          - crate: streamfy-sc-schema
+            features: ""
+          - crate: streamfy-types
+            features: ""
+    env:
+      RUST_BACKTRACE: full
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Rust toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: 1.96.0
+          override: true
+          target: wasm32-unknown-unknown
+      - name: Build WASM for ${{ matrix.context.crate }}
+        run: |
+          cargo check --manifest-path ./crates/${{ matrix.context.crate }}/Cargo.toml \
+            --no-default-features \
+            ${{ matrix.context.features }} \
+            --target wasm32-unknown-unknown
+
+  check-crate-feature-flags:
+    name: Check ${{ matrix.features }} for ${{ matrix.crate }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        crate:
+          - streamfy
+          - streamfy-socket
+          - streamfy-smartengine
+          - streamfy-sc-schema
+          - streamfy-protocol
+          - streamfy-spu-schema
+          - streamfy-types
+        features:
+          - no-default-features
+          - all-features
+    env:
+      RUST_BACKTRACE: full
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Rust toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: 1.96.0
+          override: true
+      - name: Check ${{ matrix.crate }} with ${{ matrix.features }}
+        run: cargo check --manifest-path ./crates/${{ matrix.crate }}/Cargo.toml --${{ matrix.features }}
+
+  check-windows:
+    name: Windows check ${{ matrix.crate }}
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        crate:
+          - streamfy
+          - streamfy-cli
+          - streamfy-channel
+    env:
+      RUST_BACKTRACE: full
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Rust toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: 1.96.0
+          override: true
+      - name: Install NASM
+        uses: ilammy/setup-nasm@v1
+      - uses: Swatinem/rust-cache@v2
+        timeout-minutes: 10
+        with:
+          key: windows-${{ matrix.crate }}
+      - name: Build ${{ matrix.crate }}
+        run: cargo build -p ${{ matrix.crate }}
+      - name: Test ${{ matrix.crate }}
+        run: cargo test -p ${{ matrix.crate }}
+
+  # Release-mode binaries used by cluster + bats integration tests
   build:
     name: Build ${{ matrix.binary }} (${{ matrix.rust-target }})
     runs-on: ubuntu-latest
@@ -68,7 +211,7 @@ jobs:
       matrix:
         rust-target:
           - x86_64-unknown-linux-musl
-        binary: [streamfy, streamfy-run, streamfy-test, svm]
+        binary: [streamfy, streamfy-run, streamfy-test, svm, smdk, cdk]
     env:
       RUST_BACKTRACE: full
       TARGET: ${{ matrix.rust-target }}
@@ -106,12 +249,55 @@ jobs:
       - name: Build svm
         if: matrix.binary == 'svm'
         run: make build-svm
+      - name: Build smdk
+        if: matrix.binary == 'smdk'
+        run: make build-smdk
+      - name: Build cdk
+        if: matrix.binary == 'cdk'
+        timeout-minutes: 40
+        run: make build-cdk
       - name: Upload artifact - ${{ matrix.binary }}
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.binary }}-${{ matrix.rust-target }}
           path: ${{ env.RUST_BIN_DIR }}/${{ matrix.binary }}
           retention-days: 3
+
+  check-integration:
+    name: Integration tests
+    needs: build
+    runs-on: ubuntu-latest
+    env:
+      RUST_BACKTRACE: full
+      RELEASE: true
+      RUST_TARGET: x86_64-unknown-linux-musl
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Rust toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: 1.96.0
+          override: true
+      - name: Install zig
+        run: ./actions/zig-install.sh
+      - name: Install Helm
+        run: curl -fsSL https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+      - uses: Swatinem/rust-cache@v2
+        timeout-minutes: 10
+        with:
+          key: check-integration
+      - name: Download smdk
+        uses: actions/download-artifact@v4
+        with:
+          name: smdk-${{ env.RUST_TARGET }}
+          path: ~/bin
+      - name: Mark smdk executable
+        run: |
+          chmod +x ~/bin/smdk
+          echo "$HOME/bin" >> "$GITHUB_PATH"
+      - name: Integration test
+        run: make SMDK_BIN=$HOME/bin/smdk run-integration-test
 
   # Lightweight produce/consume sanity (complements streamfy-test smoke)
   local-smoke:
@@ -167,9 +353,9 @@ jobs:
           retention-days: 5
           if-no-files-found: ignore
 
-  # Integration via streamfy-test (Fluvio local_cluster_test counterpart; local only)
+  # Fluvio local_cluster_test counterpart: make targets x run-mode matrix
   local-cluster-test:
-    name: Local cluster ${{ matrix.test }}
+    name: Local cluster (${{ matrix.run-mode }}) ${{ matrix.test }}
     runs-on: ubuntu-latest
     needs: build
     strategy:
@@ -177,20 +363,26 @@ jobs:
       matrix:
         rust-target: [x86_64-unknown-linux-musl]
         spu: [2]
+        # Make targets from makefiles/test.mk (skip concurrent/producer/consumer — not ported)
         test:
-          - smoke-test
-          - smoke-test-tls
+          - validate-test-harness
+          - smoke-test-local
+          - smoke-test-stream
+          - smoke-test-tls-root
           - smoke-test-at-most-once
-          - election
-          - multiple-partition
-          - reconnection
-          - batch-failure
-          - batch
-          - consumer-offsets
+          - election-test
+          - multiple-partition-test
+          - reconnection-test
+          - batch-failure-test
+          - batching-test
+          - streamfy-test-self-check
+          - consumer-offsets-test
+        run-mode: [local, local-k8]
     env:
       UNINSTALL: noclean
       CI: true
       SERVER_LOG: streamfy=info
+      K8_NAMESPACE: streamfy-test
     steps:
       - uses: actions/checkout@v4
       - name: Install Helm
@@ -223,56 +415,31 @@ jobs:
           echo "REPL=${{ matrix.spu }}" | tee -a "$GITHUB_ENV"
       - name: streamfy version
         run: streamfy version
-      - name: Start local cluster
-        if: matrix.test != 'smoke-test-tls'
+      - name: Set up k3d (local-k8)
+        if: matrix.run-mode == 'local-k8'
+        run: |
+          curl -s https://raw.githubusercontent.com/rancher/k3d/main/install.sh | TAG=${{ env.K3D_VERSION }} bash
+          ./k8-util/cluster/reset-k3d.sh
+      - name: Create k8 namespace
+        if: matrix.run-mode == 'local-k8'
+        run: kubectl create ns ${K8_NAMESPACE}
+      - name: Start cluster
+        if: matrix.test != 'smoke-test-tls-root'
         timeout-minutes: 10
-        run: streamfy cluster start --local --develop --spu ${{ matrix.spu }} --rust-log ${{ env.SERVER_LOG }}
-      - name: Start local cluster (TLS)
-        if: matrix.test == 'smoke-test-tls'
+        run: streamfy cluster start --${{ matrix.run-mode }} --develop --spu ${{ matrix.spu }} --rust-log ${{ env.SERVER_LOG }} --namespace ${K8_NAMESPACE}
+      - name: Start cluster (TLS)
+        if: matrix.test == 'smoke-test-tls-root'
         timeout-minutes: 10
         run: >
           AUTH_POLICY=${{ env.AUTH_FILE }}
           X509_AUTH_SCOPES=${{ env.X509_SCOPE_FILE }}
-          streamfy cluster start --local --develop --spu ${{ matrix.spu }}
-          --rust-log ${{ env.SERVER_LOG }} ${{ env.TLS_ARGS }}
+          streamfy cluster start --${{ matrix.run-mode }} --develop --spu ${{ matrix.spu }}
+          --rust-log ${{ env.SERVER_LOG }} --namespace ${K8_NAMESPACE} ${{ env.TLS_ARGS }}
       - name: Wait for cluster
         run: sleep 15
-      - name: Run smoke-test
-        if: matrix.test == 'smoke-test'
+      - name: Run ${{ matrix.test }}
         timeout-minutes: 15
-        run: make smoke-test-local
-      - name: Run smoke-test-at-most-once
-        if: matrix.test == 'smoke-test-at-most-once'
-        timeout-minutes: 15
-        run: make smoke-test-at-most-once
-      - name: Run smoke-test-tls
-        if: matrix.test == 'smoke-test-tls'
-        timeout-minutes: 15
-        run: make smoke-test-tls-root
-      - name: Run election-test
-        if: matrix.test == 'election'
-        timeout-minutes: 10
-        run: make election-test
-      - name: Run multiple-partition-test
-        if: matrix.test == 'multiple-partition'
-        timeout-minutes: 10
-        run: make multiple-partition-test
-      - name: Run reconnection-test
-        if: matrix.test == 'reconnection'
-        timeout-minutes: 10
-        run: make reconnection-test
-      - name: Run batch-failure-test
-        if: matrix.test == 'batch-failure'
-        timeout-minutes: 10
-        run: make batch-failure-test
-      - name: Run batching-test
-        if: matrix.test == 'batch'
-        timeout-minutes: 10
-        run: make batching-test
-      - name: Run consumer-offsets-test
-        if: matrix.test == 'consumer-offsets'
-        timeout-minutes: 15
-        run: make consumer-offsets-test
+        run: make ${{ matrix.test }}
       - name: Diagnostics on failure
         if: ${{ !success() }}
         timeout-minutes: 5
@@ -281,20 +448,318 @@ jobs:
         if: ${{ !success() }}
         uses: actions/upload-artifact@v4
         with:
-          name: local-cluster-${{ matrix.test }}-diag
+          name: local-${{ matrix.run-mode }}-${{ matrix.test }}-diag
           path: diagnostics*.gz
           retention-days: 5
           if-no-files-found: ignore
 
-  # CLI bats smoke (Fluvio cli_smoke counterpart; streamfy only — no smdk/cdk)
+  build-image:
+    name: Build Docker image (${{ matrix.rust-target }})
+    needs: build
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        rust-target:
+          - x86_64-unknown-linux-musl
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download streamfy-run
+        uses: actions/download-artifact@v4
+        with:
+          name: streamfy-run-${{ matrix.rust-target }}
+          path: .
+      - name: Print streamfy-run
+        run: pwd && ls -la . && chmod +x ./streamfy-run && ./streamfy-run -h || true
+      - name: Build Docker image
+        run: k8-util/docker/build.sh ${{ matrix.rust-target }} ${{ github.sha }} "$(pwd)/streamfy-run"
+      - name: Export Docker image
+        run: docker image save streamfy-io/streamfy:${{ github.sha }}-${{ matrix.rust-target }} --output /tmp/streamfy-${{ matrix.rust-target }}.tar
+      - name: Upload image tarball
+        uses: actions/upload-artifact@v4
+        with:
+          name: streamfy-${{ matrix.rust-target }}.tar
+          path: /tmp/streamfy-${{ matrix.rust-target }}.tar
+          retention-days: 3
+
+  k8-cluster-test:
+    name: K8 cluster ${{ matrix.test }} (spu=${{ matrix.spu }})
+    needs: build-image
+    runs-on: ubuntu-latest
+    env:
+      UNINSTALL: noclean
+      CI: true
+      SERVER_LOG: streamfy=debug
+      K8_NAMESPACE: streamfy-test
+    strategy:
+      fail-fast: false
+      matrix:
+        rust-target: [x86_64-unknown-linux-musl]
+        test:
+          - smoke-test-k8
+          - smoke-test-k8-tls
+          - smoke-test-k8-tls-root-unclean
+          - smoke-test-k8-tls-root
+        k8: [k3d]
+        spu: [1, 2]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Helm
+        run: curl -fsSL https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+      - name: Download streamfy
+        uses: actions/download-artifact@v4
+        with:
+          name: streamfy-${{ matrix.rust-target }}
+          path: ~/bin
+      - name: Download streamfy-test
+        uses: actions/download-artifact@v4
+        with:
+          name: streamfy-test-${{ matrix.rust-target }}
+          path: ~/bin
+      - name: Download Docker image
+        uses: actions/download-artifact@v4
+        with:
+          name: streamfy-${{ matrix.rust-target }}.tar
+          path: /tmp
+      - name: Set up binaries
+        run: |
+          chmod +x ~/bin/streamfy ~/bin/streamfy-test
+          mkdir -p ~/.streamfy/bin
+          ln -sf ~/bin/streamfy ~/.streamfy/bin/streamfy
+          echo "$HOME/bin" >> "$GITHUB_PATH"
+          echo "$HOME/.streamfy/bin" >> "$GITHUB_PATH"
+          echo "STREAMFY_BIN=$HOME/bin/streamfy" >> "$GITHUB_ENV"
+          echo "TEST_BIN=$HOME/bin/streamfy-test" >> "$GITHUB_ENV"
+          echo "DEFAULT_SPU=${{ matrix.spu }}" | tee -a "$GITHUB_ENV"
+          echo "REPL=${{ matrix.spu }}" | tee -a "$GITHUB_ENV"
+      - name: streamfy version
+        run: streamfy version && streamfy-test -h || true
+      - name: Load Docker image
+        run: |
+          docker image load --input /tmp/streamfy-${{ matrix.rust-target }}.tar
+          docker image tag streamfy-io/streamfy:${{ github.sha }}-${{ matrix.rust-target }} streamfy-io/streamfy:${{ github.sha }}
+          docker image tag streamfy-io/streamfy:${{ github.sha }}-${{ matrix.rust-target }} ghcr.io/streamfy-io/streamfy:${{ github.sha }}
+          docker image ls -a
+      - name: Export image for k3d
+        run: docker image save ghcr.io/streamfy-io/streamfy:${{ github.sha }} --output /tmp/streamfy.tar
+      - name: Install k3d
+        if: matrix.k8 == 'k3d'
+        run: |
+          curl -s https://raw.githubusercontent.com/rancher/k3d/main/install.sh | TAG=${{ env.K3D_VERSION }} bash
+          ./k8-util/cluster/reset-k3d.sh
+      - name: Load image into k3d
+        if: matrix.k8 == 'k3d'
+        run: k3d image import -k /tmp/streamfy.tar -c streamfy
+      - name: Create k8 namespace
+        run: kubectl create ns ${K8_NAMESPACE}
+      - name: Start cluster (plain)
+        if: matrix.test == 'smoke-test-k8'
+        timeout-minutes: 10
+        run: streamfy cluster start --k8 --develop --spu ${{ matrix.spu }} --rust-log ${{ env.SERVER_LOG }} --namespace ${K8_NAMESPACE}
+      - name: Start cluster (TLS)
+        if: matrix.test == 'smoke-test-k8-tls'
+        timeout-minutes: 10
+        run: streamfy cluster start --k8 --develop --spu ${{ matrix.spu }} --rust-log ${{ env.SERVER_LOG }} ${{ env.TLS_ARGS }} --namespace ${K8_NAMESPACE}
+      - name: Start cluster (TLS + auth)
+        if: matrix.test == 'smoke-test-k8-tls-root-unclean' || matrix.test == 'smoke-test-k8-tls-root'
+        timeout-minutes: 10
+        run: |
+          make smoke-test-k8-tls-policy-setup
+          streamfy cluster start --k8 --develop --spu ${{ matrix.spu }} --rust-log ${{ env.SERVER_LOG }} ${{ env.TLS_ARGS }} --namespace ${K8_NAMESPACE} --authorization-config-map authorization
+      - name: Run ${{ matrix.test }}
+        timeout-minutes: 10
+        run: |
+          sleep 15
+          make ${{ matrix.test }}
+      - name: Diagnostics on failure
+        if: ${{ !success() }}
+        timeout-minutes: 5
+        run: |
+          kubectl get pods --namespace ${K8_NAMESPACE} -o yaml || true
+          streamfy cluster diagnostics || true
+      - name: Upload diagnostics
+        if: ${{ !success() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: k8-${{ matrix.test }}-spu${{ matrix.spu }}-diag
+          path: diagnostics*.gz
+          retention-days: 5
+          if-no-files-found: ignore
+
+  k8-upgrade-test:
+    name: K8 upgrade test
+    needs: build-image
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        rust-target: [x86_64-unknown-linux-musl]
+    env:
+      CI: true
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Helm
+        run: curl -fsSL https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+      - name: Setup k3d
+        run: |
+          curl -s https://raw.githubusercontent.com/rancher/k3d/main/install.sh | TAG=${{ env.K3D_VERSION }} bash
+          ./k8-util/cluster/reset-k3d.sh
+      - name: Download streamfy
+        uses: actions/download-artifact@v4
+        with:
+          name: streamfy-${{ matrix.rust-target }}
+          path: ~/bin
+      - name: Download Docker image
+        uses: actions/download-artifact@v4
+        with:
+          name: streamfy-${{ matrix.rust-target }}.tar
+          path: /tmp
+      - name: Set up binaries
+        run: |
+          chmod +x ~/bin/streamfy
+          mkdir -p ~/.streamfy/bin
+          ln -sf ~/bin/streamfy ~/.streamfy/bin/streamfy
+          echo "$HOME/bin" >> "$GITHUB_PATH"
+          echo "$HOME/.streamfy/bin" >> "$GITHUB_PATH"
+      - name: Load Docker image
+        run: |
+          docker image load --input /tmp/streamfy-${{ matrix.rust-target }}.tar
+          docker image tag streamfy-io/streamfy:${{ github.sha }}-${{ matrix.rust-target }} streamfy-io/streamfy:${{ github.sha }}
+          docker image tag streamfy-io/streamfy:${{ github.sha }}-${{ matrix.rust-target }} ghcr.io/streamfy-io/streamfy:${{ github.sha }}
+          docker image save ghcr.io/streamfy-io/streamfy:${{ github.sha }} --output /tmp/streamfy.tar
+      - name: Run upgrade test
+        timeout-minutes: 15
+        env:
+          TEST_DATA_BYTES: 10000
+        run: |
+          k3d image import -k /tmp/streamfy.tar -c streamfy
+          make STREAMFY_BIN=$HOME/bin/streamfy upgrade-test
+      - name: Diagnostics on failure
+        if: ${{ !success() }}
+        timeout-minutes: 5
+        run: streamfy cluster diagnostics || true
+      - name: Upload diagnostics
+        if: ${{ !success() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: k8-upgrade-diag
+          path: diagnostics*.gz
+          retention-days: 5
+          if-no-files-found: ignore
+
+  local-upgrade-test:
+    name: Local upgrade test
+    needs: build
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        rust-target: [x86_64-unknown-linux-musl]
+    env:
+      CI: true
+      STREAMFY_MODE: local
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Helm
+        run: curl -fsSL https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+      - name: Download streamfy
+        uses: actions/download-artifact@v4
+        with:
+          name: streamfy-${{ matrix.rust-target }}
+          path: ~/bin
+      - name: Download streamfy-run
+        uses: actions/download-artifact@v4
+        with:
+          name: streamfy-run-${{ matrix.rust-target }}
+          path: ~/bin
+      - name: Set up binaries
+        run: |
+          chmod +x ~/bin/streamfy-run ~/bin/streamfy
+          mkdir -p ~/.streamfy/bin ~/.streamfy/extensions
+          ln -sf ~/bin/streamfy ~/.streamfy/bin/streamfy
+          cp ~/bin/streamfy-run ~/.streamfy/extensions/streamfy-run
+          echo "$HOME/bin" >> "$GITHUB_PATH"
+          echo "$HOME/.streamfy/bin" >> "$GITHUB_PATH"
+      - name: Run upgrade test
+        timeout-minutes: 15
+        env:
+          TEST_DATA_BYTES: 10000
+        run: make STREAMFY_MODE=local STREAMFY_BIN=$HOME/bin/streamfy upgrade-test
+      - name: Diagnostics on failure
+        if: ${{ !success() }}
+        timeout-minutes: 5
+        run: streamfy cluster diagnostics || true
+      - name: Upload diagnostics
+        if: ${{ !success() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: local-upgrade-diag
+          path: diagnostics*.gz
+          retention-days: 5
+          if-no-files-found: ignore
+
+  local-resume-test:
+    name: Local resume test
+    needs: build
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        rust-target: [x86_64-unknown-linux-musl]
+    env:
+      CI: true
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Helm
+        run: curl -fsSL https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+      - name: Download streamfy
+        uses: actions/download-artifact@v4
+        with:
+          name: streamfy-${{ matrix.rust-target }}
+          path: ~/bin
+      - name: Download streamfy-run
+        uses: actions/download-artifact@v4
+        with:
+          name: streamfy-run-${{ matrix.rust-target }}
+          path: ~/bin
+      - name: Set up binaries
+        run: |
+          chmod +x ~/bin/streamfy-run ~/bin/streamfy
+          mkdir -p ~/.streamfy/bin ~/.streamfy/extensions
+          ln -sf ~/bin/streamfy ~/.streamfy/bin/streamfy
+          cp ~/bin/streamfy-run ~/.streamfy/extensions/streamfy-run
+          echo "$HOME/bin" >> "$GITHUB_PATH"
+          echo "$HOME/.streamfy/bin" >> "$GITHUB_PATH"
+      - name: Install parallel
+        run: sudo apt-get install -y parallel
+      - name: Run resume test
+        timeout-minutes: 15
+        env:
+          TEST_DATA_BYTES: 10000
+        run: make STREAMFY_BIN=$HOME/bin/streamfy resume-test
+      - name: Diagnostics on failure
+        if: ${{ !success() }}
+        timeout-minutes: 5
+        run: streamfy cluster diagnostics || true
+      - name: Upload diagnostics
+        if: ${{ !success() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: local-resume-diag
+          path: diagnostics*.gz
+          retention-days: 5
+          if-no-files-found: ignore
+
+  # CLI bats smoke matrix (streamfy / smdk / cdk / svm)
   cli-smoke:
-    name: CLI bats smoke (streamfy)
+    name: CLI smoke (${{ matrix.test }})
     runs-on: ubuntu-latest
     needs: build
     env:
       SPU: 2
       CLI_TEST_RETRIES: 3
       RUST_TARGET: x86_64-unknown-linux-musl
+    strategy:
+      fail-fast: false
+      matrix:
+        test: [streamfy, smdk, cdk, svm]
     steps:
       - uses: actions/checkout@v4
       - name: Setup BATS
@@ -307,6 +772,14 @@ jobs:
           sudo apt-get install -y -V -o="APT::Acquire::Retries=3" expect
       - name: Install Helm
         run: curl -fsSL https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+      - name: Install Rust (smdk smartmodule build)
+        if: matrix.test == 'streamfy' || matrix.test == 'smdk'
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: 1.96.0
+          override: true
+          target: wasm32-wasip1
       - name: Download streamfy
         uses: actions/download-artifact@v4
         with:
@@ -327,34 +800,81 @@ jobs:
           echo "$HOME/.streamfy/bin" >> "$GITHUB_PATH"
           echo "STREAMFY_BIN=$HOME/bin/streamfy" >> "$GITHUB_ENV"
       - name: Start local cluster
+        if: matrix.test != 'svm'
         timeout-minutes: 10
         run: streamfy cluster start --local --develop --spu ${{ env.SPU }}
-      - name: Run Streamfy CLI smoke tests
+      - name: Run Streamfy CLI smoke
+        if: matrix.test == 'streamfy'
         timeout-minutes: 30
         run: make cli-streamfy-smoke-ci
+      - name: Download smdk
+        if: matrix.test == 'smdk'
+        uses: actions/download-artifact@v4
+        with:
+          name: smdk-${{ env.RUST_TARGET }}
+          path: ~/bin
+      - name: Run SMDK smoke
+        if: matrix.test == 'smdk'
+        timeout-minutes: 20
+        run: |
+          chmod +x ~/bin/smdk
+          echo "$HOME/bin" >> "$GITHUB_PATH"
+          make SMDK_BIN=$HOME/bin/smdk cli-smdk-smoke
+      - name: Download cdk
+        if: matrix.test == 'cdk'
+        uses: actions/download-artifact@v4
+        with:
+          name: cdk-${{ env.RUST_TARGET }}
+          path: ~/bin
+      - name: Run CDK smoke
+        if: matrix.test == 'cdk'
+        timeout-minutes: 20
+        run: |
+          chmod +x ~/bin/cdk
+          echo "$HOME/bin" >> "$GITHUB_PATH"
+          make CDK_BIN=$HOME/bin/cdk cli-cdk-smoke
+      - name: Download svm
+        if: matrix.test == 'svm'
+        uses: actions/download-artifact@v4
+        with:
+          name: svm-${{ env.RUST_TARGET }}
+          path: ~/bin
+      - name: Run SVM smoke
+        if: matrix.test == 'svm'
+        timeout-minutes: 20
+        run: |
+          chmod +x ~/bin/svm
+          echo "$HOME/bin" >> "$GITHUB_PATH"
+          make SVM_BIN=$HOME/bin/svm cli-svm-smoke
       - name: Diagnostics on failure
-        if: ${{ !success() }}
+        if: ${{ !success() && matrix.test != 'svm' }}
         timeout-minutes: 5
         run: streamfy cluster diagnostics || true
       - name: Upload diagnostics
-        if: ${{ !success() }}
+        if: ${{ !success() && matrix.test != 'svm' }}
         uses: actions/upload-artifact@v4
         with:
-          name: cli-smoke-diag
+          name: cli-smoke-${{ matrix.test }}-diag
           path: diagnostics*.gz
           retention-days: 5
           if-no-files-found: ignore
 
-  # Partition bats (Fluvio partition_test counterpart)
+  # Partition bats matrix (partitions x run-mode)
   partition-test:
-    name: CLI partition bats
+    name: Partition bats (p=${{ matrix.partitions }}, ${{ matrix.run-mode }})
     runs-on: ubuntu-latest
     needs: build
+    strategy:
+      fail-fast: false
+      matrix:
+        rust-target: [x86_64-unknown-linux-musl]
+        test: [multiple_partitions]
+        spu: [2]
+        partitions: [2, 4, 6]
+        replication: [1]
+        run-mode: [local, local-k8]
     env:
-      RUST_TARGET: x86_64-unknown-linux-musl
-      # Match Fluvio partition CI defaults (replication 1)
-      PARTITIONS: "2"
-      REPLICATION: "1"
+      SERVER_LOG: streamfy=info
     steps:
       - uses: actions/checkout@v4
       - name: Setup BATS
@@ -366,13 +886,18 @@ jobs:
       - name: Download streamfy
         uses: actions/download-artifact@v4
         with:
-          name: streamfy-${{ env.RUST_TARGET }}
+          name: streamfy-${{ matrix.rust-target }}
           path: ~/bin
       - name: Download streamfy-run
         uses: actions/download-artifact@v4
         with:
-          name: streamfy-run-${{ env.RUST_TARGET }}
+          name: streamfy-run-${{ matrix.rust-target }}
           path: ~/.streamfy/extensions
+      - name: Set up k3d (local-k8)
+        if: matrix.run-mode == 'local-k8'
+        run: |
+          curl -s https://raw.githubusercontent.com/rancher/k3d/main/install.sh | TAG=${{ env.K3D_VERSION }} bash
+          ./k8-util/cluster/reset-k3d.sh
       - name: Set up binaries
         run: |
           chmod +x ~/bin/streamfy ~/.streamfy/extensions/streamfy-run
@@ -381,12 +906,23 @@ jobs:
           echo "$HOME/bin" >> "$GITHUB_PATH"
           echo "$HOME/.streamfy/bin" >> "$GITHUB_PATH"
           echo "STREAMFY_BIN=$HOME/bin/streamfy" >> "$GITHUB_ENV"
-      - name: Start local cluster
+      - name: streamfy version
+        run: streamfy version
+      - name: Start cluster
         timeout-minutes: 10
-        run: streamfy cluster start --local --develop --spu 2
-      - name: Run partition bats
+        run: streamfy cluster start --${{ matrix.run-mode }} --develop --spu ${{ matrix.spu }}
+      - name: Wait for cluster
+        run: sleep 15
+      - name: Run multiple partitions bats
+        if: matrix.test == 'multiple_partitions'
         timeout-minutes: 15
+        env:
+          REPLICATION: ${{ matrix.replication }}
+          PARTITIONS: ${{ matrix.partitions }}
         run: make cli-partition-test-multiple-partitions
+      - name: Shutdown cluster
+        timeout-minutes: 10
+        run: streamfy cluster shutdown || true
       - name: Diagnostics on failure
         if: ${{ !success() }}
         timeout-minutes: 5
@@ -395,12 +931,12 @@ jobs:
         if: ${{ !success() }}
         uses: actions/upload-artifact@v4
         with:
-          name: partition-test-diag
+          name: partition-${{ matrix.run-mode }}-p${{ matrix.partitions }}-diag
           path: diagnostics*.gz
           retention-days: 5
           if-no-files-found: ignore
 
-  # Read-only cluster bats (Fluvio read_only_test counterpart)
+  # Read-only cluster bats
   read-only-test:
     name: CLI read-only bats
     runs-on: ubuntu-latest
@@ -455,3 +991,190 @@ jobs:
           retention-days: 5
           if-no-files-found: ignore
 
+  mirroring-smoke-test:
+    name: Mirroring smoke (${{ matrix.run-mode }})
+    runs-on: ubuntu-latest
+    needs: build
+    strategy:
+      fail-fast: false
+      matrix:
+        run-mode: [local, local-k8]
+    env:
+      RUST_TARGET: x86_64-unknown-linux-musl
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup BATS
+        uses: mig4/setup-bats@v1
+        with:
+          bats-version: ${{ env.BATS_VERSION }}
+      - name: Install Helm
+        run: curl -fsSL https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+      - name: Download streamfy
+        uses: actions/download-artifact@v4
+        with:
+          name: streamfy-${{ env.RUST_TARGET }}
+          path: ~/bin
+      - name: Download streamfy-run
+        uses: actions/download-artifact@v4
+        with:
+          name: streamfy-run-${{ env.RUST_TARGET }}
+          path: ~/extensions
+      - name: Set up k3d (local-k8)
+        if: matrix.run-mode == 'local-k8'
+        run: |
+          curl -s https://raw.githubusercontent.com/rancher/k3d/main/install.sh | TAG=${{ env.K3D_VERSION }} bash
+          ./k8-util/cluster/reset-k3d.sh
+          sleep 15
+      - name: Set up binaries
+        run: |
+          chmod +x ~/bin/streamfy ~/extensions/streamfy-run
+          mkdir -p ~/.streamfy/bin ~/.streamfy/extensions
+          mv ~/bin/streamfy ~/.streamfy/bin/streamfy
+          mv ~/extensions/streamfy-run ~/.streamfy/extensions/streamfy-run
+          echo "$HOME/.streamfy/bin" >> "$GITHUB_PATH"
+      - name: Start cluster
+        timeout-minutes: 10
+        run: streamfy cluster start --${{ matrix.run-mode }}
+      - name: Run mirroring smoke
+        timeout-minutes: 15
+        run: make STREAMFY_BIN=$HOME/.streamfy/bin/streamfy cli-streamfy-mirroring-smoke
+      - name: Print SC logs on failure
+        if: ${{ !success() }}
+        timeout-minutes: 5
+        run: |
+          kubectl get pods --namespace streamfy-test -o yaml || true
+          cat /tmp/flv_sc.log || cat /tmp/streamfy_sc.log || true
+
+  mirroring-smoke-test-e2e:
+    name: Mirroring smoke e2e
+    runs-on: ubuntu-latest
+    needs: build-image
+    strategy:
+      matrix:
+        rust-target: [x86_64-unknown-linux-musl]
+    env:
+      REMOTE_2_SC_PUB_ADDR: "127.0.0.1:9103"
+      REMOTE_2_SC_PRIV_ADDR: "0.0.0.0:9104"
+      REMOTE_2_SPU_ID: 6001
+      REMOTE_2_SPU_PUB_ADDR: "0.0.0.0:9020"
+      REMOTE_2_SPU_PRIV_ADDR: "0.0.0.0:9021"
+      REMOTE_2_BASE_DIR: "~/.streamfy_2"
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup BATS
+        uses: mig4/setup-bats@v1
+        with:
+          bats-version: ${{ env.BATS_VERSION }}
+      - name: Install Helm
+        run: curl -fsSL https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+      - name: Download streamfy
+        uses: actions/download-artifact@v4
+        with:
+          name: streamfy-${{ matrix.rust-target }}
+          path: ~/bin
+      - name: Download streamfy-run
+        uses: actions/download-artifact@v4
+        with:
+          name: streamfy-run-${{ matrix.rust-target }}
+          path: ~/extensions
+      - name: Download streamfy-test
+        uses: actions/download-artifact@v4
+        with:
+          name: streamfy-test-${{ matrix.rust-target }}
+          path: ~/extensions
+      - name: Download Docker image
+        uses: actions/download-artifact@v4
+        with:
+          name: streamfy-${{ matrix.rust-target }}.tar
+          path: /tmp
+      - name: Set up binaries
+        run: |
+          chmod +x ~/bin/streamfy ~/extensions/streamfy-run ~/extensions/streamfy-test
+          mkdir -p ~/.streamfy/bin ~/.streamfy/extensions
+          mv ~/bin/streamfy ~/.streamfy/bin/streamfy
+          mv ~/extensions/streamfy-run ~/.streamfy/bin/streamfy-run
+          mv ~/extensions/streamfy-test ~/.streamfy/bin/streamfy-test
+          echo "$HOME/.streamfy/bin" >> "$GITHUB_PATH"
+      - name: streamfy version
+        run: streamfy version && streamfy-test -h || true
+      - name: Load Docker image
+        run: |
+          docker image load --input /tmp/streamfy-${{ matrix.rust-target }}.tar
+          docker image tag streamfy-io/streamfy:${{ github.sha }}-${{ matrix.rust-target }} streamfy-io/streamfy:${{ github.sha }}
+          docker image tag streamfy-io/streamfy:${{ github.sha }}-${{ matrix.rust-target }} ghcr.io/streamfy-io/streamfy:${{ github.sha }}
+          docker image save ghcr.io/streamfy-io/streamfy:${{ github.sha }} --output /tmp/streamfy.tar
+      - name: Install k3d
+        run: |
+          curl -s https://raw.githubusercontent.com/rancher/k3d/main/install.sh | TAG=${{ env.K3D_VERSION }} bash
+          ./k8-util/cluster/reset-k3d.sh
+      - name: Load image into k3d
+        run: |
+          k3d image import -k /tmp/streamfy.tar -c streamfy
+          k3d image import -k /tmp/streamfy-${{ matrix.rust-target }}.tar -c streamfy
+      - name: Create k8 namespace
+        run: kubectl create ns streamfy-test
+      - name: Start edge cluster remote 1
+        timeout-minutes: 10
+        run: streamfy cluster start --local
+      - name: Start edge cluster remote 2
+        timeout-minutes: 10
+        run: |
+          streamfy profile add local2 ${REMOTE_2_SC_PUB_ADDR} local
+          streamfy cluster start --skip-profile-creation --skip-checks --spu 0 --sc-pub-addr ${REMOTE_2_SC_PUB_ADDR} --sc-priv-addr ${REMOTE_2_SC_PRIV_ADDR} --data-dir ${REMOTE_2_BASE_DIR}
+          streamfy cluster spu register --id ${REMOTE_2_SPU_ID} -p ${REMOTE_2_SPU_PUB_ADDR} -v ${REMOTE_2_SPU_PRIV_ADDR}
+          streamfy run spu -i ${REMOTE_2_SPU_ID} -p ${REMOTE_2_SPU_PUB_ADDR} -v ${REMOTE_2_SPU_PRIV_ADDR} --sc-addr ${REMOTE_2_SC_PRIV_ADDR} --log-base-dir ${REMOTE_2_BASE_DIR}/data &
+      - name: Start home cluster in k8
+        timeout-minutes: 10
+        run: streamfy cluster start --k8 --develop --namespace streamfy-test --use-k8-port-forwarding
+      - name: Run mirroring e2e
+        timeout-minutes: 10
+        run: make STREAMFY_BIN=$HOME/.streamfy/bin/streamfy cli-streamfy-mirroring-smoke-e2e
+      - name: Print SC logs on failure
+        if: ${{ !success() }}
+        timeout-minutes: 5
+        run: |
+          kubectl get pods --namespace streamfy-test -o yaml || true
+          cat /tmp/flv_sc.log || cat /tmp/streamfy_sc.log || true
+
+  cli-backward-compatibility:
+    name: CLI backward compatibility
+    runs-on: ubuntu-latest
+    needs: build-image
+    strategy:
+      matrix:
+        rust-target: [x86_64-unknown-linux-musl]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup BATS
+        uses: mig4/setup-bats@v1
+        with:
+          bats-version: ${{ env.BATS_VERSION }}
+      - name: Install Helm
+        run: curl -fsSL https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+      - name: Download streamfy
+        uses: actions/download-artifact@v4
+        with:
+          name: streamfy-${{ matrix.rust-target }}
+          path: ~/bin
+      - name: Download streamfy-run
+        uses: actions/download-artifact@v4
+        with:
+          name: streamfy-run-${{ matrix.rust-target }}
+          path: ~/.streamfy/extensions
+      - name: Set up binaries
+        run: |
+          chmod +x ~/bin/streamfy ~/.streamfy/extensions/streamfy-run
+          mkdir -p ~/.streamfy/bin
+          ln -sf ~/bin/streamfy ~/.streamfy/bin/streamfy
+          echo "$HOME/bin" >> "$GITHUB_PATH"
+          echo "$HOME/.streamfy/bin" >> "$GITHUB_PATH"
+          echo "STREAMFY_BIN=$HOME/bin/streamfy" >> "$GITHUB_ENV"
+      - name: streamfy version
+        run: streamfy version
+      - name: Run backward compatibility tests
+        timeout-minutes: 30
+        run: make cli-backward-compatibility-test
+      - name: Print SC logs on failure
+        if: ${{ !success() }}
+        timeout-minutes: 5
+        run: cat /tmp/flv_sc.log || cat /tmp/streamfy_sc.log || true
