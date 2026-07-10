@@ -352,8 +352,9 @@ jobs:
     needs: build
     env:
       RUST_TARGET: x86_64-unknown-linux-musl
+      # Match Fluvio partition CI defaults (replication 1)
       PARTITIONS: "2"
-      REPLICATION: "2"
+      REPLICATION: "1"
     steps:
       - uses: actions/checkout@v4
       - name: Setup BATS
