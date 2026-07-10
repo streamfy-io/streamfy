@@ -374,11 +374,12 @@ mod test {
             .expect("identity:")
             .build()
             .expect("acceptor");
-            let connector = ConnectorBuilder::identity(IdentityBuilder::from_path(CLIENT_IDENTITY)?)
-                .expect("connector")
-                .danger_accept_invalid_hostnames()
-                .no_cert_verification()
-                .build();
+            let connector =
+                ConnectorBuilder::identity(IdentityBuilder::from_path(CLIENT_IDENTITY)?)
+                    .expect("connector")
+                    .danger_accept_invalid_hostnames()
+                    .no_cert_verification()
+                    .build();
             (acceptor, connector)
         };
 
@@ -394,10 +395,11 @@ mod test {
             .expect("identity:")
             .build()
             .expect("acceptor");
-            let connector = ConnectorBuilder::identity(IdentityBuilder::from_path(CLIENT_IDENTITY)?)
-                .expect("connector")
-                .no_cert_verification()
-                .build();
+            let connector =
+                ConnectorBuilder::identity(IdentityBuilder::from_path(CLIENT_IDENTITY)?)
+                    .expect("connector")
+                    .no_cert_verification()
+                    .build();
             (acceptor, connector)
         };
 
