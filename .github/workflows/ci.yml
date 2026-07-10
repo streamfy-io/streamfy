@@ -1,4 +1,4 @@
-# PR / main CI: build core binaries, unit tests, local smoke test
+# PR / main CI: unit tests, release-mode builds, local cluster + CLI bats integration
 name: CI
 
 concurrency:
@@ -25,6 +25,12 @@ on:
 env:
   CARGO_TERM_COLOR: always
   GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  BATS_VERSION: "1.11.0"
+  SERVER_LOG: streamfy=info
+  # Fluvio-style TLS args for smoke-test-tls (certs are in-repo under tls/certs)
+  TLS_ARGS: --tls --domain streamfy.local --server-key ./tls/certs/server.key --server-cert ./tls/certs/server.crt --ca-cert ./tls/certs/ca.crt --client-cert ./tls/certs/client-root.crt --client-key ./tls/certs/client-root.key
+  AUTH_FILE: crates/streamfy-sc/test-data/auth_config/policy.json
+  X509_SCOPE_FILE: crates/streamfy-sc/test-data/auth_config/scopes.json
 
 jobs:
   unit-test:
@@ -49,6 +55,7 @@ jobs:
       - name: Run unit tests
         run: make run-all-unit-test
 
+  # Release-mode binaries used by local cluster + bats integration tests
   build:
     name: Build ${{ matrix.binary }} (${{ matrix.rust-target }})
     runs-on: ubuntu-latest
@@ -57,12 +64,12 @@ jobs:
       matrix:
         rust-target:
           - x86_64-unknown-linux-musl
-        binary: [streamfy, streamfy-run, svm]
+        binary: [streamfy, streamfy-run, streamfy-test, svm]
     env:
       RUST_BACKTRACE: full
       TARGET: ${{ matrix.rust-target }}
-      RUST_BIN_DIR: target/${{ matrix.rust-target }}/debug
-      RELEASE: ""
+      RUST_BIN_DIR: target/${{ matrix.rust-target }}/release
+      RELEASE: true
     steps:
       - uses: actions/checkout@v4
       - name: Install Rust toolchain
@@ -71,16 +78,21 @@ jobs:
           targets: ${{ matrix.rust-target }}
       - name: Install zig
         run: ./actions/zig-install.sh
+      - name: Install Helm
+        run: curl -fsSL https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
       - uses: Swatinem/rust-cache@v2
         timeout-minutes: 10
         with:
-          key: ci-${{ matrix.rust-target }}-${{ matrix.binary }}
+          key: ci-release-${{ matrix.rust-target }}-${{ matrix.binary }}
       - name: Build streamfy
         if: matrix.binary == 'streamfy'
         run: make build-cli
       - name: Build streamfy-run
         if: matrix.binary == 'streamfy-run'
         run: make build-cluster
+      - name: Build streamfy-test
+        if: matrix.binary == 'streamfy-test'
+        run: make build-test
       - name: Build svm
         if: matrix.binary == 'svm'
         run: make build-svm
@@ -91,6 +103,7 @@ jobs:
           path: ${{ env.RUST_BIN_DIR }}/${{ matrix.binary }}
           retention-days: 3
 
+  # Lightweight produce/consume sanity (complements streamfy-test smoke)
   local-smoke:
     name: Local cluster smoke
     runs-on: ubuntu-latest
@@ -100,8 +113,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Install Helm
-        run: |
-          curl -fsSL https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+        run: curl -fsSL https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
       - name: Download streamfy
         uses: actions/download-artifact@v4
         with:
@@ -144,3 +156,289 @@ jobs:
           path: diagnostics*.gz
           retention-days: 5
           if-no-files-found: ignore
+
+  # Integration via streamfy-test (Fluvio local_cluster_test counterpart; local only)
+  local-cluster-test:
+    name: Local cluster ${{ matrix.test }}
+    runs-on: ubuntu-latest
+    needs: build
+    strategy:
+      fail-fast: false
+      matrix:
+        rust-target: [x86_64-unknown-linux-musl]
+        spu: [2]
+        test:
+          - smoke-test
+          - smoke-test-tls
+          - smoke-test-at-most-once
+          - election
+          - multiple-partition
+          - reconnection
+          - batch-failure
+          - batch
+          - consumer-offsets
+    env:
+      UNINSTALL: noclean
+      CI: true
+      STREAMFY_BIN: ~/bin/streamfy
+      TEST_BIN: ~/bin/streamfy-test
+      SERVER_LOG: streamfy=info
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Helm
+        run: curl -fsSL https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+      - name: Download streamfy
+        uses: actions/download-artifact@v4
+        with:
+          name: streamfy-${{ matrix.rust-target }}
+          path: ~/bin
+      - name: Download streamfy-run
+        uses: actions/download-artifact@v4
+        with:
+          name: streamfy-run-${{ matrix.rust-target }}
+          path: ~/.streamfy/extensions
+      - name: Download streamfy-test
+        uses: actions/download-artifact@v4
+        with:
+          name: streamfy-test-${{ matrix.rust-target }}
+          path: ~/bin
+      - name: Set up binaries
+        run: |
+          chmod +x ~/bin/streamfy ~/bin/streamfy-test ~/.streamfy/extensions/streamfy-run
+          mkdir -p ~/.streamfy/bin
+          ln -sf ~/bin/streamfy ~/.streamfy/bin/streamfy
+          echo "$HOME/bin" >> "$GITHUB_PATH"
+          echo "$HOME/.streamfy/bin" >> "$GITHUB_PATH"
+          echo "DEFAULT_SPU=${{ matrix.spu }}" | tee -a "$GITHUB_ENV"
+          echo "REPL=${{ matrix.spu }}" | tee -a "$GITHUB_ENV"
+      - name: streamfy version
+        run: streamfy version
+      - name: Start local cluster
+        if: matrix.test != 'smoke-test-tls'
+        timeout-minutes: 10
+        run: streamfy cluster start --local --develop --spu ${{ matrix.spu }} --rust-log ${{ env.SERVER_LOG }}
+      - name: Start local cluster (TLS)
+        if: matrix.test == 'smoke-test-tls'
+        timeout-minutes: 10
+        run: >
+          AUTH_POLICY=${{ env.AUTH_FILE }}
+          X509_AUTH_SCOPES=${{ env.X509_SCOPE_FILE }}
+          streamfy cluster start --local --develop --spu ${{ matrix.spu }}
+          --rust-log ${{ env.SERVER_LOG }} ${{ env.TLS_ARGS }}
+      - name: Wait for cluster
+        run: sleep 15
+      - name: Run smoke-test
+        if: matrix.test == 'smoke-test'
+        timeout-minutes: 15
+        run: make smoke-test-local
+      - name: Run smoke-test-at-most-once
+        if: matrix.test == 'smoke-test-at-most-once'
+        timeout-minutes: 15
+        run: make smoke-test-at-most-once
+      - name: Run smoke-test-tls
+        if: matrix.test == 'smoke-test-tls'
+        timeout-minutes: 15
+        run: make smoke-test-tls-root
+      - name: Run election-test
+        if: matrix.test == 'election'
+        timeout-minutes: 10
+        run: make election-test
+      - name: Run multiple-partition-test
+        if: matrix.test == 'multiple-partition'
+        timeout-minutes: 10
+        run: make multiple-partition-test
+      - name: Run reconnection-test
+        if: matrix.test == 'reconnection'
+        timeout-minutes: 10
+        run: make reconnection-test
+      - name: Run batch-failure-test
+        if: matrix.test == 'batch-failure'
+        timeout-minutes: 10
+        run: make batch-failure-test
+      - name: Run batching-test
+        if: matrix.test == 'batch'
+        timeout-minutes: 10
+        run: make batching-test
+      - name: Run consumer-offsets-test
+        if: matrix.test == 'consumer-offsets'
+        timeout-minutes: 15
+        run: make consumer-offsets-test
+      - name: Diagnostics on failure
+        if: ${{ !success() }}
+        timeout-minutes: 5
+        run: streamfy cluster diagnostics || true
+      - name: Upload diagnostics
+        if: ${{ !success() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: local-cluster-${{ matrix.test }}-diag
+          path: diagnostics*.gz
+          retention-days: 5
+          if-no-files-found: ignore
+
+  # CLI bats smoke (Fluvio cli_smoke counterpart; streamfy only — no smdk/cdk)
+  cli-smoke:
+    name: CLI bats smoke (streamfy)
+    runs-on: ubuntu-latest
+    needs: build
+    env:
+      SPU: 2
+      CLI_TEST_RETRIES: 3
+      STREAMFY_BIN: ~/bin/streamfy
+      RUST_TARGET: x86_64-unknown-linux-musl
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup BATS
+        uses: mig4/setup-bats@v1
+        with:
+          bats-version: ${{ env.BATS_VERSION }}
+      - name: Install expect
+        run: |
+          sudo apt-get update -o="APT::Acquire::Retries=3"
+          sudo apt-get install -y -V -o="APT::Acquire::Retries=3" expect
+      - name: Install Helm
+        run: curl -fsSL https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+      - name: Download streamfy
+        uses: actions/download-artifact@v4
+        with:
+          name: streamfy-${{ env.RUST_TARGET }}
+          path: ~/bin
+      - name: Download streamfy-run
+        uses: actions/download-artifact@v4
+        with:
+          name: streamfy-run-${{ env.RUST_TARGET }}
+          path: ~/bin
+      - name: Set up binaries
+        run: |
+          chmod +x ~/bin/streamfy ~/bin/streamfy-run
+          mkdir -p ~/.streamfy/bin ~/.streamfy/extensions
+          cp ~/bin/streamfy ~/.streamfy/bin/streamfy
+          cp ~/bin/streamfy-run ~/.streamfy/extensions/streamfy-run
+          echo "$HOME/bin" >> "$GITHUB_PATH"
+          echo "$HOME/.streamfy/bin" >> "$GITHUB_PATH"
+      - name: Start local cluster
+        timeout-minutes: 10
+        run: streamfy cluster start --local --develop --spu ${{ env.SPU }}
+      - name: Run Streamfy CLI smoke tests
+        timeout-minutes: 30
+        run: make cli-streamfy-smoke-ci
+      - name: Diagnostics on failure
+        if: ${{ !success() }}
+        timeout-minutes: 5
+        run: streamfy cluster diagnostics || true
+      - name: Upload diagnostics
+        if: ${{ !success() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: cli-smoke-diag
+          path: diagnostics*.gz
+          retention-days: 5
+          if-no-files-found: ignore
+
+  # Partition bats (Fluvio partition_test counterpart)
+  partition-test:
+    name: CLI partition bats
+    runs-on: ubuntu-latest
+    needs: build
+    env:
+      STREAMFY_BIN: ~/bin/streamfy
+      RUST_TARGET: x86_64-unknown-linux-musl
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup BATS
+        uses: mig4/setup-bats@v1
+        with:
+          bats-version: ${{ env.BATS_VERSION }}
+      - name: Install Helm
+        run: curl -fsSL https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+      - name: Download streamfy
+        uses: actions/download-artifact@v4
+        with:
+          name: streamfy-${{ env.RUST_TARGET }}
+          path: ~/bin
+      - name: Download streamfy-run
+        uses: actions/download-artifact@v4
+        with:
+          name: streamfy-run-${{ env.RUST_TARGET }}
+          path: ~/.streamfy/extensions
+      - name: Set up binaries
+        run: |
+          chmod +x ~/bin/streamfy ~/.streamfy/extensions/streamfy-run
+          mkdir -p ~/.streamfy/bin
+          ln -sf ~/bin/streamfy ~/.streamfy/bin/streamfy
+          echo "$HOME/bin" >> "$GITHUB_PATH"
+          echo "$HOME/.streamfy/bin" >> "$GITHUB_PATH"
+      - name: Start local cluster
+        timeout-minutes: 10
+        run: streamfy cluster start --local --develop --spu 2
+      - name: Run partition bats
+        timeout-minutes: 15
+        run: make cli-partition-test-multiple-partitions
+      - name: Diagnostics on failure
+        if: ${{ !success() }}
+        timeout-minutes: 5
+        run: streamfy cluster diagnostics || true
+      - name: Upload diagnostics
+        if: ${{ !success() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: partition-test-diag
+          path: diagnostics*.gz
+          retention-days: 5
+          if-no-files-found: ignore
+
+  # Read-only cluster bats (Fluvio read_only_test counterpart)
+  read-only-test:
+    name: CLI read-only bats
+    runs-on: ubuntu-latest
+    needs: build
+    env:
+      RUST_TARGET: x86_64-unknown-linux-musl
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup BATS
+        uses: mig4/setup-bats@v1
+        with:
+          bats-version: ${{ env.BATS_VERSION }}
+      - name: Install Helm
+        run: curl -fsSL https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+      - name: Download streamfy
+        uses: actions/download-artifact@v4
+        with:
+          name: streamfy-${{ env.RUST_TARGET }}
+          path: ~/bin
+      - name: Download streamfy-run
+        uses: actions/download-artifact@v4
+        with:
+          name: streamfy-run-${{ env.RUST_TARGET }}
+          path: ~/extensions
+      - name: Set up binaries
+        run: |
+          chmod +x ~/bin/streamfy ~/extensions/streamfy-run
+          mkdir -p ~/.streamfy/bin ~/.streamfy/extensions
+          mv ~/bin/streamfy ~/.streamfy/bin/streamfy
+          mv ~/extensions/streamfy-run ~/.streamfy/extensions/streamfy-run
+          echo "$HOME/.streamfy/bin" >> "$GITHUB_PATH"
+      - name: Start cluster in read-only mode
+        timeout-minutes: 10
+        run: streamfy cluster start --read-only crates/streamfy-cluster/test-data/metadata.json
+      - name: Run read-only bats
+        timeout-minutes: 15
+        run: make STREAMFY_BIN=$HOME/.streamfy/bin/streamfy cli-streamfy-read-only-smoke
+      - name: Print SC logs on failure
+        if: ${{ !success() }}
+        timeout-minutes: 5
+        run: cat /tmp/flv_sc.log || cat /tmp/streamfy_sc.log || true
+      - name: Diagnostics on failure
+        if: ${{ !success() }}
+        timeout-minutes: 5
+        run: streamfy cluster diagnostics || true
+      - name: Upload diagnostics
+        if: ${{ !success() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: read-only-test-diag
+          path: diagnostics*.gz
+          retention-days: 5
+          if-no-files-found: ignore
+

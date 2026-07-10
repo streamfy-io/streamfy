@@ -244,6 +244,12 @@ cli-streamfy-smoke:
 	bats ./tests/cli/streamfy_smoke_tests/non-concurrent/local-resume.bats
 	bats ./tests/cli/streamfy_smoke_tests/non-concurrent/cluster-delete.bats
 
+# Core CLI smoke for CI: same as cli-streamfy-smoke but without SmartModule suites
+cli-streamfy-smoke-ci:
+	bats -x $(shell ls -1 ./tests/cli/streamfy_smoke_tests/*.bats | grep -v smartmodule | sort -R)
+	bats ./tests/cli/streamfy_smoke_tests/non-concurrent/local-resume.bats
+	bats ./tests/cli/streamfy_smoke_tests/non-concurrent/cluster-delete.bats
+
 cli-streamfy-read-only-smoke:
 	bats $(shell ls -1 ./tests/cli/streamfy_read_only/*.bats | sort -R)
 
