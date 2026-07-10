@@ -50,6 +50,7 @@ members = [
     "crates/streamfy-test-derive",
     "crates/streamfy-test-case-derive",
     "crates/streamfy-test-util",
+    "crates/streamfy-ws-stream-wasm",
     "crates/streamfy-wasm-timer",
     "crates/streamfy-util",
     "crates/streamfy-tls-proxy",
@@ -196,7 +197,7 @@ x509-parser = "0.17.0"
 zip = "7"
 
 # External dependencies (published on crates.io under original names)
-fluvio_ws_stream_wasm = "0.7.0"
+streamfy-ws-stream-wasm = { path = "crates/streamfy-ws-stream-wasm" }
 streamfy-command = { path = "crates/streamfy-command" }
 streamfy-future = { path = "crates/streamfy-future", version = "0.8.3", default-features = false }
 streamfy-helm = { path = "crates/streamfy-helm" }

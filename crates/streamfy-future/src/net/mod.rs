@@ -122,7 +122,7 @@ mod wasm_connector {
     use async_trait::async_trait;
     use futures_util::io::AsyncReadExt;
     use std::io::Error as IoError;
-    use ws_stream_wasm::WsMeta;
+    use streamfy_ws_stream_wasm::WsMeta;
 
     #[derive(Clone, Default)]
     pub struct DefaultDomainWebsocketConnector {}

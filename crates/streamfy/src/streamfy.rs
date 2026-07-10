@@ -545,7 +545,7 @@ fn check_platform_compatible(cluster_version: &Version) -> Result<(), StreamfyEr
 #[cfg(target_arch = "wasm32")]
 mod wasm_tests {
     use async_trait::async_trait;
-    use fluvio_ws_stream_wasm::WsMeta;
+    use streamfy_ws_stream_wasm::WsMeta;
     use std::io::Error as IoError;
     use streamfy_future::net::{
         BoxReadConnection, BoxWriteConnection, DomainConnector, TcpDomainConnector, ConnectionFd,
