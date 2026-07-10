@@ -31,6 +31,8 @@ fn to_bytes(bytes: Vec<u8>) -> Bytes {
 
 #[test_async]
 async fn test_tls() -> Result<()> {
+    let _guard = crate::test_util::lock_tls_tests();
+
     // Test the client against a server with CA intermediary cert chain
     // Requires X509VerifyFlags::PARTIAL_CHAIN or allow_partial: true (default)
     run_test(

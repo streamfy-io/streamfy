@@ -927,7 +927,7 @@ mod tests {
 
     #[streamfy_future::test]
     async fn test_replica_limit_request_size() {
-        let mut option = base_option("test_batch_limit");
+        let mut option = base_option("test_replica_limit_request_size");
         option.max_request_size = 100;
         option.update_hw = false;
 
@@ -1216,7 +1216,7 @@ mod tests {
 
     #[streamfy_future::test]
     async fn test_replica_batch_exceeded_segment_size() {
-        let mut option = base_option("test_batch_limit");
+        let mut option = base_option("test_replica_batch_exceeded_segment_size");
         option.segment_max_bytes = 100;
         option.update_hw = false;
 

@@ -14,6 +14,19 @@ macro_rules! assert_async_block {
     }};
 }
 
+/// Serialize TLS-related unit tests.
+///
+/// Concurrent PKCS#12 / Security.framework / OpenSSL usage races on macOS
+/// (OSStatus -26276) when multiple native_tls/openssl tests run in parallel.
+#[cfg(test)]
+pub(crate) fn lock_tls_tests() -> std::sync::MutexGuard<'static, ()> {
+    use std::sync::{Mutex, OnceLock};
+    static LOCK: OnceLock<Mutex<()>> = OnceLock::new();
+    LOCK.get_or_init(|| Mutex::new(()))
+        .lock()
+        .unwrap_or_else(|poisoned| poisoned.into_inner())
+}
+
 #[cfg(test)]
 mod test {
 

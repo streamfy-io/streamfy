@@ -26,6 +26,8 @@ use super::stream::TlsStream;
 pub mod certs {
 
     use anyhow::{Context, Result};
+    use openssl::hash::MessageDigest;
+    use openssl::nid::Nid;
     use openssl::pkcs12::Pkcs12;
     use openssl::pkey::Private;
 
@@ -123,7 +125,10 @@ pub mod certs {
     }
 
     impl IdentityBuilder {
-        /// load pk12 from x509 certs
+        /// Build a PKCS#12 identity from X.509 PEM cert + key.
+        ///
+        /// Uses legacy 3DES/SHA-1 algorithms for macOS Security.framework
+        /// compatibility (see native_tls IdentityBuilder::from_x509).
         pub fn from_x509(x509: X509PemBuilder, key: PrivateKeyBuilder) -> Result<Self> {
             let server_key = key.build()?;
             let server_crt = x509.build()?;
@@ -131,6 +136,10 @@ pub mod certs {
                 .name("")
                 .pkey(&server_key)
                 .cert(server_crt.inner())
+                .key_algorithm(Nid::PBE_WITHSHA1AND3_KEY_TRIPLEDES_CBC)
+                .cert_algorithm(Nid::PBE_WITHSHA1AND3_KEY_TRIPLEDES_CBC)
+                .mac_md(MessageDigest::sha1())
+                .mac_iter(1)
                 .build2(PASSWORD)
                 .context("Failed to create Pkcs12")?;
 

@@ -165,6 +165,8 @@ mod cert {
     use anyhow::{Context, Result};
     use native_tls::Certificate as NativeCertificate;
     use native_tls::Identity;
+    use openssl::hash::MessageDigest;
+    use openssl::nid::Nid;
     use openssl::pkcs12::Pkcs12;
     use openssl::pkey::Private;
 
@@ -216,7 +218,12 @@ mod cert {
     }
 
     impl IdentityBuilder {
-        /// load pk12 from x509 certs
+        /// Build a PKCS#12 identity from X.509 PEM cert + key.
+        ///
+        /// Uses legacy 3DES/SHA-1 algorithms so the resulting bag can be loaded by
+        /// macOS Security.framework (`native-tls` on Darwin). OpenSSL 3 defaults
+        /// (AES-256 + SHA-256) produce PKCS#12 that macOS rejects with
+        /// `OSStatus -26276` (errSecUnknownFormat).
         pub fn from_x509(x509: X509PemBuilder, key: PrivateKeyBuilder) -> Result<Self> {
             let server_key = key.build()?;
             let server_crt = x509.build()?;
@@ -224,6 +231,10 @@ mod cert {
                 .name("")
                 .pkey(&server_key)
                 .cert(&server_crt)
+                .key_algorithm(Nid::PBE_WITHSHA1AND3_KEY_TRIPLEDES_CBC)
+                .cert_algorithm(Nid::PBE_WITHSHA1AND3_KEY_TRIPLEDES_CBC)
+                .mac_md(MessageDigest::sha1())
+                .mac_iter(1)
                 .build2(PASSWORD)
                 .context("Failed to create Pkcs12")?;
 
@@ -351,6 +362,7 @@ mod test {
 
     #[test_async]
     async fn test_native_tls_pk12() -> Result<()> {
+        let _guard = crate::test_util::lock_tls_tests();
         const PK12_PORT: u16 = 9900;
 
         let acceptor = AcceptorBuilder::identity(
@@ -392,6 +404,7 @@ mod test {
     #[test_async]
     #[cfg(not(windows))]
     async fn test_native_tls_x509() -> Result<()> {
+        let _guard = crate::test_util::lock_tls_tests();
         const X500_PORT: u16 = 9910;
 
         let acceptor = AcceptorBuilder::identity(
