@@ -6,7 +6,7 @@ use std::{
 
 use anyhow::Result;
 use streamfy::config::TlsPolicy;
-use fluvio_command::CommandExt;
+use streamfy_command::CommandExt;
 use tracing::info;
 
 use super::{StreamfyLocalProcess, LocalRuntimeError};

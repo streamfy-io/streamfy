@@ -4,7 +4,7 @@ use derive_builder::Builder;
 use k8_client::meta_client::MetadataClient;
 use tracing::{info, warn, debug, instrument};
 
-use fluvio_command::CommandExt;
+use streamfy_command::CommandExt;
 
 use crate::helm::HelmClient;
 use crate::charts::{APP_CHART_NAME, SYS_CHART_NAME};
@@ -97,7 +97,7 @@ impl ClusterUninstaller {
 
     #[instrument(skip(self))]
     async fn uninstall_k8(&self) -> Result<()> {
-        use fluvio_helm::UninstallArg;
+        use streamfy_helm::UninstallArg;
 
         let pb = self.pb_factory.create()?;
         pb.set_message("Uninstalling streamfy kubernetes components");
@@ -118,7 +118,7 @@ impl ClusterUninstaller {
 
     #[instrument(skip(self))]
     async fn uninstall_sys(&self) -> Result<()> {
-        use fluvio_helm::UninstallArg;
+        use streamfy_helm::UninstallArg;
 
         let pb = self.pb_factory.create()?;
         pb.set_message("Uninstalling Streamfy sys chart");

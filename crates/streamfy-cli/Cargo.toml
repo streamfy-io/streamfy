@@ -77,7 +77,7 @@ streamfy-cluster = { workspace = true, features = ["cli"], optional = true }
 streamfy = { workspace = true }
 streamfy-auth = { workspace = true }
 streamfy-benchmark = { workspace = true }
-fluvio-command = { workspace = true  }
+streamfy-command = { workspace = true  }
 streamfy-package-index = { workspace = true }
 streamfy-extension-common = { workspace = true,  features = ["target", "installation"] }
 streamfy-channel = { workspace = true }

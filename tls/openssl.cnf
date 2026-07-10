@@ -3,7 +3,8 @@
 basicConstraints = critical,CA:false
 keyUsage = nonRepudiation, digitalSignature
 subjectKeyIdentifier = hash
-authorityKeyIdentifier = keyid:always,issuer:always
+# "always" breaks LibreSSL (macOS /usr/bin/openssl); plain form works on OpenSSL + LibreSSL
+authorityKeyIdentifier = keyid,issuer
 subjectAltName = @alt_names
 
 [ v3_client ]
@@ -11,7 +12,7 @@ basicConstraints = critical,CA:false
 keyUsage = nonRepudiation, digitalSignature
 extendedKeyUsage = critical, clientAuth
 subjectKeyIdentifier = hash
-authorityKeyIdentifier = keyid:always,issuer:always
+authorityKeyIdentifier = keyid,issuer
 
 [ v3_inter ]
 subjectKeyIdentifier = hash
@@ -20,5 +21,6 @@ basicConstraints = CA:true
 keyUsage = cRLSign, keyCertSign, digitalSignature, nonRepudiation, keyEncipherment, dataEncipherment, keyAgreement, keyCertSign, cRLSign
 
 [ alt_names ]
-DNS.2 = *.streamfy.local
 DNS.1 = streamfy.local
+DNS.2 = *.streamfy.local
+DNS.3 = localhost

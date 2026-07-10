@@ -4,7 +4,7 @@ use anyhow::Result;
 use tracing::{debug, instrument};
 use include_dir::{Dir, include_dir};
 
-use fluvio_helm::HelmClient;
+use streamfy_helm::HelmClient;
 
 pub use inline::*;
 

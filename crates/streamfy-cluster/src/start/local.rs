@@ -15,7 +15,7 @@ use streamfy::{Streamfy, StreamfyClusterConfig};
 use streamfy::config::{TlsPolicy, ConfigFile, LOCAL_PROFILE};
 use streamfy_controlplane_metadata::spu::{SpuSpec, CustomSpuSpec};
 use streamfy_future::timer::sleep;
-use fluvio_command::CommandExt;
+use streamfy_command::CommandExt;
 use streamfy_types::config_file::SaveLoadConfig;
 use k8_types::{InputK8Obj, InputObjectMeta};
 use k8_client::SharedK8Client;

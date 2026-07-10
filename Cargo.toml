@@ -16,6 +16,8 @@ members = [
     "crates/streamfy-cli",
     "crates/streamfy-cli-common",
     "crates/streamfy-cluster",
+    "crates/streamfy-command",
+    "crates/streamfy-helm",
     "crates/streamfy-compression",
     "crates/streamfy-controlplane",
     "crates/streamfy-controlplane-metadata",
@@ -187,9 +189,9 @@ zip = "7"
 
 # External dependencies (published on crates.io under original names)
 fluvio_ws_stream_wasm = "0.7.0"
-fluvio-command = { version = "0.2.0" }
+streamfy-command = { path = "crates/streamfy-command" }
 streamfy-future = { path = "crates/streamfy-future", version = "0.8.3", default-features = false }
-fluvio-helm = { version = "0.4.1" }
+streamfy-helm = { path = "crates/streamfy-helm" }
 flv-tls-proxy = { version = "0.12.0" }
 flv-util = { version = "0.5.2", default-features = false }
 k8-client = { version = "14.0.0" }

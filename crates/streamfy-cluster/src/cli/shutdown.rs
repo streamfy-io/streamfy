@@ -6,7 +6,7 @@ use clap::Parser;
 use tracing::debug;
 
 use streamfy_types::defaults::SPU_MONITORING_UNIX_SOCKET;
-use fluvio_command::CommandExt;
+use streamfy_command::CommandExt;
 
 use crate::process;
 use crate::render::ProgressRenderer;

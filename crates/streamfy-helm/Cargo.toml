@@ -1,0 +1,20 @@
+[package]
+name = "streamfy-helm"
+version = "0.4.3"
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Helm wrapper for Streamfy"
+publish = false
+
+[lib]
+name = "streamfy_helm"
+path = "src/lib.rs"
+
+[dependencies]
+tracing = { workspace = true }
+serde = { workspace = true, features = ["derive"] }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+streamfy-command = { path = "../streamfy-command" }

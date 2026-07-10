@@ -2084,16 +2084,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "fluvio-command"
-version = "0.2.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "82a1ae36b98e5a130177feb586ca70a2a9741d912200dd28fe1c5a89cdadba87"
-dependencies = [
- "thiserror 1.0.69",
- "tracing",
-]
-
-[[package]]
 name = "fluvio-future"
 version = "0.8.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2120,19 +2110,6 @@ dependencies = [
  "tracing",
  "wasm-bindgen-futures",
  "ws_stream_wasm",
-]
-
-[[package]]
-name = "fluvio-helm"
-version = "0.4.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e925a69b64cb86b021e697a087053c07eca04a5207bb116326d44c0c675e61ed"
-dependencies = [
- "fluvio-command",
- "serde",
- "serde_json",
- "thiserror 1.0.69",
- "tracing",
 ]
 
 [[package]]
@@ -6174,7 +6151,6 @@ dependencies = [
  "ctrlc",
  "current_platform",
  "flate2",
- "fluvio-command",
  "futures",
  "futures-util",
  "handlebars",
@@ -6196,6 +6172,7 @@ dependencies = [
  "streamfy-channel",
  "streamfy-cli-common",
  "streamfy-cluster",
+ "streamfy-command",
  "streamfy-controlplane-metadata",
  "streamfy-extension-common",
  "streamfy-future",
@@ -6263,8 +6240,6 @@ dependencies = [
  "directories",
  "duct",
  "flate2",
- "fluvio-command",
- "fluvio-helm",
  "flv-util",
  "futures-util",
  "include_dir",
@@ -6282,9 +6257,11 @@ dependencies = [
  "streamfy",
  "streamfy-channel",
  "streamfy-cli-common",
+ "streamfy-command",
  "streamfy-controlplane-metadata",
  "streamfy-extension-common",
  "streamfy-future",
+ "streamfy-helm",
  "streamfy-sc-schema",
  "streamfy-stream-dispatcher",
  "streamfy-types",
@@ -6296,6 +6273,14 @@ dependencies = [
  "tracing",
  "url",
  "which",
+]
+
+[[package]]
+name = "streamfy-command"
+version = "0.2.1"
+dependencies = [
+ "thiserror 2.0.18",
+ "tracing",
 ]
 
 [[package]]
@@ -6493,6 +6478,17 @@ dependencies = [
  "streamfy-future",
  "syn 2.0.101",
  "trybuild",
+]
+
+[[package]]
+name = "streamfy-helm"
+version = "0.4.3"
+dependencies = [
+ "serde",
+ "serde_json",
+ "streamfy-command",
+ "thiserror 2.0.18",
+ "tracing",
 ]
 
 [[package]]
@@ -6868,7 +6864,6 @@ dependencies = [
  "comfy-table",
  "crc",
  "fastrand",
- "fluvio-command",
  "fork",
  "futures",
  "futures-lite",
@@ -6884,6 +6879,7 @@ dependencies = [
  "signal-hook",
  "streamfy",
  "streamfy-cli",
+ "streamfy-command",
  "streamfy-controlplane-metadata",
  "streamfy-future",
  "streamfy-protocol",
@@ -6931,7 +6927,6 @@ dependencies = [
  "clap",
  "comfy-table",
  "dyn-clone",
- "fluvio-command",
  "hdrhistogram",
  "humantime",
  "inventory",
@@ -6940,6 +6935,7 @@ dependencies = [
  "serde",
  "streamfy",
  "streamfy-cluster",
+ "streamfy-command",
  "streamfy-future",
  "streamfy-types",
  "syn 2.0.101",

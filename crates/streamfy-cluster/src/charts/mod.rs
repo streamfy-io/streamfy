@@ -12,7 +12,7 @@ pub(crate) const DEFAULT_HELM_VERSION: &str = "3.3.4";
 mod error {
 
     use std::io::Error as IoError;
-    use fluvio_helm::HelmError;
+    use streamfy_helm::HelmError;
 
     /// Errors that may occur while trying to install Streamfy system charts
     #[derive(thiserror::Error, Debug)]

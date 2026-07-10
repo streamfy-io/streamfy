@@ -39,7 +39,7 @@ mod process;
 /// extensions
 #[cfg(feature = "cli")]
 pub mod cli;
-use fluvio_helm as helm;
+use streamfy_helm as helm;
 
 pub use start::k8::{ClusterInstaller, ClusterConfig, ClusterConfigBuilder, DEFAULT_SPU_GROUP_NAME};
 pub use start::local::{LocalInstaller, LocalConfig, LocalConfigBuilder};

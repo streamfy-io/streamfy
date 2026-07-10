@@ -6,7 +6,7 @@ use derive_builder::Builder;
 
 use semver::Version;
 
-use fluvio_helm::{HelmClient, InstallArg};
+use streamfy_helm::{HelmClient, InstallArg};
 
 use crate::DEFAULT_NAMESPACE;
 

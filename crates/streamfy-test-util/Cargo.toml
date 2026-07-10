@@ -29,7 +29,7 @@ streamfy = { workspace = true  }
 streamfy-types = { workspace = true }
 streamfy-future = { workspace = true, features = ["task", "timer", "subscriber", "fixture"] }
 streamfy-cluster = { workspace = true }
-fluvio-command = { workspace = true  }
+streamfy-command = { workspace = true  }
 
 [lib]
 path = "lib.rs"

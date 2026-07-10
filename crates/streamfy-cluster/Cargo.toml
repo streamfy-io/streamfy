@@ -62,12 +62,12 @@ sysinfo = { workspace = true, default-features = false, features = ["system", "n
 
 
 # External Streamfy dependencies
-fluvio-helm = { workspace = true }
+streamfy-helm = { workspace = true }
 flv-util = { workspace = true }
 k8-config = { workspace = true }
 k8-client = { workspace = true }
 k8-types = { workspace = true, features = ["app"] }
-fluvio-command = { workspace = true }
+streamfy-command = { workspace = true }
 streamfy-future = { workspace = true }
 
 streamfy = { workspace = true  }

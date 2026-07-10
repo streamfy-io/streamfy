@@ -19,7 +19,7 @@ use url::ParseError;
 
 use streamfy_future::timer::sleep;
 use streamfy_types::config_file::SaveLoadConfig;
-use fluvio_helm::{HelmClient, HelmError};
+use streamfy_helm::{HelmClient, HelmError};
 use k8_config::{ConfigError as K8ConfigError, K8Config};
 
 use crate::charts::{DEFAULT_HELM_VERSION, APP_CHART_NAME};

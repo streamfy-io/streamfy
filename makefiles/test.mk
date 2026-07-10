@@ -149,7 +149,7 @@ SC_PORT=9003
 test-permission-user1:
 	rm -f /tmp/topic.err
 	- $(STREAMFY_BIN) --cluster ${SC_HOST}:${SC_PORT} \
-		--tls --enable-client-cert --domain fluvio.local \
+		--tls --enable-client-cert --domain streamfy.local \
 		--ca-cert tls/certs/ca.crt \
 		--client-cert tls/certs/client-user1.crt \
 		--client-key tls/certs/client-user1.key \

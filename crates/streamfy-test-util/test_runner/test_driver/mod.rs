@@ -13,7 +13,7 @@ use streamfy::metadata::topic::TopicStorageConfig;
 use streamfy_types::PartitionId;
 
 #[allow(unused_imports)]
-use fluvio_command::CommandExt;
+use streamfy_command::CommandExt;
 use crate::setup::TestCluster;
 use crate::test_meta::TestCase;
 use crate::test_meta::test_result::TestResult;
