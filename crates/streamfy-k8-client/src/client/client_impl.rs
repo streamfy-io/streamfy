@@ -101,13 +101,13 @@ impl K8Client {
     where
         B: Into<Body>,
     {
-        if let Ok(guard) = self.token.read() {
-            if let Some(token) = guard.as_ref() {
-                let full_token = format!("Bearer {token}");
-                request
-                    .headers_mut()
-                    .insert(AUTHORIZATION, HeaderValue::from_str(&full_token)?);
-            }
+        if let Ok(guard) = self.token.read()
+            && let Some(token) = guard.as_ref()
+        {
+            let full_token = format!("Bearer {token}");
+            request
+                .headers_mut()
+                .insert(AUTHORIZATION, HeaderValue::from_str(&full_token)?);
         }
         Ok(())
     }
@@ -158,49 +158,49 @@ impl K8Client {
         }
 
         // retry once on 401 with a freshly-read token
-        if status1 == StatusCode::UNAUTHORIZED {
-            if let Ok(fresh) = std::fs::read_to_string(SA_TOKEN_PATH) {
-                let fresh_trimmed = fresh.trim().to_owned();
+        if status1 == StatusCode::UNAUTHORIZED
+            && let Ok(fresh) = std::fs::read_to_string(SA_TOKEN_PATH)
+        {
+            let fresh_trimmed = fresh.trim().to_owned();
 
-                let mut req2 = http::Request::builder()
-                    .method(method)
-                    .uri(uri)
-                    .version(version)
-                    .body(Body::from(body_buf))?;
-                {
-                    let h = req2.headers_mut();
-                    for (k, v) in headers.iter() {
-                        h.insert(k.clone(), v.clone());
-                    }
-                    let bearer = format!("Bearer {}", fresh_trimmed);
-                    h.insert(AUTHORIZATION, HeaderValue::from_str(&bearer)?);
+            let mut req2 = http::Request::builder()
+                .method(method)
+                .uri(uri)
+                .version(version)
+                .body(Body::from(body_buf))?;
+            {
+                let h = req2.headers_mut();
+                for (k, v) in headers.iter() {
+                    h.insert(k.clone(), v.clone());
                 }
+                let bearer = format!("Bearer {}", fresh_trimmed);
+                h.insert(AUTHORIZATION, HeaderValue::from_str(&bearer)?);
+            }
 
-                let resp2 = self.client.request(req2).await?;
-                let status2 = resp2.status();
+            let resp2 = self.client.request(req2).await?;
+            let status2 = resp2.status();
 
-                let mut r2 = (aggregate(resp2).await?).reader();
-                let mut b2 = Vec::new();
-                r2.read_to_end(&mut b2)?;
+            let mut r2 = (aggregate(resp2).await?).reader();
+            let mut b2 = Vec::new();
+            r2.read_to_end(&mut b2)?;
 
-                if status2.is_success() {
-                    if let Ok(mut w) = self.token.write() {
-                        *w = Some(fresh_trimmed);
-                    }
-                    trace!(%status2, "success response (retry): {}", String::from_utf8_lossy(&b2));
-                    return serde_json::from_slice(&b2).map_err(|err| {
-                        error!("json error: {}", err);
-                        error!("source: {}", String::from_utf8_lossy(&b2));
-                        err.into()
-                    });
-                } else {
-                    trace!(%status2, "error response received (retry)");
-                    let api_status: MetaStatus = serde_json::from_slice(&b2).map_err(|err| {
-                        error!("json error: {}", err);
-                        err
-                    })?;
-                    return Err(api_status.into());
+            if status2.is_success() {
+                if let Ok(mut w) = self.token.write() {
+                    *w = Some(fresh_trimmed);
                 }
+                trace!(%status2, "success response (retry): {}", String::from_utf8_lossy(&b2));
+                return serde_json::from_slice(&b2).map_err(|err| {
+                    error!("json error: {}", err);
+                    error!("source: {}", String::from_utf8_lossy(&b2));
+                    err.into()
+                });
+            } else {
+                trace!(%status2, "error response received (retry)");
+                let api_status: MetaStatus = serde_json::from_slice(&b2).map_err(|err| {
+                    error!("json error: {}", err);
+                    err
+                })?;
+                return Err(api_status.into());
             }
         }
 

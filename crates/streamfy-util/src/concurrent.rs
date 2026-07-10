@@ -36,6 +36,15 @@ where
     }
 }
 
+impl<K, V> Default for SimpleConcurrentHashMap<K, V>
+where
+    K: Eq + Hash,
+{
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 #[derive(Debug)]
 pub struct SimpleConcurrentBTreeMap<K, V>(RwLock<BTreeMap<K, V>>);
 

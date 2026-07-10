@@ -15,7 +15,7 @@ path = "src/lib.rs"
 [dependencies]
 anyhow = { workspace = true }
 tracing = { workspace = true }
-futures-util = { workspace = true }
+futures-util = { workspace = true, default-features = true, features = ["std"] }
 pin-utils = "0.1.0"
 serde = { workspace = true, default-features = true, features = ["derive"] }
 serde_json = { workspace = true }

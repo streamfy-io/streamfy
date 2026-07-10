@@ -102,15 +102,10 @@ pub fn string_to_socket_addr(addr_string: &str) -> Result<SocketAddr, IoError> {
     }
 }
 
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, PartialEq, Clone, Default)]
 pub enum EndPointEncryption {
+    #[default]
     PLAINTEXT,
-}
-
-impl Default for EndPointEncryption {
-    fn default() -> Self {
-        EndPointEncryption::PLAINTEXT
-    }
 }
 
 impl fmt::Display for EndPointEncryption {

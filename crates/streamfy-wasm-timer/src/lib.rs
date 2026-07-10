@@ -1,3 +1,15 @@
+// Vendored third-party WASM timer; keep style lints quiet under workspace `-D warnings`.
+#![allow(
+    clippy::all,
+    dropping_copy_types,
+    unexpected_cfgs,
+    dead_code,
+    unused,
+    unused_mut,
+    unused_variables,
+    unused_imports
+)]
+
 // Copyright 2019 Pierre Krieger
 //
 // Permission is hereby granted, free of charge, to any person obtaining a

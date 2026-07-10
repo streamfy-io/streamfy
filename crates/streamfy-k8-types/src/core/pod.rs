@@ -51,16 +51,13 @@ pub struct PodSpec {
     pub affinity: Option<Affinity>,
 }
 
-#[derive(Deserialize, Serialize, Debug, Clone, Eq, PartialEq)]
+#[derive(Deserialize, Serialize, Debug, Clone, Eq, PartialEq, Default)]
 pub enum PodRestartPolicy {
+    // https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#restart-policy
+    #[default]
     Always,
     Never,
     OnFailure,
-}
-impl Default for PodRestartPolicy {
-    fn default() -> Self {
-        Self::Always // https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#restart-policy
-    }
 }
 
 #[derive(Deserialize, Serialize, Debug, Default, Clone, Eq, PartialEq)]
@@ -98,17 +95,13 @@ pub struct ContainerSpec {
     pub liveness_probe: Option<Probe>,
 }
 
-#[derive(Deserialize, Serialize, Debug, Clone, Eq, PartialEq)]
+#[derive(Deserialize, Serialize, Debug, Clone, Eq, PartialEq, Default)]
 pub enum ImagePullPolicy {
+    // https://kubernetes.io/docs/concepts/containers/images/#updating-images
+    #[default]
     Always,
     Never,
     IfNotPresent,
-}
-
-impl Default for ImagePullPolicy {
-    fn default() -> Self {
-        Self::Always // https://kubernetes.io/docs/concepts/containers/images/#updating-images
-    }
 }
 
 #[derive(Deserialize, Serialize, Default, Debug, Clone, Eq, PartialEq)]

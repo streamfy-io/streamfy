@@ -31,7 +31,7 @@ where
     P: AsRef<Path>,
 {
     let log_path = path.as_ref();
-    if let Ok(_) = remove_file(log_path) {
+    if remove_file(log_path).is_ok() {
         info!("remove existing file: {}", log_path.display());
     } else {
         info!("there was no existing file: {}", log_path.display());

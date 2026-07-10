@@ -78,8 +78,13 @@ impl<T> Actions<T> {
     pub fn iter<'a>(&'a self) -> Iter<'a, T> {
         self.0.iter()
     }
+}
 
-    pub fn into_iter(self) -> IntoIter<T> {
+impl<T> IntoIterator for Actions<T> {
+    type Item = T;
+    type IntoIter = IntoIter<T>;
+
+    fn into_iter(self) -> Self::IntoIter {
         self.0.into_iter()
     }
 }

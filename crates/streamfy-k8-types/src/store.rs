@@ -145,8 +145,8 @@ impl MetaItemContext {
     }
 
     pub fn make_parent_ctx(&self) -> Self {
-        if self.item_ctx.is_some() {
-            Self::default().with_parent_ctx(self.item_ctx.as_ref().unwrap().clone())
+        if let Some(item_ctx) = &self.item_ctx {
+            Self::default().with_parent_ctx(item_ctx.clone())
         } else {
             Self::default()
         }
