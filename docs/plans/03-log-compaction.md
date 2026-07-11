@@ -1,10 +1,7 @@
 # Task 3: Log Compaction
 
-## Status: Implemented (see architecture plan 15)
+## Status: Not Started
 ## Priority: High | Effort: Large
-
-> **Superseded by** [`15-arch-log-compaction.md`](./15-arch-log-compaction.md) for design decisions.
-> Core implementation landed in `streamfy-storage` (`compact.rs`), metadata `CleanupPolicy` variants, and CLI `--cleanup-policy`.
 
 ## Problem
 

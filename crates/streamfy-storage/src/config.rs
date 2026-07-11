@@ -8,6 +8,7 @@ use derive_builder::Builder;
 use streamfy_controlplane::replica::Replica;
 use serde::Deserialize;
 
+use streamfy_controlplane_metadata::topic::CleanupPolicy;
 use streamfy_types::defaults::{
     SPU_LOG_INDEX_MAX_BYTES, SPU_LOG_BASE_DIR, STORAGE_FLUSH_WRITE_COUNT, STORAGE_FLUSH_IDLE_MSEC,
     STORAGE_MAX_BATCH_SIZE, STORAGE_MAX_REQUEST_SIZE, STORAGE_RETENTION_SECONDS,
@@ -18,11 +19,6 @@ use streamfy_types::defaults::SPU_LOG_SEGMENT_MAX_BYTES;
 use streamfy_protocol::record::{Size, Size64};
 
 use crate::ReplicaStorageConfig;
-
-/// Default dirty ratio (percent) before compaction runs.
-pub const DEFAULT_MIN_CLEANABLE_DIRTY_RATIO: u32 = 50;
-/// Default tombstone retention (seconds).
-pub const DEFAULT_DELETE_RETENTION_SECS: u32 = 86_400;
 
 // Replica specific config
 #[derive(Builder, Clone, Debug, Eq, PartialEq, Deserialize)]
@@ -61,26 +57,6 @@ pub struct ReplicaConfig {
     #[builder(default = "default_max_partition_size()")]
     #[serde(default = "default_max_partition_size")]
     pub max_partition_size: Size64,
-    /// When true, sealed segments are key-compacted in the background.
-    #[builder(default = "default_compact_enabled()")]
-    #[serde(default = "default_compact_enabled")]
-    pub compact_enabled: bool,
-    /// When true, size/TTL segment deletion still applies.
-    #[builder(default = "default_delete_enabled()")]
-    #[serde(default = "default_delete_enabled")]
-    pub delete_enabled: bool,
-    /// Compact when dirty records exceed this percent of total (0–100).
-    #[builder(default = "default_min_cleanable_dirty_ratio()")]
-    #[serde(default = "default_min_cleanable_dirty_ratio")]
-    pub min_cleanable_dirty_ratio: u32,
-    /// Tombstone retention before key is fully removed.
-    #[builder(default = "default_delete_retention_secs()")]
-    #[serde(default = "default_delete_retention_secs")]
-    pub delete_retention_secs: u32,
-    /// Minimum age before a superseded record may be removed.
-    #[builder(default = "default_min_compaction_lag_secs()")]
-    #[serde(default = "default_min_compaction_lag_secs")]
-    pub min_compaction_lag_secs: u32,
 }
 
 impl fmt::Display for ReplicaConfig {
@@ -92,13 +68,10 @@ impl fmt::Display for ReplicaConfig {
 impl ReplicaStorageConfig for ReplicaConfig {
     fn update_from_replica(&mut self, replica: &Replica) {
         if let Some(policy) = &replica.cleanup_policy {
-            self.compact_enabled = policy.is_compact_enabled();
-            self.delete_enabled = policy.is_delete_enabled();
-            self.retention_seconds = policy.retention_secs();
-            if let Some(compact) = policy.compact_policy() {
-                self.min_cleanable_dirty_ratio = compact.min_cleanable_dirty_ratio.min(100);
-                self.delete_retention_secs = compact.delete_retention_secs;
-                self.min_compaction_lag_secs = compact.min_compaction_lag_secs;
+            match policy {
+                CleanupPolicy::Segment(segment) => {
+                    self.retention_seconds = segment.retention_secs();
+                }
             }
         }
 
@@ -163,26 +136,6 @@ const fn default_max_partition_size() -> Size64 {
     SPU_PARTITION_MAX_BYTES
 }
 
-const fn default_compact_enabled() -> bool {
-    false
-}
-
-const fn default_delete_enabled() -> bool {
-    true
-}
-
-const fn default_min_cleanable_dirty_ratio() -> u32 {
-    DEFAULT_MIN_CLEANABLE_DIRTY_RATIO
-}
-
-const fn default_delete_retention_secs() -> u32 {
-    DEFAULT_DELETE_RETENTION_SECS
-}
-
-const fn default_min_compaction_lag_secs() -> u32 {
-    0
-}
-
 impl ReplicaConfig {
     // Used to get a [`ConfigOptionBuilder`].
     pub fn builder() -> ReplicaConfigBuilder {
@@ -208,11 +161,6 @@ impl Default for ReplicaConfig {
             retention_seconds: default_retention_seconds(),
             max_partition_size: default_max_partition_size(),
             update_hw: true,
-            compact_enabled: default_compact_enabled(),
-            delete_enabled: default_delete_enabled(),
-            min_cleanable_dirty_ratio: default_min_cleanable_dirty_ratio(),
-            delete_retention_secs: default_delete_retention_secs(),
-            min_compaction_lag_secs: default_min_compaction_lag_secs(),
         }
     }
 }
@@ -290,11 +238,6 @@ pub struct SharedReplicaConfig {
     pub update_hw: bool, // if true, enable hw update
     pub retention_seconds: SharedConfigU32Value,
     pub max_partition_size: SharedConfigU64Value,
-    pub compact_enabled: std::sync::atomic::AtomicBool,
-    pub delete_enabled: std::sync::atomic::AtomicBool,
-    pub min_cleanable_dirty_ratio: SharedConfigU32Value,
-    pub delete_retention_secs: SharedConfigU32Value,
-    pub min_compaction_lag_secs: SharedConfigU32Value,
 }
 
 impl From<ReplicaConfig> for SharedReplicaConfig {
@@ -311,34 +254,7 @@ impl From<ReplicaConfig> for SharedReplicaConfig {
             update_hw: config.update_hw,
             retention_seconds: SharedConfigU32Value::new(config.retention_seconds),
             max_partition_size: SharedConfigU64Value::new(config.max_partition_size),
-            compact_enabled: std::sync::atomic::AtomicBool::new(config.compact_enabled),
-            delete_enabled: std::sync::atomic::AtomicBool::new(config.delete_enabled),
-            min_cleanable_dirty_ratio: SharedConfigU32Value::new(config.min_cleanable_dirty_ratio),
-            delete_retention_secs: SharedConfigU32Value::new(config.delete_retention_secs),
-            min_compaction_lag_secs: SharedConfigU32Value::new(config.min_compaction_lag_secs),
         }
-    }
-}
-
-impl SharedReplicaConfig {
-    pub fn compact_enabled(&self) -> bool {
-        self.compact_enabled
-            .load(std::sync::atomic::Ordering::Relaxed)
-    }
-
-    pub fn delete_enabled(&self) -> bool {
-        self.delete_enabled
-            .load(std::sync::atomic::Ordering::Relaxed)
-    }
-
-    pub fn set_compact_enabled(&self, enabled: bool) {
-        self.compact_enabled
-            .store(enabled, std::sync::atomic::Ordering::Relaxed);
-    }
-
-    pub fn set_delete_enabled(&self, enabled: bool) {
-        self.delete_enabled
-            .store(enabled, std::sync::atomic::Ordering::Relaxed);
     }
 }
 

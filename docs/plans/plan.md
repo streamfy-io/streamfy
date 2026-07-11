@@ -10,7 +10,7 @@ The tasks below are ordered by impact and urgency. Each has a dedicated file in 
 |---|------|----------|--------|------|
 | 1 | [Prometheus & OpenTelemetry Observability](./01-observability.md) | High | Medium | `01-observability.md` |
 | 2 | [Wire SPU Authentication & Add Encryption at Rest](./02-security.md) | High | Medium | `02-security.md` |
-| 3 | [Log Compaction](./03-log-compaction.md) → **[A](./15-arch-log-compaction.md)** | High | Large | `03` / `15` (in progress) |
+| 3 | [Log Compaction](./03-log-compaction.md) | High | Large | `03-log-compaction.md` |
 | 4 | [Tiered Storage (S3/Cloud Offloading)](./04-tiered-storage.md) | Medium | Large | `04-tiered-storage.md` |
 | 5 | [Consumer Groups with Rebalancing](./05-consumer-groups.md) | High | Large | `05-consumer-groups.md` |
 | 6 | [Production Connectors (Postgres, S3, HTTP, MQTT)](./06-production-connectors.md) | Medium | Medium | `06-production-connectors.md` |
@@ -22,17 +22,6 @@ The tasks below are ordered by impact and urgency. Each has a dedicated file in 
 | 12 | [Dead Letter Queue & Error Handling](./12-dead-letter-queue.md) | Low | Small | `12-dead-letter-queue.md` |
 | 13 | [MCP Server (Model Context Protocol)](./13-mcp-server.md) | High | Medium | `13-mcp-server.md` |
 | 14 | [Web UI Dashboard](./14-web-ui.md) | Medium | Large | `14-web-ui.md` |
-
-## Architecture proposals (2026 review)
-
-| ID | Change | Priority | File |
-|----|--------|----------|------|
-| — | [Architecture Review & Ranking](./architecture-review.md) | — | `architecture-review.md` |
-| A | [Log Compaction (storage primitive)](./15-arch-log-compaction.md) | Critical | `15-arch-log-compaction.md` |
-| B | [Consumer Groups (coordinator)](./16-arch-consumer-groups.md) | Critical | `16-arch-consumer-groups.md` |
-| C | [SPU Trust Boundary (data-plane authz)](./17-arch-spu-authz.md) | Critical | `17-arch-spu-authz.md` |
-
-**Selected for implementation:** **A — Log Compaction** (foundational hard change; not the easy path).
 
 ## Separate Analysis
 

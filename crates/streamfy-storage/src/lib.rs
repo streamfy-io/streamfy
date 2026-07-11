@@ -19,7 +19,6 @@ pub mod iterators;
 #[cfg(feature = "fixture")]
 pub mod fixture;
 mod cleaner;
-mod compact;
 
 pub use crate::error::StorageError;
 pub use crate::records::FileRecordsSlice;
