@@ -182,7 +182,7 @@ impl SegmentList {
     }
 
     #[instrument(skip(self, segment))]
-    fn add_segment(&mut self, segment: ReadSegment) -> Offset {
+    pub(crate) fn add_segment(&mut self, segment: ReadSegment) -> Offset {
         debug!(
             base_offset = segment.get_base_offset(),
             end_offset = segment.get_end_offset(),
@@ -261,6 +261,31 @@ impl SegmentList {
     #[instrument(skip(self))]
     pub(crate) fn find_first(&self, count: usize) -> Vec<Offset> {
         self.segments.keys().take(count).copied().collect()
+    }
+
+    /// Return (base_offset, end_offset) pairs for all sealed segments.
+    pub(crate) fn sealed_segment_offsets(&self) -> Vec<(Offset, Offset)> {
+        self.segments
+            .values()
+            .map(|seg| (seg.get_base_offset(), seg.get_end_offset()))
+            .collect()
+    }
+
+    /// Iterator over all segments (base_offset, segment reference).
+    pub(crate) fn iter_segments(&self) -> impl Iterator<Item = (&Offset, &ReadSegment)> {
+        self.segments.iter()
+    }
+
+    /// Remove a segment by offset without removing files (caller manages files).
+    /// Returns the removed segment if found.
+    pub(crate) async fn remove_segment_unlocked(&mut self, offset: &Offset) {
+        if let Some(old) = self.segments.remove(offset) {
+            // Remove the segment's files.
+            if let Err(e) = old.remove().await {
+                tracing::error!("failed to remove old segment files: {}", e);
+            }
+            self.update_min_max();
+        }
     }
 }
 

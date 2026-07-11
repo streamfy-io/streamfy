@@ -8,7 +8,7 @@ use derive_builder::Builder;
 use streamfy_controlplane::replica::Replica;
 use serde::Deserialize;
 
-use streamfy_controlplane_metadata::topic::CleanupPolicy;
+use streamfy_controlplane_metadata::topic::{CleanupPolicy, CompactionPolicy};
 use streamfy_types::defaults::{
     SPU_LOG_INDEX_MAX_BYTES, SPU_LOG_BASE_DIR, STORAGE_FLUSH_WRITE_COUNT, STORAGE_FLUSH_IDLE_MSEC,
     STORAGE_MAX_BATCH_SIZE, STORAGE_MAX_REQUEST_SIZE, STORAGE_RETENTION_SECONDS,
@@ -57,6 +57,26 @@ pub struct ReplicaConfig {
     #[builder(default = "default_max_partition_size()")]
     #[serde(default = "default_max_partition_size")]
     pub max_partition_size: Size64,
+    /// Whether log compaction is enabled for this replica.
+    #[builder(default = "false")]
+    #[serde(default)]
+    pub compaction_enabled: bool,
+    /// Whether TTL/size deletion is also enabled (for CompactAndDelete).
+    #[builder(default = "false")]
+    #[serde(default)]
+    pub compaction_delete_enabled: bool,
+    /// Minimum ratio of dirty (uncompacted) bytes to total bytes (0–100).
+    #[builder(default = "default_min_cleanable_dirty_ratio()")]
+    #[serde(default = "default_min_cleanable_dirty_ratio")]
+    pub min_cleanable_dirty_ratio: u8,
+    /// How long to retain tombstones before dropping them (seconds).
+    #[builder(default = "default_delete_retention_secs()")]
+    #[serde(default = "default_delete_retention_secs")]
+    pub delete_retention_secs: u32,
+    /// Minimum age before a record is eligible for compaction (seconds).
+    #[builder(default = "default_min_compaction_lag_secs()")]
+    #[serde(default = "default_min_compaction_lag_secs")]
+    pub min_compaction_lag_secs: u32,
 }
 
 impl fmt::Display for ReplicaConfig {
@@ -71,6 +91,19 @@ impl ReplicaStorageConfig for ReplicaConfig {
             match policy {
                 CleanupPolicy::Segment(segment) => {
                     self.retention_seconds = segment.retention_secs();
+                    self.compaction_enabled = false;
+                    self.compaction_delete_enabled = false;
+                }
+                CleanupPolicy::Compact(compact) => {
+                    self.compaction_enabled = true;
+                    self.compaction_delete_enabled = false;
+                    self.apply_compaction_config(compact);
+                }
+                CleanupPolicy::CompactAndDelete(compact, segment) => {
+                    self.retention_seconds = segment.retention_secs();
+                    self.compaction_enabled = true;
+                    self.compaction_delete_enabled = true;
+                    self.apply_compaction_config(compact);
                 }
             }
         }
@@ -89,6 +122,14 @@ impl ReplicaStorageConfig for ReplicaConfig {
         {
             self.max_partition_size = max_partition_size;
         }
+    }
+}
+
+impl ReplicaConfig {
+    fn apply_compaction_config(&mut self, compact: &CompactionPolicy) {
+        self.min_cleanable_dirty_ratio = compact.min_cleanable_dirty_ratio;
+        self.delete_retention_secs = compact.delete_retention_secs;
+        self.min_compaction_lag_secs = compact.min_compaction_lag_secs;
     }
 }
 
@@ -136,6 +177,18 @@ const fn default_max_partition_size() -> Size64 {
     SPU_PARTITION_MAX_BYTES
 }
 
+const fn default_min_cleanable_dirty_ratio() -> u8 {
+    50
+}
+
+const fn default_delete_retention_secs() -> u32 {
+    86400
+}
+
+const fn default_min_compaction_lag_secs() -> u32 {
+    0
+}
+
 impl ReplicaConfig {
     // Used to get a [`ConfigOptionBuilder`].
     pub fn builder() -> ReplicaConfigBuilder {
@@ -161,6 +214,11 @@ impl Default for ReplicaConfig {
             retention_seconds: default_retention_seconds(),
             max_partition_size: default_max_partition_size(),
             update_hw: true,
+            compaction_enabled: false,
+            compaction_delete_enabled: false,
+            min_cleanable_dirty_ratio: default_min_cleanable_dirty_ratio(),
+            delete_retention_secs: default_delete_retention_secs(),
+            min_compaction_lag_secs: default_min_compaction_lag_secs(),
         }
     }
 }
@@ -238,6 +296,11 @@ pub struct SharedReplicaConfig {
     pub update_hw: bool, // if true, enable hw update
     pub retention_seconds: SharedConfigU32Value,
     pub max_partition_size: SharedConfigU64Value,
+    pub compaction_enabled: bool,
+    pub compaction_delete_enabled: bool,
+    pub min_cleanable_dirty_ratio: u8,
+    pub delete_retention_secs: u32,
+    pub min_compaction_lag_secs: u32,
 }
 
 impl From<ReplicaConfig> for SharedReplicaConfig {
@@ -254,6 +317,11 @@ impl From<ReplicaConfig> for SharedReplicaConfig {
             update_hw: config.update_hw,
             retention_seconds: SharedConfigU32Value::new(config.retention_seconds),
             max_partition_size: SharedConfigU64Value::new(config.max_partition_size),
+            compaction_enabled: config.compaction_enabled,
+            compaction_delete_enabled: config.compaction_delete_enabled,
+            min_cleanable_dirty_ratio: config.min_cleanable_dirty_ratio,
+            delete_retention_secs: config.delete_retention_secs,
+            min_compaction_lag_secs: config.min_compaction_lag_secs,
         }
     }
 }

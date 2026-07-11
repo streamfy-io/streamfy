@@ -156,14 +156,19 @@ impl TopicSpec {
 
     /// validate configuration, return string with errors
     pub fn validate_config(&self) -> Option<String> {
-        if let Some(policy) = self.get_clean_policy()
-            && policy.retention_secs() < STORAGE_RETENTION_SECONDS_MIN
-        {
-            return Some(format!(
-                "retention_secs {} is less than minimum {}",
-                policy.retention_secs(),
-                STORAGE_RETENTION_SECONDS_MIN
-            ));
+        if let Some(policy) = self.get_clean_policy() {
+            // Only validate retention_secs for segment-based policies (not compact-only)
+            let has_segment_retention = matches!(
+                policy,
+                CleanupPolicy::Segment(_) | CleanupPolicy::CompactAndDelete(_, _)
+            );
+            if has_segment_retention && policy.retention_secs() < STORAGE_RETENTION_SECONDS_MIN {
+                return Some(format!(
+                    "retention_secs {} is less than minimum {}",
+                    policy.retention_secs(),
+                    STORAGE_RETENTION_SECONDS_MIN
+                ));
+            }
         }
 
         if let Some(storage) = self.get_storage() {
@@ -944,6 +949,12 @@ pub enum CleanupPolicy {
     #[cfg_attr(feature = "use_serde", serde(rename = "segment"))]
     #[streamfy(tag = 0)]
     Segment(SegmentBasedPolicy),
+    #[cfg_attr(feature = "use_serde", serde(rename = "compact"))]
+    #[streamfy(tag = 1)]
+    Compact(CompactionPolicy),
+    #[cfg_attr(feature = "use_serde", serde(rename = "compact+delete"))]
+    #[streamfy(tag = 2)]
+    CompactAndDelete(CompactionPolicy, SegmentBasedPolicy),
 }
 
 impl Default for CleanupPolicy {
@@ -956,6 +967,21 @@ impl CleanupPolicy {
     pub fn retention_secs(&self) -> u32 {
         match self {
             CleanupPolicy::Segment(policy) => policy.retention_secs(),
+            CleanupPolicy::Compact(_) => 0,
+            CleanupPolicy::CompactAndDelete(_, segment) => segment.retention_secs(),
+        }
+    }
+
+    /// Returns true if compaction is enabled for this policy.
+    pub fn is_compact(&self) -> bool {
+        matches!(self, CleanupPolicy::Compact(_) | CleanupPolicy::CompactAndDelete(_, _))
+    }
+
+    /// Returns the compaction config if compaction is enabled.
+    pub fn compaction_config(&self) -> Option<&CompactionPolicy> {
+        match self {
+            CleanupPolicy::Compact(c) | CleanupPolicy::CompactAndDelete(c, _) => Some(c),
+            CleanupPolicy::Segment(_) => None,
         }
     }
 }
@@ -973,6 +999,40 @@ pub struct SegmentBasedPolicy {
 impl SegmentBasedPolicy {
     pub fn retention_secs(&self) -> u32 {
         self.time_in_seconds
+    }
+}
+
+/// Configuration for log compaction (Kafka-style cleanup.policy=compact).
+///
+/// NOTE (v1 limitation): The per-key offset map is held in memory.
+/// For topics with very high key cardinality (>10 M distinct keys)
+/// consider partitioning to keep per-replica cardinality bounded.
+#[derive(Decoder, Encoder, Debug, Clone, Eq, PartialEq)]
+#[cfg_attr(
+    feature = "use_serde",
+    derive(serde::Serialize, serde::Deserialize),
+    serde(rename_all = "camelCase")
+)]
+pub struct CompactionPolicy {
+    /// Minimum ratio of dirty (uncompacted) bytes to total bytes
+    /// before compaction kicks in. Range 0–100, default 50.
+    pub min_cleanable_dirty_ratio: u8,
+    /// How long (in seconds) to retain tombstone records
+    /// (keyed records with an empty value) before dropping them.
+    /// Default: 86400 (24 hours).
+    pub delete_retention_secs: u32,
+    /// Minimum time (in seconds) a record must have been in the log
+    /// before it becomes eligible for compaction. Default: 0.
+    pub min_compaction_lag_secs: u32,
+}
+
+impl Default for CompactionPolicy {
+    fn default() -> Self {
+        Self {
+            min_cleanable_dirty_ratio: 50,
+            delete_retention_secs: 86400,
+            min_compaction_lag_secs: 0,
+        }
     }
 }
 
