@@ -91,18 +91,15 @@ pub(crate) async fn try_compact(
     }
 
     // Phase 1: scan all sealed segments to build the latest-offset-per-key map.
-    let key_map = build_key_map(config, &sealed_segments).await?;
-    if key_map.is_empty() {
+    let (key_map, total_keyed) = build_key_map(config, &sealed_segments).await?;
+    if key_map.is_empty() || total_keyed == 0 {
         debug!("no keyed records found, skipping compaction");
         return Ok(None);
     }
 
-    // Check dirty ratio: we count records that would be removed vs total.
-    let (total_keyed, surviving) = count_surviving(&key_map, config);
+    // Dirty ratio = fraction of keyed records that would be dropped.
+    let surviving = count_surviving(&key_map, config);
     let removed_count = total_keyed.saturating_sub(surviving);
-    if total_keyed == 0 {
-        return Ok(None);
-    }
     let dirty_ratio = (removed_count as f64 / total_keyed as f64 * 100.0) as u8;
     if dirty_ratio < config.min_cleanable_dirty_ratio {
         debug!(
@@ -188,11 +185,16 @@ pub(crate) async fn cleanup_compact_dir(base_dir: &Path) {
 }
 
 /// Scan all sealed segments and build an in-memory map of latest offset per key.
+///
+/// Returns `(key_map, total_keyed_records)` where `total_keyed_records` counts
+/// every keyed record seen (including superseded ones) so dirty ratio can be
+/// computed as `1 - surviving/total`.
 async fn build_key_map(
     config: &Arc<SharedReplicaConfig>,
     sealed_segments: &[(Offset, Offset)],
-) -> Result<HashMap<Vec<u8>, KeyEntry>> {
+) -> Result<(HashMap<Vec<u8>, KeyEntry>, u64)> {
     let mut key_map: HashMap<Vec<u8>, KeyEntry> = HashMap::new();
+    let mut total_keyed: u64 = 0;
 
     for &(base_offset, _end_offset) in sealed_segments {
         let segment = ReadSegment::open_for_read(base_offset, _end_offset, config.clone()).await?;
@@ -213,6 +215,7 @@ async fn build_key_map(
                 let abs_offset = batch_base + i as Offset;
                 // Skip null-key records – they are never compacted.
                 if let Some(ref key_data) = record.key {
+                    total_keyed += 1;
                     let key_bytes = key_data.as_ref().to_vec();
                     let is_tombstone = record.value.is_empty();
                     let entry = KeyEntry {
@@ -226,32 +229,17 @@ async fn build_key_map(
         }
     }
 
-    Ok(key_map)
+    Ok((key_map, total_keyed))
 }
 
-/// Count total keyed records and how many would survive compaction.
-fn count_surviving(
-    key_map: &HashMap<Vec<u8>, KeyEntry>,
-    config: &SharedReplicaConfig,
-) -> (u64, u64) {
+/// Count how many keys would survive compaction (latest value, or non-expired
+/// tombstone). Expired tombstones are not counted as surviving.
+fn count_surviving(key_map: &HashMap<Vec<u8>, KeyEntry>, config: &SharedReplicaConfig) -> u64 {
     let now = SystemTime::now();
     let delete_retention = Duration::from_secs(config.delete_retention_secs as u64);
-    let mut total: u64 = 0;
     let mut surviving: u64 = 0;
 
-    // total = number of entries in the map (one per key – the latest)
-    // but we also need to know how many *records across all segments* are keyed
-    // For dirty ratio, we use key_map.len() as surviving and estimate total
-    // from the fact that every entry that was replaced is "dirty".
-    // Actually the simplest correct dirty ratio: we count how many would be
-    // *removed* vs total in the map. But the real metric is across all records.
-    // For now, we use the map to count surviving and treat all entries as total.
-    // The dirty records are the ones that were overwritten (not in the map).
-    // We'll use a simpler heuristic: everything in the map survives unless it's
-    // an expired tombstone. The caller has the total_keyed count.
-
     for entry in key_map.values() {
-        total += 1;
         if entry.is_tombstone {
             let age = now
                 .duration_since(entry.segment_modified)
@@ -265,7 +253,7 @@ fn count_surviving(
         }
     }
 
-    (total, surviving)
+    surviving
 }
 
 /// Rewrite a single segment, keeping only records whose key+offset matches the

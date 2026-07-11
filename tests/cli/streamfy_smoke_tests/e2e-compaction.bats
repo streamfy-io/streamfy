@@ -25,7 +25,7 @@ teardown_file() {
     debug_msg "Creating topic $TOPIC_NAME with --cleanup-policy compact and small segment-size"
     run timeout 15s "$STREAMFY_BIN" topic create "$TOPIC_NAME" \
         --cleanup-policy compact \
-        --segment-size 256
+        --segment-size 1024
     assert_success
     assert_output --partial "topic \"$TOPIC_NAME\" created"
 }
@@ -46,6 +46,16 @@ teardown_file() {
     # Key "user-3": single value (should survive)
     run bash -c 'echo "only" | timeout 15s "$STREAMFY_BIN" produce "$TOPIC_NAME" --key "user-3"'
     assert_success
+
+    # Compaction only rewrites *sealed* segments; the active segment is never
+    # compacted. Min segment size is 1024 bytes and the records above are ~500B,
+    # so pad with large values under a repeated key until the segment rolls.
+    # Using one pad key keeps the dirty ratio high enough (>= 50% default).
+    local pad
+    pad=$(printf 'x%.0s' {1..200})
+    for _ in 1 2 3 4 5; do
+        echo "$pad" | timeout 15s "$STREAMFY_BIN" produce "$TOPIC_NAME" --key "pad"
+    done
 }
 
 # ---------------------------------------------------------------
@@ -62,7 +72,7 @@ teardown_file() {
 # ---------------------------------------------------------------
 @test "Consume after compaction returns latest per key" {
     run timeout 15s "$STREAMFY_BIN" consume "$TOPIC_NAME" \
-        --from-beginning -d --format "{{key}}={{value}}"
+        --beginning -d --format "{{key}}={{value}}"
 
     debug_msg "Output: $output"
 
@@ -83,7 +93,7 @@ teardown_file() {
     # When consuming with offset output, the offsets should have gaps
     # (records were removed but offsets were not renumbered).
     run timeout 15s "$STREAMFY_BIN" consume "$TOPIC_NAME" \
-        --from-beginning -d --format "{{offset}}:{{key}}={{value}}"
+        --beginning -d --format "{{offset}}:{{key}}={{value}}"
 
     debug_msg "Output with offsets: $output"
 
