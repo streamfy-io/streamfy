@@ -115,10 +115,7 @@ pub(crate) async fn try_compact(
 
     info!(
         dirty_ratio,
-        total_keyed,
-        surviving,
-        removed_count,
-        "compaction eligible, starting rewrite"
+        total_keyed, surviving, removed_count, "compaction eligible, starting rewrite"
     );
 
     // Phase 2: rewrite segments into .compact/ directory.
@@ -198,8 +195,7 @@ async fn build_key_map(
     let mut key_map: HashMap<Vec<u8>, KeyEntry> = HashMap::new();
 
     for &(base_offset, _end_offset) in sealed_segments {
-        let segment =
-            ReadSegment::open_for_read(base_offset, _end_offset, config.clone()).await?;
+        let segment = ReadSegment::open_for_read(base_offset, _end_offset, config.clone()).await?;
 
         let modified_time = segment
             .get_msg_log()
@@ -234,7 +230,10 @@ async fn build_key_map(
 }
 
 /// Count total keyed records and how many would survive compaction.
-fn count_surviving(key_map: &HashMap<Vec<u8>, KeyEntry>, config: &SharedReplicaConfig) -> (u64, u64) {
+fn count_surviving(
+    key_map: &HashMap<Vec<u8>, KeyEntry>,
+    config: &SharedReplicaConfig,
+) -> (u64, u64) {
     let now = SystemTime::now();
     let delete_retention = Duration::from_secs(config.delete_retention_secs as u64);
     let mut total: u64 = 0;
@@ -292,16 +291,12 @@ async fn rewrite_segment(
             config.index_max_interval_bytes.get(),
         ),
         segment_max_bytes: crate::config::SharedConfigU32Value::new(u32::MAX), // no size limit for compacted segment
-        flush_write_count: crate::config::SharedConfigU32Value::new(
-            config.flush_write_count.get(),
-        ),
+        flush_write_count: crate::config::SharedConfigU32Value::new(config.flush_write_count.get()),
         flush_idle_msec: crate::config::SharedConfigU32Value::new(config.flush_idle_msec.get()),
         max_batch_size: crate::config::SharedConfigU32Value::new(config.max_batch_size.get()),
         max_request_size: crate::config::SharedConfigU32Value::new(config.max_request_size.get()),
         update_hw: false,
-        retention_seconds: crate::config::SharedConfigU32Value::new(
-            config.retention_seconds.get(),
-        ),
+        retention_seconds: crate::config::SharedConfigU32Value::new(config.retention_seconds.get()),
         max_partition_size: crate::config::SharedConfigU64Value::new(
             config.max_partition_size.get(),
         ),
@@ -425,7 +420,9 @@ async fn append_batch_preserving_offset(
     batch.encode(&mut buffer, 0)?;
 
     // Write raw bytes to the segment's underlying log file.
-    segment.write_raw_batch(&buffer, batch.get_last_offset() + 1).await?;
+    segment
+        .write_raw_batch(&buffer, batch.get_last_offset() + 1)
+        .await?;
 
     Ok(())
 }
@@ -506,9 +503,7 @@ mod tests {
     }
 
     /// Create a sealed (read-only) segment from a mutable one.
-    async fn seal_segment(
-        mut seg: MutableSegment,
-    ) -> Result<ReadSegment> {
+    async fn seal_segment(mut seg: MutableSegment) -> Result<ReadSegment> {
         seg.close().await?;
         seg.as_segment().await
     }
@@ -535,14 +530,18 @@ mod tests {
 
         // Segment 1: key "a" = "v1", key "b" = "v1"
         let mut seg1 = MutableSegment::create(0, shared.clone()).await.unwrap();
-        seg1.append_batch(&mut keyed_batch(vec![("a", "v1"), ("b", "v1")])).await.unwrap();
+        seg1.append_batch(&mut keyed_batch(vec![("a", "v1"), ("b", "v1")]))
+            .await
+            .unwrap();
         let read_seg1 = seal_segment(seg1).await.unwrap();
 
         // Segment 2: key "a" = "v2" (supersedes v1)
         let mut seg2 = MutableSegment::create(read_seg1.get_end_offset(), shared.clone())
             .await
             .unwrap();
-        seg2.append_batch(&mut keyed_batch(vec![("a", "v2")])).await.unwrap();
+        seg2.append_batch(&mut keyed_batch(vec![("a", "v2")]))
+            .await
+            .unwrap();
         let read_seg2 = seal_segment(seg2).await.unwrap();
 
         let segments = shared_segments_from(vec![read_seg1, read_seg2]);
@@ -550,7 +549,10 @@ mod tests {
         let result = try_compact(&shared, &segments).await.unwrap();
         assert!(result.is_some(), "compaction should have run");
         let result = result.unwrap();
-        assert!(result.records_removed >= 1, "at least one record should be removed");
+        assert!(
+            result.records_removed >= 1,
+            "at least one record should be removed"
+        );
 
         // Verify: read back all segments and check keys
         let reader = segments.read().await;
@@ -592,8 +594,12 @@ mod tests {
 
         // Segment: key "a" = "v1", then tombstone for "a" (empty value)
         let mut seg = MutableSegment::create(0, shared.clone()).await.unwrap();
-        seg.append_batch(&mut keyed_batch(vec![("a", "v1")])).await.unwrap();
-        seg.append_batch(&mut keyed_batch(vec![("a", "")])).await.unwrap();
+        seg.append_batch(&mut keyed_batch(vec![("a", "v1")]))
+            .await
+            .unwrap();
+        seg.append_batch(&mut keyed_batch(vec![("a", "")]))
+            .await
+            .unwrap();
         let read_seg = seal_segment(seg).await.unwrap();
 
         let segments = shared_segments_from(vec![read_seg]);
@@ -614,7 +620,10 @@ mod tests {
                 }
             }
         }
-        assert_eq!(keyed_count, 0, "expired tombstone and superseded value should both be removed");
+        assert_eq!(
+            keyed_count, 0,
+            "expired tombstone and superseded value should both be removed"
+        );
     }
 
     #[streamfy_future::test]
@@ -631,9 +640,13 @@ mod tests {
         // Create a segment with 3 records: offsets 0, 1, 2
         // key "a" at offset 0, key "b" at offset 1, key "a" at offset 2
         let mut seg = MutableSegment::create(0, shared.clone()).await.unwrap();
-        seg.append_batch(&mut keyed_batch(vec![("a", "old"), ("b", "keep"), ("a", "new")]))
-            .await
-            .unwrap();
+        seg.append_batch(&mut keyed_batch(vec![
+            ("a", "old"),
+            ("b", "keep"),
+            ("a", "new"),
+        ]))
+        .await
+        .unwrap();
         let read_seg = seal_segment(seg).await.unwrap();
 
         let segments = shared_segments_from(vec![read_seg]);
@@ -664,7 +677,9 @@ mod tests {
         // key "b" should be at offset 1, key "a" (new) at offset 2
         // key "a" (old) at offset 0 should be gone
         assert!(
-            !offset_values.iter().any(|(o, k, v)| *o == 0 && k == "a" && v == "old"),
+            !offset_values
+                .iter()
+                .any(|(o, k, v)| *o == 0 && k == "a" && v == "old"),
             "old value for 'a' at offset 0 should be removed"
         );
         assert!(
@@ -672,7 +687,9 @@ mod tests {
             "key 'b' should be at offset 1"
         );
         assert!(
-            offset_values.iter().any(|(o, k, v)| *o == 2 && k == "a" && v == "new"),
+            offset_values
+                .iter()
+                .any(|(o, k, v)| *o == 2 && k == "a" && v == "new"),
             "key 'a' with new value should be at offset 2"
         );
     }
@@ -703,7 +720,9 @@ mod tests {
         seg.append_batch(&mut batch).await.unwrap();
 
         // Second batch: update "mykey"
-        seg.append_batch(&mut keyed_batch(vec![("mykey", "v2")])).await.unwrap();
+        seg.append_batch(&mut keyed_batch(vec![("mykey", "v2")]))
+            .await
+            .unwrap();
         let read_seg = seal_segment(seg).await.unwrap();
 
         let segments = shared_segments_from(vec![read_seg]);
@@ -728,6 +747,10 @@ mod tests {
             }
         }
         assert!(null_key_found, "null-key record should be preserved");
-        assert_eq!(mykey_values, vec!["v2"], "only latest keyed value should remain");
+        assert_eq!(
+            mykey_values,
+            vec!["v2"],
+            "only latest keyed value should remain"
+        );
     }
 }

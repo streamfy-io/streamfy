@@ -974,7 +974,10 @@ impl CleanupPolicy {
 
     /// Returns true if compaction is enabled for this policy.
     pub fn is_compact(&self) -> bool {
-        matches!(self, CleanupPolicy::Compact(_) | CleanupPolicy::CompactAndDelete(_, _))
+        matches!(
+            self,
+            CleanupPolicy::Compact(_) | CleanupPolicy::CompactAndDelete(_, _)
+        )
     }
 
     /// Returns the compaction config if compaction is enabled.
