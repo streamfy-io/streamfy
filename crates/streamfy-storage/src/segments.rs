@@ -272,6 +272,7 @@ impl SegmentList {
     }
 
     /// Iterator over all segments (base_offset, segment reference).
+    #[cfg(test)]
     pub(crate) fn iter_segments(&self) -> impl Iterator<Item = (&Offset, &ReadSegment)> {
         self.segments.iter()
     }

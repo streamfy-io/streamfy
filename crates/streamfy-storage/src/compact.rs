@@ -160,10 +160,10 @@ pub(crate) async fn try_compact(
     }
 
     // Clean up temp directory.
-    if compact_dir.exists() {
-        if let Err(e) = remove_dir_all(&compact_dir).await {
-            warn!("failed to clean up .compact dir: {}", e);
-        }
+    if compact_dir.exists()
+        && let Err(e) = remove_dir_all(&compact_dir).await
+    {
+        warn!("failed to clean up .compact dir: {}", e);
     }
 
     Ok(Some(CompactionResult {
