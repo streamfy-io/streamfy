@@ -2,38 +2,33 @@ use crate::{import::*, WsErr};
 
 /// Events related to the WebSocket. You can filter like:
 ///
+/// ```ignore
+/// // Browser/WASM example — not compiled under native doctests.
+/// use streamfy_ws_stream_wasm::*;
+/// use pharos::*;
+/// use wasm_bindgen::UnwrapThrowExt;
+/// use wasm_bindgen_futures::spawn_local;
+/// use futures::stream::StreamExt;
+///
+/// let program = async {
+///     let (mut ws, _wsio) = WsMeta::connect("127.0.0.1:3012", None)
+///         .await
+///         .expect_throw("assume the connection succeeds");
+///
+///     // The Filter type comes from the pharos crate.
+///     let mut evts = ws
+///         .observe(Filter::Pointer(WsEvent::is_closed).into())
+///         .await
+///         .expect("observe ws_meta");
+///
+///     ws.close().await;
+///
+///     // Note we will only get the closed event here; WsEvent::Closing was filtered out.
+///     assert!(evts.next().await.unwrap_throw().is_closed());
+/// };
+///
+/// spawn_local(program);
 /// ```
-/// use
-///{
-///   ws_stream_wasm       :: *                        ,
-///   pharos               :: *                        ,
-///   wasm_bindgen         :: UnwrapThrowExt           ,
-///   wasm_bindgen_futures :: spawn_local              ,
-///   futures              :: stream::StreamExt        ,
-///};
-///
-///let program = async
-///{
-///   let (mut ws, _wsio) = WsMeta::connect( "127.0.0.1:3012", None ).await
-///
-///      .expect_throw( "assume the connection succeeds" );
-///
-///   // The Filter type comes from the pharos crate.
-///   //
-///   let mut evts = ws.observe( Filter::Pointer( WsEvent::is_closed ).into() )
-///      .await
-///      .expect("observe ws_meta")
-///   ;
-///
-///   ws.close().await;
-///
-///   // Note we will only get the closed event here, the WsEvent::Closing has been filtered out.
-///   //
-///   assert!( evts.next().await.unwrap_throw().is_closed () );
-///};
-///
-///spawn_local( program );
-///```
 //
 #[derive(Clone, Debug, PartialEq, Eq)]
 //

@@ -46,6 +46,7 @@ pub fn generate_aggregate_smartmodule(sm_func: &SmartModuleFn) -> TokenStream {
                 use streamfy_smartmodule::dataplane::core::{Encoder, Decoder};
                 use streamfy_smartmodule::dataplane::record::{Record, RecordData};
 
+                #[link(wasm_import_module = "env")]
                 unsafe extern "C" {
                     fn copy_records(putr: i32, len: i32);
                 }

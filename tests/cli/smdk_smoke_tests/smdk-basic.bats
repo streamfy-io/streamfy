@@ -71,6 +71,9 @@ smdk_via_stdin() {
     cd $TEST_DIR
     sed -i -e $'/members/a\\\n    "'$SM_PACKAGE_NAME'",' Cargo.toml
 
+    # Remove leftovers from BATS_TEST_RETRIES so generate is idempotent
+    rm -rf "${TEST_DIR:?}/${SM_PACKAGE_NAME}"
+
     # Generate
     run $SMDK_BIN generate \
         $PARAMS_FLAG \
@@ -116,6 +119,9 @@ smdk_via_stdin() {
     cd $TEST_DIR
     sed -i -e $'/members/a\\\n    "'$SM_PACKAGE_NAME'",' Cargo.toml
 
+    # Remove leftovers from BATS_TEST_RETRIES so generate is idempotent
+    rm -rf "${TEST_DIR:?}/${SM_PACKAGE_NAME}"
+
     # Generate
     run $SMDK_BIN generate \
         $PARAMS_FLAG \
@@ -158,6 +164,9 @@ smdk_via_stdin() {
     # Add SM to workspace
     cd $TEST_DIR
     sed -i -e $'/members/a\\\n    "'$SM_PACKAGE_NAME'",' Cargo.toml
+
+    # Remove leftovers from BATS_TEST_RETRIES so generate is idempotent
+    rm -rf "${TEST_DIR:?}/${SM_PACKAGE_NAME}"
 
     # Generate
     run $SMDK_BIN generate \
@@ -202,6 +211,9 @@ smdk_via_stdin() {
     # Add SM to workspace
     cd $TEST_DIR
     sed -i -e $'/members/a\\\n    "'$SM_PACKAGE_NAME'",' Cargo.toml
+
+    # Remove leftovers from BATS_TEST_RETRIES so generate is idempotent
+    rm -rf "${TEST_DIR:?}/${SM_PACKAGE_NAME}"
 
     # Generate
     run $SMDK_BIN generate \
@@ -255,6 +267,9 @@ smdk_via_stdin() {
     cd $TEST_DIR
     sed -i -e $'/members/a\\\n    "'$SM_PACKAGE_NAME'",' Cargo.toml
 
+    # Remove leftovers from BATS_TEST_RETRIES so generate is idempotent
+    rm -rf "${TEST_DIR:?}/${SM_PACKAGE_NAME}"
+
     # Generate
     cd $TEST_DIR
     run $SMDK_BIN generate \
@@ -299,6 +314,9 @@ smdk_via_stdin() {
     # Add SM to workspace
     cd $TEST_DIR
     sed -i -e $'/members/a\\\n    "'$SM_PACKAGE_NAME'",' Cargo.toml
+
+    # Remove leftovers from BATS_TEST_RETRIES so generate is idempotent
+    rm -rf "${TEST_DIR:?}/${SM_PACKAGE_NAME}"
 
     # Generate
     run $SMDK_BIN generate \
@@ -346,6 +364,9 @@ smdk_via_stdin() {
     cd $TEST_DIR
     sed -i -e $'/members/a\\\n    "'$SM_PACKAGE_NAME'",' Cargo.toml
 
+    # Remove leftovers from BATS_TEST_RETRIES so generate is idempotent
+    rm -rf "${TEST_DIR:?}/${SM_PACKAGE_NAME}"
+
     # Generate
     run $SMDK_BIN generate \
         $PARAMS_FLAG \
@@ -389,6 +410,9 @@ smdk_via_stdin() {
     cd $TEST_DIR
     sed -i -e $'/members/a\\\n    "'$SM_PACKAGE_NAME'",' Cargo.toml
 
+    # Remove leftovers from BATS_TEST_RETRIES so generate is idempotent
+    rm -rf "${TEST_DIR:?}/${SM_PACKAGE_NAME}"
+
     # Generate
     run $SMDK_BIN generate \
         $PARAMS_FLAG \
@@ -426,6 +450,9 @@ smdk_via_stdin() {
     # Add SM to workspace
     cd $TEST_DIR
     sed -i -e $'/members/a\\\n    "'$SM_PACKAGE_NAME'",' Cargo.toml
+
+    # Remove leftovers from BATS_TEST_RETRIES so generate is idempotent
+    rm -rf "${TEST_DIR:?}/${SM_PACKAGE_NAME}"
 
     # Generate
     run $SMDK_BIN generate \
@@ -465,6 +492,9 @@ smdk_via_stdin() {
     cd $TEST_DIR
     sed -i -e $'/members/a\\\n    "'$SM_PACKAGE_NAME'",' Cargo.toml
 
+    # Remove leftovers from BATS_TEST_RETRIES so generate is idempotent
+    rm -rf "${TEST_DIR:?}/${SM_PACKAGE_NAME}"
+
     # Generate
     run $SMDK_BIN generate \
         $PARAMS_FLAG \
@@ -503,6 +533,9 @@ smdk_via_stdin() {
     cd $TEST_DIR
     sed -i -e $'/members/a\\\n    "'$SM_PACKAGE_NAME'",' Cargo.toml
 
+    # Remove leftovers from BATS_TEST_RETRIES so generate is idempotent
+    rm -rf "${TEST_DIR:?}/${SM_PACKAGE_NAME}"
+
     # Generate
     run $SMDK_BIN generate \
           $PARAMS_FLAG \
@@ -539,6 +572,9 @@ smdk_via_stdin() {
     # Add SM to workspace
     cd $TEST_DIR
     sed -i -e $'/members/a\\\n    "'$SM_PACKAGE_NAME'",' Cargo.toml
+
+    # Remove leftovers from BATS_TEST_RETRIES so generate is idempotent
+    rm -rf "${TEST_DIR:?}/${SM_PACKAGE_NAME}"
 
     # Generate
     run $SMDK_BIN generate \
@@ -580,6 +616,9 @@ smdk_via_stdin() {
     cd $TEST_DIR
     sed -i -e $'/members/a\\\n    "'$SM_PACKAGE_NAME'",' Cargo.toml
 
+    # Remove leftovers from BATS_TEST_RETRIES so generate is idempotent
+    rm -rf "${TEST_DIR:?}/${SM_PACKAGE_NAME}"
+
     # Generate
     run $SMDK_BIN generate \
         $PARAMS_FLAG \
@@ -620,6 +659,9 @@ smdk_via_stdin() {
     # Add SM to workspace
     cd $TEST_DIR
     sed -i -e $'/members/a\\\n    "'$SM_PACKAGE_NAME'",' Cargo.toml
+
+    # Remove leftovers from BATS_TEST_RETRIES so generate is idempotent
+    rm -rf "${TEST_DIR:?}/${SM_PACKAGE_NAME}"
 
     # Generate
     run $SMDK_BIN generate \
@@ -670,6 +712,9 @@ smdk_via_stdin() {
     cd $TEST_DIR
     sed -i -e $'/members/a\\\n    "'$SM_PACKAGE_NAME'",' Cargo.toml
 
+    # Remove leftovers from BATS_TEST_RETRIES so generate is idempotent
+    rm -rf "${TEST_DIR:?}/${SM_PACKAGE_NAME}"
+
     # Generate
     run $SMDK_BIN generate \
         $PARAMS_FLAG \
@@ -710,6 +755,9 @@ smdk_via_stdin() {
     # Add SM to workspace
     cd $TEST_DIR
     sed -i -e $'/members/a\\\n    "'$SM_PACKAGE_NAME'",' Cargo.toml
+
+    # Remove leftovers from BATS_TEST_RETRIES so generate is idempotent
+    rm -rf "${TEST_DIR:?}/${SM_PACKAGE_NAME}"
 
     # Generate
     run $SMDK_BIN generate \
@@ -754,6 +802,9 @@ smdk_via_stdin() {
     cd $TEST_DIR
     sed -i -e $'/members/a\\\n    "'$SM_PACKAGE_NAME'",' Cargo.toml
 
+    # Remove leftovers from BATS_TEST_RETRIES so generate is idempotent
+    rm -rf "${TEST_DIR:?}/${SM_PACKAGE_NAME}"
+
     # Generate
     run $SMDK_BIN generate \
         $PARAMS_FLAG \
@@ -794,6 +845,9 @@ smdk_via_stdin() {
     cd $TEST_DIR
     sed -i -e $'/members/a\\\n    "'$SM_PACKAGE_NAME'",' Cargo.toml
 
+    # Remove leftovers from BATS_TEST_RETRIES so generate is idempotent
+    rm -rf "${TEST_DIR:?}/${SM_PACKAGE_NAME}"
+
     # Generate
     run $SMDK_BIN generate \
         $PARAMS_FLAG \
@@ -828,6 +882,9 @@ smdk_via_stdin() {
     # Add SM to workspace
     cd $TEST_DIR
     sed -i -e $'/members/a\\\n    "'$SM_PACKAGE_NAME'",' Cargo.toml
+
+    # Remove leftovers from BATS_TEST_RETRIES so generate is idempotent
+    rm -rf "${TEST_DIR:?}/${SM_PACKAGE_NAME}"
 
     # Generate
     run $SMDK_BIN generate \
@@ -864,6 +921,9 @@ smdk_via_stdin() {
     cd $TEST_DIR
     sed -i -e $'/members/a\\\n    "'$SM_PACKAGE_NAME'",' Cargo.toml
 
+    # Remove leftovers from BATS_TEST_RETRIES so generate is idempotent
+    rm -rf "${TEST_DIR:?}/${SM_PACKAGE_NAME}"
+
     # Generate
     run $SMDK_BIN generate \
         $PARAMS_FLAG \
@@ -898,6 +958,9 @@ smdk_via_stdin() {
     # Add SM to workspace
     cd $TEST_DIR
     sed -i -e $'/members/a\\\n    "'$SM_PACKAGE_NAME'",' Cargo.toml
+
+    # Remove leftovers from BATS_TEST_RETRIES so generate is idempotent
+    rm -rf "${TEST_DIR:?}/${SM_PACKAGE_NAME}"
 
     # Generate
     run $SMDK_BIN generate \

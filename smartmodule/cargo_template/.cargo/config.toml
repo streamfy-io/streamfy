@@ -1,6 +1,6 @@
-[build]
-target = "wasm32-wasip1"
-
 [target.wasm32-wasip1]
 # Host-provided SmartModule ABI (copy_records, etc.)
+rustflags = ["-C", "link-arg=--allow-undefined"]
+
+[target.wasm32-unknown-unknown]
 rustflags = ["-C", "link-arg=--allow-undefined"]
