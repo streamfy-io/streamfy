@@ -79,7 +79,7 @@ mod inner {
     use tracing::info;
     use tokio::select;
     use futures_util::StreamExt;
-    use once_cell::sync::Lazy;
+    use std::sync::LazyLock;
 
     use streamfy_future::task::spawn;
     use streamfy_future::timer::sleep;
@@ -96,7 +96,7 @@ mod inner {
     use crate::services::internal::FetchStreamRequest;
     use crate::core::spus::SharedSpuLocalStore;
 
-    static SHORT_RECONCILLATION: Lazy<u64> = Lazy::new(|| {
+    static SHORT_RECONCILLATION: LazyLock<u64> = LazyLock::new(|| {
         let var_value = std::env::var("FLV_SHORT_RECONCILLATION").unwrap_or_default();
         var_value.parse().unwrap_or(10)
     });

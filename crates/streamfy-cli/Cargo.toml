@@ -19,7 +19,9 @@ path = "src/bin/main.rs"
 doc = false
 
 [features]
-default = ["consumer", "k8s", "producer-file-io"]
+# Slim by default: no k8s cluster tooling, no benchmark, no smartengine.
+# Full product CLI: --features "consumer,k8s,producer-file-io,benchmark"
+default = ["consumer", "producer-file-io"]
 consumer = [
     "ctrlc",
     "content_inspector",
@@ -29,10 +31,13 @@ consumer = [
     "streamfy-spu-schema",
 ]
 k8s = [
-    "k8-client",
-    "k8-config",
-    "streamfy-cluster",
+    "dep:k8-client",
+    "dep:k8-config",
+    "dep:k8-types",
+    "dep:streamfy-cluster",
 ]
+# Enables `streamfy benchmark`. Omit for slim CLI builds.
+benchmark = ["dep:streamfy-benchmark"]
 smartengine = ["streamfy-smartengine/default"]
 producer-file-io = ["streamfy-cli-common/file-records"]
 
@@ -45,8 +50,6 @@ clap = { workspace = true, features = ["std", "derive", "string", "help", "usage
 clap_complete = { workspace = true }
 indicatif = { workspace = true }
 sha2 = { workspace = true }
-home = { workspace = true }
-current_platform = { workspace = true }
 comfy-table = { workspace = true }
 ctrlc = { workspace = true, optional = true }
 colored = { workspace = true }
@@ -54,7 +57,7 @@ handlebars = { workspace = true }
 content_inspector = { optional = true, workspace = true }
 flate2 = { workspace = true }
 crossterm = { workspace = true, features = ['event-stream',"bracketed-paste", "windows","events"]}
-tui = { workspace = true, features = ['crossterm'] }
+ratatui = { workspace = true }
 futures = { workspace = true }
 futures-util = { workspace = true, features = ["sink"] }
 humantime = { workspace = true }
@@ -71,12 +74,12 @@ which = { workspace = true }
 # Streamfy dependencies
 k8-config = { workspace = true, optional = true }
 k8-client = { workspace = true, optional = true }
-k8-types = { workspace = true , features = ["core"] }
+k8-types = { workspace = true, optional = true, features = ["core"] }
 streamfy-cluster = { workspace = true, features = ["cli"], optional = true }
 
 streamfy = { workspace = true }
 streamfy-auth = { workspace = true }
-streamfy-benchmark = { workspace = true }
+streamfy-benchmark = { workspace = true, optional = true }
 streamfy-command = { workspace = true  }
 streamfy-package-index = { workspace = true }
 streamfy-extension-common = { workspace = true,  features = ["target", "installation"] }

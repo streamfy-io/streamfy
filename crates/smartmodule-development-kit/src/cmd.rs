@@ -5,6 +5,7 @@ use clap::Parser;
 use streamfy_cli_common::version_cmd::BasicVersionCmd;
 
 use crate::build::{BuildCmd, BUILD_TARGET};
+#[cfg(feature = "generate")]
 use crate::generate::GenerateCmd;
 use crate::test::TestCmd;
 use crate::load::LoadCmd;
@@ -16,6 +17,7 @@ pub enum SmdkCommand {
     /// Builds SmartModule into WASM
     Build(BuildCmd),
     /// Generates a new SmartModule Project
+    #[cfg(feature = "generate")]
     Generate(GenerateCmd),
     Test(TestCmd),
     Load(LoadCmd),
@@ -29,6 +31,7 @@ impl SmdkCommand {
     pub(crate) fn process(self) -> Result<()> {
         match self {
             SmdkCommand::Build(opt) => opt.process(),
+            #[cfg(feature = "generate")]
             SmdkCommand::Generate(opt) => opt.process(),
             SmdkCommand::Test(opt) => opt.process(),
             SmdkCommand::Load(opt) => opt.process(),

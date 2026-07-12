@@ -14,7 +14,7 @@ use tracing::trace;
 use tracing::instrument;
 use serde::de::DeserializeOwned;
 use serde::Serialize;
-use once_cell::sync::Lazy;
+use std::sync::LazyLock;
 
 use streamfy_future::timer::sleep;
 
@@ -24,7 +24,7 @@ use crate::store::k8::K8ExtendedSpec;
 use crate::store::StoreContext;
 use crate::actions::WSAction;
 
-static SC_RECONCILIATION_INTERVAL_SEC: Lazy<u64> = Lazy::new(|| {
+static SC_RECONCILIATION_INTERVAL_SEC: LazyLock<u64> = LazyLock::new(|| {
     use std::env;
 
     let var_value = env::var("FLV_SC_RECONCILIATION_INTERVAL").unwrap_or_default();

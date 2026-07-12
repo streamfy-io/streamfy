@@ -15,7 +15,8 @@ name = "streamfy"
 path = "src/lib.rs"
 
 [features]
-default = ["rustls", "compress", "rustls-aws"]
+# Prefer ring over aws-lc-rs for smaller client binaries; use rustls-aws when needed.
+default = ["rustls", "compress", "rustls-ring"]
 admin = ["streamfy-sc-schema/use_serde"]
 smartengine = ["streamfy-smartengine"]
 openssl = ["streamfy-future/openssl_tls"]
@@ -35,10 +36,8 @@ async-trait = { workspace = true }
 anyhow = { workspace = true }
 cfg-if = { workspace = true }
 derive_builder = { workspace = true }
-parking_lot = { workspace = true }
 event-listener = { workspace = true }
 futures-util = { workspace = true }
-once_cell = { workspace = true }
 serde = { workspace = true, features = ['derive'] }
 tokio = { workspace = true, features = ["macros"] }
 thiserror = { workspace = true }

@@ -250,10 +250,21 @@ mod builder {
 
     pub type ClientConfigBuilder<Stage> = ConfigBuilder<ClientConfig, Stage>;
 
+    /// rustls 0.23 panics in `Config::builder()` when multiple crypto providers
+    /// are compiled in and none is process-default. Prefer ring (smaller).
+    fn ensure_default_crypto_provider() {
+        use futures_rustls::rustls::crypto::CryptoProvider;
+        if CryptoProvider::get_default().is_some() {
+            return;
+        }
+        let _ = rustls::crypto::ring::default_provider().install_default();
+    }
+
     pub struct ConnectorBuilder;
 
     impl ConnectorBuilder {
         pub fn with_safe_defaults() -> ConnectorBuilderStage<WantsVerifier> {
+            ensure_default_crypto_provider();
             ConnectorBuilderStage(ClientConfig::builder())
         }
     }
@@ -354,6 +365,7 @@ mod builder {
 
     impl AcceptorBuilder {
         pub fn with_safe_defaults() -> AcceptorBuilderStage<WantsVerifier> {
+            ensure_default_crypto_provider();
             AcceptorBuilderStage(ServerConfig::builder())
         }
     }

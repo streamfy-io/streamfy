@@ -5,6 +5,7 @@ use clap::Parser;
 use streamfy_cli_common::version_cmd::BasicVersionCmd;
 
 use crate::build::BuildCmd;
+#[cfg(feature = "generate")]
 use crate::generate::GenerateCmd;
 use crate::deploy::DeployCmd;
 use crate::test::TestCmd;
@@ -14,6 +15,7 @@ use crate::test::TestCmd;
 pub enum CdkCommand {
     Build(BuildCmd),
     Test(TestCmd),
+    #[cfg(feature = "generate")]
     Generate(GenerateCmd),
     Deploy(DeployCmd),
     Version(BasicVersionCmd),
@@ -25,6 +27,7 @@ impl CdkCommand {
             CdkCommand::Build(opt) => opt.process(),
             CdkCommand::Test(opt) => opt.process(),
             CdkCommand::Deploy(opt) => opt.process(),
+            #[cfg(feature = "generate")]
             CdkCommand::Generate(opt) => opt.process(),
             CdkCommand::Version(opt) => opt.process("CDK"),
         }

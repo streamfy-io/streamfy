@@ -95,8 +95,27 @@ impl From<Lookback> for streamfy_smartmodule::dataplane::smartmodule::Lookback {
     }
 }
 
-#[derive(Default, Clone, Debug, PartialEq, Eq, Serialize, JsonSchema)]
+#[derive(Default, Clone, Debug, Serialize, JsonSchema)]
 pub struct JsonString(String);
+
+// Compare by parsed JSON value so object key order is irrelevant when
+// serde_json preserve_order is unified in (YAML insertion order vs sorted keys).
+impl PartialEq for JsonString {
+    fn eq(&self, other: &Self) -> bool {
+        if self.0 == other.0 {
+            return true;
+        }
+        match (
+            serde_json::from_str::<serde_json::Value>(&self.0),
+            serde_json::from_str::<serde_json::Value>(&other.0),
+        ) {
+            (Ok(a), Ok(b)) => a == b,
+            _ => false,
+        }
+    }
+}
+
+impl Eq for JsonString {}
 
 impl From<JsonString> for String {
     fn from(json: JsonString) -> Self {

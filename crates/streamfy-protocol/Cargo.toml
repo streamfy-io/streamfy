@@ -36,7 +36,6 @@ record = [
     "crc32c",
     "content_inspector",
     "streamfy-compression",
-    "once_cell",
     "streamfy-types"
 ]
 types = ["streamfy-types"]
@@ -49,7 +48,6 @@ bytes = { workspace = true  }
 cfg-if = { workspace = true }
 crc32c = { workspace = true,  optional = true }
 content_inspector = { optional = true, workspace = true }
-once_cell = { workspace = true, optional = true }
 derive_builder = { workspace = true,  optional = true }
 eyre = { workspace = true,  optional = true }
 semver = { workspace = true, optional = true }

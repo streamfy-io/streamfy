@@ -22,7 +22,7 @@ use streamfy_spu_schema::server::consumer_offset::{
 };
 use tracing::{debug, error, trace, instrument, info, warn};
 use futures_util::stream::{Stream, select_all};
-use once_cell::sync::Lazy;
+use std::sync::LazyLock;
 use futures_util::future::{Either, err, try_join_all};
 use futures_util::stream::{StreamExt, once, iter};
 use futures_util::FutureExt;
@@ -775,7 +775,7 @@ mod publish_stream {
 }
 
 /// MAX FETCH BYTES
-static MAX_FETCH_BYTES: Lazy<i32> = Lazy::new(|| {
+static MAX_FETCH_BYTES: LazyLock<i32> = LazyLock::new(|| {
     use std::env;
     use streamfy_protocol::Encoder;
     use streamfy_spu_schema::fetch::FetchResponse;

@@ -28,7 +28,6 @@ async-lock = { workspace = true }
 clap = { workspace = true,features = ["std", "derive", "env"]}
 futures-util = { workspace = true }
 mimalloc = { workspace = true }
-once_cell = { workspace = true }
 rand = { workspace = true }
 semver = { workspace = true }
 serde = { workspace = true, features = ['derive'] }

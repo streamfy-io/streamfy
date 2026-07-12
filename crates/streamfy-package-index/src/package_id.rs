@@ -1,5 +1,5 @@
 use std::fmt;
-use once_cell::sync::Lazy;
+use std::sync::LazyLock;
 use serde::{Serialize, Deserialize, Deserializer, Serializer};
 use url::Url;
 use crate::Error;
@@ -25,12 +25,12 @@ impl Registry {
     }
 }
 
-static DEFAULT_REGISTRY: Lazy<Registry> = Lazy::new(|| {
+static DEFAULT_REGISTRY: LazyLock<Registry> = LazyLock::new(|| {
     let url = url::Url::parse("https://packages.streamfy.io/v1/").unwrap();
     Registry::from(url)
 });
 
-static DEFAULT_GROUP: Lazy<GroupName> = Lazy::new(|| GroupName("streamfy".to_owned()));
+static DEFAULT_GROUP: LazyLock<GroupName> = LazyLock::new(|| GroupName("streamfy".to_owned()));
 
 impl fmt::Display for Registry {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {

@@ -77,12 +77,12 @@ impl<T: K8MetadataClient> MetadataClient<K8MetaItem> for T {
     where
         S: K8ExtendedSpec,
     {
-        use once_cell::sync::Lazy;
+        use std::sync::LazyLock;
         use serde_json::Value;
 
         use k8_client::meta_client::PatchMergeType::JsonMerge;
 
-        static FINALIZER: Lazy<Value> = Lazy::new(|| {
+        static FINALIZER: LazyLock<Value> = LazyLock::new(|| {
             serde_json::from_str(
                 r#"
                 {

@@ -18,7 +18,8 @@ path = "src/bin/main.rs"
 doc = false
 
 [features]
-default = ["spu_smartengine"]
+# Slim by default (no wasmtime via SPU). Full runner: --features spu_smartengine
+default = []
 spu_smartengine = ["streamfy-spu/smartengine"]
 rustls = ["streamfy-future/rust_tls"]
 

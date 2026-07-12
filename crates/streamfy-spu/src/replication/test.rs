@@ -11,7 +11,7 @@ use streamfy_types::event::offsets::OffsetPublisher;
 use rand::Rng;
 use tracing::debug;
 use derive_builder::Builder;
-use once_cell::sync::Lazy;
+use std::sync::LazyLock;
 
 use streamfy_storage::FileReplica;
 use streamfy_future::timer::sleep;
@@ -38,7 +38,7 @@ const LEADER: SpuId = 5001;
 const FOLLOWER1: SpuId = 5002;
 const FOLLOWER2: SpuId = 5003;
 
-static MAX_WAIT_REPLICATION: Lazy<u64> = Lazy::new(|| {
+static MAX_WAIT_REPLICATION: LazyLock<u64> = LazyLock::new(|| {
     use std::env;
     if env::var("CI").is_ok() { 5000 } else { 1000 }
 });

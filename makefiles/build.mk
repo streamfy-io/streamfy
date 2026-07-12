@@ -1,21 +1,34 @@
+# Product feature sets (crate defaults are intentionally slim for faster local builds)
+CLI_FEATURES ?= consumer,k8s,producer-file-io,benchmark
+ifdef SMARTENGINE
+CLI_FEATURES := $(CLI_FEATURES),smartengine
+endif
+# Kits include project scaffolding (cargo-generate)
+KIT_FEATURES ?= generate
+# Full cluster runner includes SmartModule engine (wasmtime)
+RUN_FEATURES ?= spu_smartengine
+
 # Build targets
 build-cli: install_rustup_target
-	$(CARGO_BUILDER) build --bin streamfy -p streamfy-cli $(RELEASE_FLAG) $(TARGET_FLAG) $(VERBOSE_FLAG) $(SMARTENGINE_FLAG)
+	$(CARGO_BUILDER) build --bin streamfy -p streamfy-cli $(RELEASE_FLAG) $(TARGET_FLAG) $(VERBOSE_FLAG) \
+		--features "$(CLI_FEATURES)"
 
 build-smdk: install_rustup_target
-	$(CARGO_BUILDER) build --bin smdk -p smartmodule-development-kit $(RELEASE_FLAG) $(TARGET_FLAG) $(VERBOSE_FLAG) $(SMARTENGINE_FLAG)
+	$(CARGO_BUILDER) build --bin smdk -p smartmodule-development-kit $(RELEASE_FLAG) $(TARGET_FLAG) $(VERBOSE_FLAG) \
+		--features "$(KIT_FEATURES)"
 
 build-cdk: install_rustup_target
-	$(CARGO_BUILDER) build --bin cdk -p cdk $(RELEASE_FLAG) $(TARGET_FLAG) $(VERBOSE_FLAG) $(SMARTENGINE_FLAG)
+	$(CARGO_BUILDER) build --bin cdk -p cdk $(RELEASE_FLAG) $(TARGET_FLAG) $(VERBOSE_FLAG) \
+		--features "$(KIT_FEATURES)"
 
 build-benchmark: install_rustup_target
-	$(CARGO_BUILDER) build --bin streamfy-benchmark -p streamfy-benchmark $(RELEASE_FLAG) $(TARGET_FLAG) $(VERBOSE_FLAG) $(SMARTENGINE_FLAG)
+	$(CARGO_BUILDER) build --bin streamfy-benchmark -p streamfy-benchmark $(RELEASE_FLAG) $(TARGET_FLAG) $(VERBOSE_FLAG)
 
 build-svm: install_rustup_target
-	$(CARGO_BUILDER) build --bin svm -p streamfy-version-manager $(RELEASE_FLAG) $(TARGET_FLAG) $(VERBOSE_FLAG) $(SMARTENGINE_FLAG)
+	$(CARGO_BUILDER) build --bin svm -p streamfy-version-manager $(RELEASE_FLAG) $(TARGET_FLAG) $(VERBOSE_FLAG)
 
 build-cli-minimal: install_rustup_target
-	# https://github.com/streamfy-io/streamfy/issues/1255
+	# Slim CLI (matches package defaults aside from being explicit)
 	cargo build --bin streamfy -p streamfy-cli $(RELEASE_FLAG) $(TARGET_FLAG) $(VERBOSE_FLAG) \
 	    --no-default-features --features consumer,producer-file-io
 
@@ -23,7 +36,7 @@ build-cli-minimal: install_rustup_target
 ifeq ($(TARGET), armv7-unknown-linux-gnueabihf)
   streamfy_run_extra=--no-default-features --features rustls
 else
-  streamfy_run_extra=
+  streamfy_run_extra=--features $(RUN_FEATURES)
 endif
 build-cluster: install_rustup_target
 	cargo build --bin streamfy-run -p streamfy-run $(RELEASE_FLAG) $(TARGET_FLAG) $(VERBOSE_FLAG) $(DEBUG_SMARTMODULE_FLAG) $(streamfy_run_extra)

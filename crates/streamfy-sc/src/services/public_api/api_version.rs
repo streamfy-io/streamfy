@@ -1,7 +1,7 @@
 use streamfy_sc_schema::mirroring::ObjectMirroringRequest;
 use tracing::{trace, instrument, debug};
 use semver::Version;
-use once_cell::sync::Lazy;
+use std::sync::LazyLock;
 use anyhow::Result;
 
 use streamfy_protocol::api::{RequestMessage, ResponseMessage, Request};
@@ -16,7 +16,7 @@ use streamfy_sc_schema::AdminPublicApiKey;
 
 // Fluvi Client version 0.14.0 corresponds to Platform version 10.0.0
 
-static PLATFORM_VER: Lazy<Version> = Lazy::new(|| Version::parse(crate::VERSION).unwrap());
+static PLATFORM_VER: LazyLock<Version> = LazyLock::new(|| Version::parse(crate::VERSION).unwrap());
 
 #[instrument(skip(request))]
 pub async fn handle_api_versions_request(

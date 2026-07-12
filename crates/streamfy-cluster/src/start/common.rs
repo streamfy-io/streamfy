@@ -5,7 +5,7 @@ use std::{
 
 use streamfy_controlplane_metadata::spu::SpuSpec;
 use k8_client::SharedK8Client;
-use once_cell::sync::Lazy;
+use std::sync::LazyLock;
 use semver::Version;
 use tracing::{debug, error, info, instrument, warn};
 
@@ -18,7 +18,7 @@ use streamfy_future::{
 use crate::render::ProgressRenderer;
 
 /// maximum time for VERSION CHECK
-static MAX_SC_LOOP: Lazy<u8> = Lazy::new(|| {
+static MAX_SC_LOOP: LazyLock<u8> = LazyLock::new(|| {
     let var_value = env::var("FLV_CLUSTER_MAX_SC_VERSION_LOOP").unwrap_or_default();
     var_value.parse().unwrap_or(120)
 });

@@ -317,14 +317,14 @@ cfg_if::cfg_if! {
     if #[cfg(feature = "smartengine")] {
 
         use std::collections::BTreeMap;
-        use once_cell::sync::Lazy;
+        use std::sync::LazyLock;
 
         use streamfy_spu_schema::server::smartmodule::SmartModuleContextData;
         use streamfy_smartengine::SmartEngine;
 
         pub use streamfy_smartengine::{SmartModuleChainBuilder, SmartModuleConfig, SmartModuleInitialData};
 
-        static SM_ENGINE: Lazy<SmartEngine> = Lazy::new(|| {
+        static SM_ENGINE: LazyLock<SmartEngine> = LazyLock::new(|| {
             streamfy_smartengine::SmartEngine::new()
         });
 

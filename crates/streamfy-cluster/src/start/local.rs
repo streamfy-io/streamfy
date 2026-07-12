@@ -9,7 +9,7 @@ use semver::Version;
 use derive_builder::Builder;
 use serde::{Serialize, Deserialize};
 use tracing::{debug, error, instrument, warn};
-use once_cell::sync::Lazy;
+use std::sync::LazyLock;
 
 use streamfy::{Streamfy, StreamfyClusterConfig};
 use streamfy::config::{TlsPolicy, ConfigFile, LOCAL_PROFILE};
@@ -30,11 +30,10 @@ use crate::progress::{InstallProgressMessage, ProgressBarFactory};
 use super::constants::MAX_PROVISION_TIME_SEC;
 use super::common::check_crd;
 
-pub static LOCAL_CONFIG_PATH: Lazy<Option<PathBuf>> = Lazy::new(|| {
-    directories::BaseDirs::new().map(|it| it.home_dir().join(".streamfy/local-config"))
-});
-pub static DEFAULT_DATA_DIR: Lazy<Option<PathBuf>> =
-    Lazy::new(|| directories::BaseDirs::new().map(|it| it.home_dir().join(".streamfy/data")));
+pub static LOCAL_CONFIG_PATH: LazyLock<Option<PathBuf>> =
+    LazyLock::new(|| dirs::home_dir().map(|home| home.join(".streamfy/local-config")));
+pub static DEFAULT_DATA_DIR: LazyLock<Option<PathBuf>> =
+    LazyLock::new(|| dirs::home_dir().map(|home| home.join(".streamfy/data")));
 pub const DEFAULT_METADATA_SUB_DIR: &str = "metadata";
 
 const DEFAULT_LOG_DIR: &str = "/tmp";
@@ -44,7 +43,8 @@ const DEFAULT_TLS_POLICY: TlsPolicy = TlsPolicy::Disabled;
 const LOCAL_SC_ADDRESS: &str = "127.0.0.1:9003";
 const LOCAL_SC_PORT: &str = "9003";
 
-pub static DEFAULT_RUNNER_PATH: Lazy<Option<PathBuf>> = Lazy::new(|| std::env::current_exe().ok());
+pub static DEFAULT_RUNNER_PATH: LazyLock<Option<PathBuf>> =
+    LazyLock::new(|| std::env::current_exe().ok());
 
 /// Describes how to install Streamfy locally
 #[derive(Builder, Debug, Clone, Serialize, Deserialize)]
