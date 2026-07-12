@@ -186,6 +186,25 @@ impl MutFileRecords {
     pub fn flush_count(&self) -> u32 {
         self.flush_count.load(Ordering::Relaxed)
     }
+
+    /// Write raw pre-encoded bytes directly to the log file.
+    /// Used by compaction to write batches preserving original offsets.
+    pub(crate) async fn write_raw(&mut self, raw_bytes: &[u8]) -> Result<(), std::io::Error> {
+        use std::os::unix::prelude::{AsRawFd, FromRawFd};
+
+        let raw_fd = self.file.as_raw_fd();
+        let mut std_file = unsafe { std::fs::File::from_raw_fd(raw_fd) };
+        if let Err(err) = std_file.write_all(raw_bytes) {
+            std::mem::forget(std_file);
+            return Err(err);
+        }
+        std::mem::forget(std_file);
+
+        self.len += raw_bytes.len() as u32;
+        self.file.flush().await?;
+
+        Ok(())
+    }
 }
 
 impl FileRecords for MutFileRecords {

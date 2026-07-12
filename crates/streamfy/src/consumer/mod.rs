@@ -434,9 +434,8 @@ where
 
         let start_absolute_offset = offset.resolve(&offsets, consumer_offset).await?;
         let end_absolute_offset = offsets.last_stable_offset;
-        let record_count = end_absolute_offset - start_absolute_offset;
 
-        debug!(start_absolute_offset, end_absolute_offset, record_count);
+        debug!(start_absolute_offset, end_absolute_offset);
 
         let with_consumer_id = consumer_id.is_some();
         let stream_request = DefaultStreamFetchRequest::builder()
@@ -582,7 +581,15 @@ where
         };
 
         let stream = if config.disable_continuous {
-            TakeRecords::new(ft_stream.flatten_stream().boxed(), record_count).boxed()
+            // Stop once the fetch cursor reaches the known high-watermark.
+            // Must be offset-based (not record-count-based): compaction creates
+            // offset gaps, so (LSO - start) over-counts actual records.
+            TakeRecords::new(
+                ft_stream.flatten_stream().boxed(),
+                start_absolute_offset,
+                end_absolute_offset,
+            )
+            .boxed()
         } else {
             ft_stream.flatten_stream().boxed()
         };
@@ -657,15 +664,18 @@ where
 
 /// Wrap an inner record stream and only stream until a given number of records have been fetched.
 ///
-/// This is used for "disable continuous" mode. In this mode, we first make a FetchOffsetPartitionResponse
-/// in order to see the starting and ending offsets currently available for this partition.
-/// Based on the starting offset the caller asks for, we can figure out the "record count", or
-/// how many records from the start onward we know for sure we can stream without waiting.
-/// We then use `TakeRecords` to stop the stream as soon as we reach that point, so the user
-/// (e.g. on the CLI) does not spend any time waiting for new records to be produced, they are
-/// simply given all the records that are already available.
+/// Used for "disable continuous" mode. We first look up the partition's
+/// last-stable offset (high watermark), stream until the fetch cursor reaches
+/// that offset, then stop so the CLI does not wait for new produces.
+///
+/// Termination is **offset-based**, not record-count-based: after log
+/// compaction the log can contain gaps, so `(LSO - start)` is greater than the
+/// number of records that will actually arrive.
 struct TakeRecords<S> {
-    remaining: i64,
+    /// Exclusive end offset (last stable / high watermark). Stop after a
+    /// response whose next fetch offset is `>= end_offset`.
+    end_offset: i64,
+    finished: bool,
     stream: S,
 }
 
@@ -673,9 +683,11 @@ impl<S> TakeRecords<S>
 where
     S: Stream<Item = Result<DefaultStreamFetchResponse, ErrorCode>> + std::marker::Unpin,
 {
-    pub fn new(stream: S, until: i64) -> Self {
+    pub fn new(stream: S, start_offset: i64, end_offset: i64) -> Self {
         Self {
-            remaining: until,
+            end_offset,
+            // Already at/ past watermark: nothing to stream.
+            finished: start_offset >= end_offset,
             stream,
         }
     }
@@ -693,22 +705,24 @@ where
     ) -> std::task::Poll<Option<Self::Item>> {
         use std::{pin::Pin, task::Poll};
         use futures_util::ready;
-        if self.remaining <= 0 {
+        if self.finished {
             return Poll::Ready(None);
         }
         let next = ready!(Pin::new(&mut self.as_mut().stream).poll_next(cx));
         match next {
             Some(Ok(response)) => {
-                // Count how many records are present in this batch's response
-                let count: usize = response
-                    .partition
-                    .records
-                    .batches
-                    .iter()
-                    .map(|it| it.records_len())
-                    .sum();
-                let diff = self.remaining - count as i64;
-                self.remaining = diff.max(0);
+                if let Some(next_offset) = response.partition.next_offset_for_fetch()
+                    && next_offset >= self.end_offset
+                {
+                    self.finished = true;
+                }
+                // No records and no next offset: nothing more will arrive for
+                // the known watermark (empty partition / already at end).
+                if response.partition.records.batches.is_empty()
+                    && response.partition.next_offset_for_fetch().is_none()
+                {
+                    self.finished = true;
+                }
                 Poll::Ready(Some(Ok(response)))
             }
             other => Poll::Ready(other),
