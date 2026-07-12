@@ -19,7 +19,9 @@ future = ["futures-lite"]
 io = ["async-fs", "async-io"]
 net = ["futures-lite", "async-net", "async-trait", "cfg-if", "futures-util/io", "socket2", "streamfy-ws-stream-wasm"]
 tls = ["rust_tls"]
-rust_tls = ["net", "rustls-pemfile", "futures-rustls", "pin-project", "futures-util/io"]
+# rustls dep with ring: ensure a provider is available when aws-lc-rs is also
+# unified in (rustls 0.23 requires install_default if multiple providers are linked).
+rust_tls = ["net", "rustls-pemfile", "futures-rustls", "dep:rustls", "pin-project", "futures-util/io"]
 # native_tls identity helpers use the openssl crate; vendor so hosts without system OpenSSL still build.
 native_tls = ["net", "pin-project", "async-native-tls", "dep:native-tls", "openssl/vendored", "futures-util/io"]
 # Vendored OpenSSL by default so macOS/Linux hosts without pkg-config + libssl-dev still build
@@ -59,6 +61,8 @@ async-net = { version = "2.0", optional = true }
 async-lock = { version = "3.4", optional = true }
 async-task = { version = "4.7", optional = true }
 futures-rustls = { version = "0.26.0", optional = true }
+# Prefer ring when dual crypto providers are linked via feature unification.
+rustls = { version = "0.23", optional = true, default-features = false, features = ["std", "tls12", "ring"] }
 memmap2 = { version = "0.9.5", optional = true }
 native-tls = { version = "0.2.14", optional = true }
 nix = { version = "0.30.1", optional = true, features = ["zerocopy"] }
