@@ -423,7 +423,7 @@ impl TableModel {
                     .borders(Borders::ALL)
                     .title(table_title_text),
             )
-            .highlight_style(selected_style)
+            .row_highlight_style(selected_style)
             .highlight_symbol(selected_symbol.as_str());
 
         // draw

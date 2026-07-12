@@ -43,7 +43,8 @@ const DEFAULT_TLS_POLICY: TlsPolicy = TlsPolicy::Disabled;
 const LOCAL_SC_ADDRESS: &str = "127.0.0.1:9003";
 const LOCAL_SC_PORT: &str = "9003";
 
-pub static DEFAULT_RUNNER_PATH: LazyLock<Option<PathBuf>> = LazyLock::new(|| std::env::current_exe().ok());
+pub static DEFAULT_RUNNER_PATH: LazyLock<Option<PathBuf>> =
+    LazyLock::new(|| std::env::current_exe().ok());
 
 /// Describes how to install Streamfy locally
 #[derive(Builder, Debug, Clone, Serialize, Deserialize)]

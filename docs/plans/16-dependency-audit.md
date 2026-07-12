@@ -29,7 +29,7 @@
 | **`once_cell` → `std::sync::{LazyLock,OnceLock}`** | Done | Direct dep removed from workspace members |
 | **`directories` → `dirs` in cluster** | Done | Single home-dir crate in first-party code |
 | **cdk/smdk `generate` feature** | Done | Default off; `cargo-generate` + vendored openssl only with `--features generate` |
-| **`openssl_tls` system OpenSSL + `openssl_vendored` opt-in** | Done | `native_tls` still vendors (CLI identity helpers) |
+| **`openssl_tls` vendors OpenSSL by default** | Done | Zero-setup (macOS); `OPENSSL_NO_VENDOR=1` for system libssl |
 | **Makefile product feature sets** | Done | `make build-cli` / `build-run` / `build-cdk` pass full features explicitly |
 
 **Product builds (full weight):**

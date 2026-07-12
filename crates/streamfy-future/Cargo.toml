@@ -22,8 +22,11 @@ tls = ["rust_tls"]
 rust_tls = ["net", "rustls-pemfile", "futures-rustls", "pin-project", "futures-util/io"]
 # native_tls identity helpers use the openssl crate; vendor so hosts without system OpenSSL still build.
 native_tls = ["net", "pin-project", "async-native-tls", "dep:native-tls", "openssl/vendored", "futures-util/io"]
-# System OpenSSL by default. For musl/CI without libssl, also enable `openssl_vendored`.
-openssl_tls = ["net", "openssl", "openssl-sys", "pin-project", "futures-util/io"]
+# Vendored OpenSSL by default so macOS/Linux hosts without pkg-config + libssl-dev still build
+# (Apple only ships LibreSSL without headers). To link system OpenSSL instead:
+#   OPENSSL_NO_VENDOR=1 and install openssl + pkg-config (e.g. brew install openssl@3 pkgconf).
+# `openssl_vendored` remains as an explicit alias for CI/musl feature flags.
+openssl_tls = ["net", "openssl", "openssl-sys", "pin-project", "futures-util/io", "openssl_vendored"]
 openssl_vendored = ["openssl?/vendored", "openssl-sys?/vendored"]
 timer = ["async-io", "pin-project", "futures-lite", "streamfy-wasm-timer"]
 fs = ["async-fs", "futures-lite", "pin-utils", "async-trait"]
