@@ -26,7 +26,8 @@ env:
   CARGO_TERM_COLOR: always
   GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   BATS_VERSION: "1.11.0"
-  K3D_VERSION: v5.4.9
+  # v5.4.9 has no checksums.txt; current k3d install.sh requires it (404).
+  K3D_VERSION: v5.8.3
   SERVER_LOG: streamfy=info
   K8_NAMESPACE: streamfy-test
   # TLS smoke uses in-repo certs under tls/certs (SAN: streamfy.local / *.streamfy.local).
@@ -201,6 +202,29 @@ jobs:
         run: cargo build -p ${{ matrix.crate }}
       - name: Test ${{ matrix.crate }}
         run: cargo test -p ${{ matrix.crate }}
+
+  # Upgrade / SVM / backward-compat need a non-prerelease GitHub release baseline.
+  # Until the first stable release is published, those jobs are skipped (not failed).
+  check-stable-release:
+    name: Check stable release available
+    runs-on: ubuntu-latest
+    outputs:
+      available: ${{ steps.check.outputs.available }}
+    steps:
+      - id: check
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          n="$(gh api "repos/${{ github.repository }}/releases" \
+            --jq '[.[] | select(.prerelease == false and .draft == false)] | length')"
+          if [ "${n:-0}" -gt 0 ]; then
+            echo "available=true" >> "$GITHUB_OUTPUT"
+            echo "Found $n stable release(s)"
+          else
+            echo "available=false" >> "$GITHUB_OUTPUT"
+            echo "No stable GitHub release yet; release-dependent jobs will be skipped"
+          fi
 
   # Release-mode binaries used by cluster + bats integration tests
   build:
@@ -418,7 +442,7 @@ jobs:
       - name: Set up k3d (local-k8)
         if: matrix.run-mode == 'local-k8'
         run: |
-          curl -s https://raw.githubusercontent.com/rancher/k3d/main/install.sh | TAG=${{ env.K3D_VERSION }} bash
+          curl -fsSL https://raw.githubusercontent.com/k3d-io/k3d/main/install.sh | TAG=${{ env.K3D_VERSION }} bash
           ./k8-util/cluster/reset-k3d.sh
       - name: Create k8 namespace
         if: matrix.run-mode == 'local-k8'
@@ -545,7 +569,7 @@ jobs:
       - name: Install k3d
         if: matrix.k8 == 'k3d'
         run: |
-          curl -s https://raw.githubusercontent.com/rancher/k3d/main/install.sh | TAG=${{ env.K3D_VERSION }} bash
+          curl -fsSL https://raw.githubusercontent.com/k3d-io/k3d/main/install.sh | TAG=${{ env.K3D_VERSION }} bash
           ./k8-util/cluster/reset-k3d.sh
       - name: Load image into k3d
         if: matrix.k8 == 'k3d'
@@ -588,7 +612,8 @@ jobs:
 
   k8-upgrade-test:
     name: K8 upgrade test
-    needs: build-image
+    needs: [build-image, check-stable-release]
+    if: needs.check-stable-release.outputs.available == 'true'
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -601,7 +626,7 @@ jobs:
         run: curl -fsSL https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
       - name: Setup k3d
         run: |
-          curl -s https://raw.githubusercontent.com/rancher/k3d/main/install.sh | TAG=${{ env.K3D_VERSION }} bash
+          curl -fsSL https://raw.githubusercontent.com/k3d-io/k3d/main/install.sh | TAG=${{ env.K3D_VERSION }} bash
           ./k8-util/cluster/reset-k3d.sh
       - name: Download streamfy
         uses: actions/download-artifact@v4
@@ -648,7 +673,8 @@ jobs:
 
   local-upgrade-test:
     name: Local upgrade test
-    needs: build
+    needs: [build, check-stable-release]
+    if: needs.check-stable-release.outputs.available == 'true'
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -751,7 +777,9 @@ jobs:
   cli-smoke:
     name: CLI smoke (${{ matrix.test }})
     runs-on: ubuntu-latest
-    needs: build
+    needs: [build, check-stable-release]
+    # SVM install/switch tests require published stable release artifacts.
+    if: matrix.test != 'svm' || needs.check-stable-release.outputs.available == 'true'
     env:
       SPU: 2
       CLI_TEST_RETRIES: 3
@@ -896,7 +924,7 @@ jobs:
       - name: Set up k3d (local-k8)
         if: matrix.run-mode == 'local-k8'
         run: |
-          curl -s https://raw.githubusercontent.com/rancher/k3d/main/install.sh | TAG=${{ env.K3D_VERSION }} bash
+          curl -fsSL https://raw.githubusercontent.com/k3d-io/k3d/main/install.sh | TAG=${{ env.K3D_VERSION }} bash
           ./k8-util/cluster/reset-k3d.sh
       - name: Set up binaries
         run: |
@@ -1022,7 +1050,7 @@ jobs:
       - name: Set up k3d (local-k8)
         if: matrix.run-mode == 'local-k8'
         run: |
-          curl -s https://raw.githubusercontent.com/rancher/k3d/main/install.sh | TAG=${{ env.K3D_VERSION }} bash
+          curl -fsSL https://raw.githubusercontent.com/k3d-io/k3d/main/install.sh | TAG=${{ env.K3D_VERSION }} bash
           ./k8-util/cluster/reset-k3d.sh
           sleep 15
       - name: Set up binaries
@@ -1105,7 +1133,7 @@ jobs:
           docker image save ghcr.io/streamfy-io/streamfy:${{ github.sha }} --output /tmp/streamfy.tar
       - name: Install k3d
         run: |
-          curl -s https://raw.githubusercontent.com/rancher/k3d/main/install.sh | TAG=${{ env.K3D_VERSION }} bash
+          curl -fsSL https://raw.githubusercontent.com/k3d-io/k3d/main/install.sh | TAG=${{ env.K3D_VERSION }} bash
           ./k8-util/cluster/reset-k3d.sh
       - name: Load image into k3d
         run: |
@@ -1139,7 +1167,8 @@ jobs:
   cli-backward-compatibility:
     name: CLI backward compatibility
     runs-on: ubuntu-latest
-    needs: build-image
+    needs: [build-image, check-stable-release]
+    if: needs.check-stable-release.outputs.available == 'true'
     strategy:
       matrix:
         rust-target: [x86_64-unknown-linux-musl]

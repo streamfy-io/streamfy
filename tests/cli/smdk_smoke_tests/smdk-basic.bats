@@ -9,16 +9,29 @@ load "$TEST_HELPER_DIR"/bats-support/load.bash
 load "$TEST_HELPER_DIR"/bats-assert/load.bash
 
 setup_file() {
+    # Bats invokes this from the repo root (make target cwd).
+    REPO_ROOT="$(pwd)"
+    export REPO_ROOT
+
     PROJECT_NAME_PREFIX="$(random_string)"
     export PROJECT_NAME_PREFIX
     TEST_DIR="$(mktemp -d -t smdk-test.XXXXX)"
     export TEST_DIR
 
-    SMDK_TEMPLATE_PATH_FLAG="--template-path $(pwd)/smartmodule"
+    # Template lives under cargo_template/, not the smartmodule/ parent.
+    SMDK_TEMPLATE_PATH_FLAG="--template-path ${REPO_ROOT}/smartmodule/cargo_template"
     export SMDK_TEMPLATE_PATH_FLAG
 
     TESTING_GROUP_NAME_FLAG="--project-group=smdk-smoke-test-group"
     export TESTING_GROUP_NAME_FLAG
+
+    # crates.io name is not published for this fork yet; skip those cases.
+    if curl -fsS "https://crates.io/api/v1/crates/streamfy-smartmodule" >/dev/null 2>&1; then
+        STREAMFY_SMARTMODULE_ON_CRATES_IO=1
+    else
+        STREAMFY_SMARTMODULE_ON_CRATES_IO=0
+    fi
+    export STREAMFY_SMARTMODULE_ON_CRATES_IO
 
     # Create a workspace to facilitate dependency sharing between test cases SMs
     cd $TEST_DIR
@@ -49,6 +62,9 @@ smdk_via_stdin() {
     SMDK_SM_TYPE=filter
     PARAMS_FLAG=--no-params
     SM_CRATE_PATH_FLAG=
+    if [ "$STREAMFY_SMARTMODULE_ON_CRATES_IO" != "1" ]; then
+        skip "streamfy-smartmodule is not published to crates.io yet"
+    fi
     SM_PACKAGE_NAME=$LABEL-$SMDK_SM_TYPE-$PROJECT_NAME_PREFIX
     SMDK_SM_PUBLIC=false
 
@@ -90,6 +106,9 @@ smdk_via_stdin() {
     SMDK_SM_TYPE=filter
     PARAMS_FLAG=--no-params
     SM_CRATE_PATH_FLAG=
+    if [ "$STREAMFY_SMARTMODULE_ON_CRATES_IO" != "1" ]; then
+        skip "streamfy-smartmodule is not published to crates.io yet"
+    fi
     SM_PACKAGE_NAME=$LABEL-$SMDK_SM_TYPE-$PROJECT_NAME_PREFIX
     SMDK_SM_PUBLIC=false
 
@@ -130,6 +149,9 @@ smdk_via_stdin() {
     SMDK_SM_TYPE=map
     PARAMS_FLAG=--no-params
     SM_CRATE_PATH_FLAG=
+    if [ "$STREAMFY_SMARTMODULE_ON_CRATES_IO" != "1" ]; then
+        skip "streamfy-smartmodule is not published to crates.io yet"
+    fi
     SM_PACKAGE_NAME=$LABEL-$SMDK_SM_TYPE-$PROJECT_NAME_PREFIX
     SMDK_SM_PUBLIC=false
 
@@ -171,6 +193,9 @@ smdk_via_stdin() {
     SMDK_SM_TYPE=array-map
     PARAMS_FLAG=--no-params
     SM_CRATE_PATH_FLAG=
+    if [ "$STREAMFY_SMARTMODULE_ON_CRATES_IO" != "1" ]; then
+        skip "streamfy-smartmodule is not published to crates.io yet"
+    fi
     SM_PACKAGE_NAME=$LABEL-$SMDK_SM_TYPE-$PROJECT_NAME_PREFIX
     SMDK_SM_PUBLIC=false
 
@@ -220,6 +245,9 @@ smdk_via_stdin() {
     SMDK_SM_TYPE=filter-map
     PARAMS_FLAG=--no-params
     SM_CRATE_PATH_FLAG=
+    if [ "$STREAMFY_SMARTMODULE_ON_CRATES_IO" != "1" ]; then
+        skip "streamfy-smartmodule is not published to crates.io yet"
+    fi
     SM_PACKAGE_NAME=$LABEL-$SMDK_SM_TYPE-$PROJECT_NAME_PREFIX
     SMDK_SM_PUBLIC=false
 
@@ -262,6 +290,9 @@ smdk_via_stdin() {
     SMDK_SM_TYPE=aggregate
     PARAMS_FLAG=--no-params
     SM_CRATE_PATH_FLAG=
+    if [ "$STREAMFY_SMARTMODULE_ON_CRATES_IO" != "1" ]; then
+        skip "streamfy-smartmodule is not published to crates.io yet"
+    fi
     SM_PACKAGE_NAME=$LABEL-$SMDK_SM_TYPE-$PROJECT_NAME_PREFIX
     SMDK_SM_PUBLIC=false
 
@@ -305,6 +336,9 @@ smdk_via_stdin() {
     SMDK_SM_TYPE=filter
     PARAMS_FLAG=--with-params
     SM_CRATE_PATH_FLAG=
+    if [ "$STREAMFY_SMARTMODULE_ON_CRATES_IO" != "1" ]; then
+        skip "streamfy-smartmodule is not published to crates.io yet"
+    fi
     SM_PACKAGE_NAME=$LABEL-$SMDK_SM_TYPE-$PROJECT_NAME_PREFIX
     SMDK_SM_PUBLIC=false
 
@@ -345,6 +379,9 @@ smdk_via_stdin() {
     SMDK_SM_TYPE=map
     PARAMS_FLAG=--with-params
     SM_CRATE_PATH_FLAG=
+    if [ "$STREAMFY_SMARTMODULE_ON_CRATES_IO" != "1" ]; then
+        skip "streamfy-smartmodule is not published to crates.io yet"
+    fi
     SM_PACKAGE_NAME=$LABEL-$SMDK_SM_TYPE-$PROJECT_NAME_PREFIX
     SMDK_SM_PUBLIC=false
 
@@ -380,6 +417,9 @@ smdk_via_stdin() {
     SMDK_SM_TYPE=array-map
     PARAMS_FLAG=--with-params
     SM_CRATE_PATH_FLAG=
+    if [ "$STREAMFY_SMARTMODULE_ON_CRATES_IO" != "1" ]; then
+        skip "streamfy-smartmodule is not published to crates.io yet"
+    fi
     SM_PACKAGE_NAME=$LABEL-$SMDK_SM_TYPE-$PROJECT_NAME_PREFIX
     SMDK_SM_PUBLIC=false
 
@@ -415,6 +455,9 @@ smdk_via_stdin() {
     SMDK_SM_TYPE=filter-map
     PARAMS_FLAG=--with-params
     SM_CRATE_PATH_FLAG=
+    if [ "$STREAMFY_SMARTMODULE_ON_CRATES_IO" != "1" ]; then
+        skip "streamfy-smartmodule is not published to crates.io yet"
+    fi
     SM_PACKAGE_NAME=$LABEL-$SMDK_SM_TYPE-$PROJECT_NAME_PREFIX
     SMDK_SM_PUBLIC=false
 
@@ -450,6 +493,9 @@ smdk_via_stdin() {
     SMDK_SM_TYPE=aggregate
     PARAMS_FLAG=--with-params
     SM_CRATE_PATH_FLAG=
+    if [ "$STREAMFY_SMARTMODULE_ON_CRATES_IO" != "1" ]; then
+        skip "streamfy-smartmodule is not published to crates.io yet"
+    fi
     SM_PACKAGE_NAME=$LABEL-$SMDK_SM_TYPE-$PROJECT_NAME_PREFIX
     SMDK_SM_PUBLIC=false
 
@@ -486,7 +532,7 @@ smdk_via_stdin() {
     LABEL=repo
     SMDK_SM_TYPE=filter
     PARAMS_FLAG=--no-params
-    SM_CRATE_PATH_FLAG="--sm-crate-path $(pwd)/crates/streamfy-smartmodule"
+    SM_CRATE_PATH_FLAG="--sm-crate-path ${REPO_ROOT}/crates/streamfy-smartmodule"
     SM_PACKAGE_NAME=$LABEL-$SMDK_SM_TYPE-$PROJECT_NAME_PREFIX
     SMDK_SM_PUBLIC=false
 
@@ -526,7 +572,7 @@ smdk_via_stdin() {
     LABEL=repo
     SMDK_SM_TYPE=map
     PARAMS_FLAG=--no-params
-    SM_CRATE_PATH_FLAG="--sm-crate-path $(pwd)/crates/streamfy-smartmodule"
+    SM_CRATE_PATH_FLAG="--sm-crate-path ${REPO_ROOT}/crates/streamfy-smartmodule"
     SM_PACKAGE_NAME=$LABEL-$SMDK_SM_TYPE-$PROJECT_NAME_PREFIX
     SMDK_SM_PUBLIC=false
 
@@ -567,7 +613,7 @@ smdk_via_stdin() {
     LABEL=repo
     SMDK_SM_TYPE=array-map
     PARAMS_FLAG=--no-params
-    SM_CRATE_PATH_FLAG="--sm-crate-path $(pwd)/crates/streamfy-smartmodule"
+    SM_CRATE_PATH_FLAG="--sm-crate-path ${REPO_ROOT}/crates/streamfy-smartmodule"
     SM_PACKAGE_NAME=$LABEL-$SMDK_SM_TYPE-$PROJECT_NAME_PREFIX
     SMDK_SM_PUBLIC=false
 
@@ -616,7 +662,7 @@ smdk_via_stdin() {
     LABEL=repo
     SMDK_SM_TYPE=filter-map
     PARAMS_FLAG=--no-params
-    SM_CRATE_PATH_FLAG="--sm-crate-path $(pwd)/crates/streamfy-smartmodule"
+    SM_CRATE_PATH_FLAG="--sm-crate-path ${REPO_ROOT}/crates/streamfy-smartmodule"
     SM_PACKAGE_NAME=$LABEL-$SMDK_SM_TYPE-$PROJECT_NAME_PREFIX
     SMDK_SM_PUBLIC=false
 
@@ -657,7 +703,7 @@ smdk_via_stdin() {
     LABEL=repo
     SMDK_SM_TYPE=aggregate
     PARAMS_FLAG=--no-params
-    SM_CRATE_PATH_FLAG="--sm-crate-path $(pwd)/crates/streamfy-smartmodule"
+    SM_CRATE_PATH_FLAG="--sm-crate-path ${REPO_ROOT}/crates/streamfy-smartmodule"
     SM_PACKAGE_NAME=$LABEL-$SMDK_SM_TYPE-$PROJECT_NAME_PREFIX
     SMDK_SM_PUBLIC=false
 
@@ -700,7 +746,7 @@ smdk_via_stdin() {
     LABEL=repo-params
     SMDK_SM_TYPE=filter
     PARAMS_FLAG=--with-params
-    SM_CRATE_PATH_FLAG="--sm-crate-path $(pwd)/crates/streamfy-smartmodule"
+    SM_CRATE_PATH_FLAG="--sm-crate-path ${REPO_ROOT}/crates/streamfy-smartmodule"
     SM_PACKAGE_NAME=$LABEL-$SMDK_SM_TYPE-$PROJECT_NAME_PREFIX
     SMDK_SM_PUBLIC=false
 
@@ -740,7 +786,7 @@ smdk_via_stdin() {
     LABEL=repo-params
     SMDK_SM_TYPE=map
     PARAMS_FLAG=--with-params
-    SM_CRATE_PATH_FLAG="--sm-crate-path $(pwd)/crates/streamfy-smartmodule"
+    SM_CRATE_PATH_FLAG="--sm-crate-path ${REPO_ROOT}/crates/streamfy-smartmodule"
     SM_PACKAGE_NAME=$LABEL-$SMDK_SM_TYPE-$PROJECT_NAME_PREFIX
     SMDK_SM_PUBLIC=false
 
@@ -775,7 +821,7 @@ smdk_via_stdin() {
     LABEL=repo-params
     SMDK_SM_TYPE=array-map
     PARAMS_FLAG=--with-params
-    SM_CRATE_PATH_FLAG="--sm-crate-path $(pwd)/crates/streamfy-smartmodule"
+    SM_CRATE_PATH_FLAG="--sm-crate-path ${REPO_ROOT}/crates/streamfy-smartmodule"
     SM_PACKAGE_NAME=$LABEL-$SMDK_SM_TYPE-$PROJECT_NAME_PREFIX
     SMDK_SM_PUBLIC=false
 
@@ -810,7 +856,7 @@ smdk_via_stdin() {
     LABEL=repo-params
     SMDK_SM_TYPE=filter-map
     PARAMS_FLAG=--with-params
-    SM_CRATE_PATH_FLAG="--sm-crate-path $(pwd)/crates/streamfy-smartmodule"
+    SM_CRATE_PATH_FLAG="--sm-crate-path ${REPO_ROOT}/crates/streamfy-smartmodule"
     SM_PACKAGE_NAME=$LABEL-$SMDK_SM_TYPE-$PROJECT_NAME_PREFIX
     SMDK_SM_PUBLIC=false
 
@@ -845,7 +891,7 @@ smdk_via_stdin() {
     LABEL=repo-params
     SMDK_SM_TYPE=aggregate
     PARAMS_FLAG=--with-params
-    SM_CRATE_PATH_FLAG="--sm-crate-path $(pwd)/crates/streamfy-smartmodule"
+    SM_CRATE_PATH_FLAG="--sm-crate-path ${REPO_ROOT}/crates/streamfy-smartmodule"
     SM_PACKAGE_NAME=$LABEL-$SMDK_SM_TYPE-$PROJECT_NAME_PREFIX
     SMDK_SM_PUBLIC=false
 
@@ -878,7 +924,7 @@ smdk_via_stdin() {
 
 @test "Test Lookback" {
     # Test with smartmodule example with Lookback
-    cd "$(pwd)/smartmodule/examples/filter_look_back/"
+    cd "${REPO_ROOT}/smartmodule/examples/filter_look_back/"
 
     # Build
     run $SMDK_BIN build
@@ -896,7 +942,7 @@ smdk_via_stdin() {
 
 @test "Test output with visible keys" {
     # Test with smartmodule example with Lookback
-    cd "$(pwd)/smartmodule/examples/filter_look_back/"
+    cd "${REPO_ROOT}/smartmodule/examples/filter_look_back/"
 
     # Build
     run $SMDK_BIN build
@@ -914,7 +960,7 @@ smdk_via_stdin() {
 
 @test "Test using SmartModuleRecord on streamfy-smartmodule-map-with-timestamp" {
     # Test with smartmodule example with timestamp
-    cd "$(pwd)/smartmodule/examples/map_with_timestamp/"
+    cd "${REPO_ROOT}/smartmodule/examples/map_with_timestamp/"
 
     # Set Date Variables
     DATE_NOW_YEAR="$(date --utc +%Y)"
@@ -933,7 +979,7 @@ smdk_via_stdin() {
 
 @test "Test using SmartModuleRecord on streamfy-smartmodule-aggregate-with-timestamp" {
     # Test with smartmodule example with timestamp
-    cd "$(pwd)/smartmodule/examples/aggregate_with_timestamp/"
+    cd "${REPO_ROOT}/smartmodule/examples/aggregate_with_timestamp/"
 
     # Set Date Variables
     DATE_NOW_YEAR="$(date --utc +%Y)"
@@ -952,7 +998,7 @@ smdk_via_stdin() {
 
 @test "Test using SmartModuleRecord on streamfy-filter-look-back-with-timestamps" {
     # Test with smartmodule example with Lookback
-    cd "$(pwd)/smartmodule/examples/filter_look_back_with_timestamps/"
+    cd "${REPO_ROOT}/smartmodule/examples/filter_look_back_with_timestamps/"
 
     # Build
     run $SMDK_BIN build
@@ -970,7 +1016,7 @@ smdk_via_stdin() {
 
 @test "Test using SmartModuleRecord on streamfy-array-map-json-array-with-timestamp" {
     # Test with smartmodule example with Array Map with Timestamp
-    cd "$(pwd)/smartmodule/examples/array_map_json_array_with_timestamp/"
+    cd "${REPO_ROOT}/smartmodule/examples/array_map_json_array_with_timestamp/"
 
     # Set Date Variables
     DATE_NOW_YEAR="$(date --utc +%Y)"
@@ -992,7 +1038,7 @@ smdk_via_stdin() {
 
 @test "Test key value on filter-odd-key" {
     # Test with smartmodule example with Array Map with Timestamp
-    cd "$(pwd)/smartmodule/examples/filter_odd_key/"
+    cd "${REPO_ROOT}/smartmodule/examples/filter_odd_key/"
 
     # Build
     run $SMDK_BIN build

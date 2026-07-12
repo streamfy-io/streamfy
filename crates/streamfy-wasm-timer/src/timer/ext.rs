@@ -29,7 +29,7 @@ pub trait TryFutureExt: TryFuture + Sized {
     /// ```no_run
     /// use std::time::Duration;
     /// use futures::prelude::*;
-    /// use wasm_timer::TryFutureExt;
+    /// use streamfy_wasm_timer::TryFutureExt;
     ///
     /// # fn long_future() -> impl TryFuture<Ok = (), Error = std::io::Error> {
     /// #     futures::future::ok(())
@@ -37,14 +37,7 @@ pub trait TryFutureExt: TryFuture + Sized {
     /// #
     /// fn main() {
     ///     let future = long_future();
-    ///     let timed_out = future.timeout(Duration::from_secs(1));
-    ///
-    ///     async_std::task::block_on(async {
-    ///         match timed_out.await {
-    ///             Ok(item) => println!("got {:?} within enough time!", item),
-    ///             Err(_) => println!("took too long to produce the item"),
-    ///         }
-    ///     })
+    ///     let _timed_out = future.timeout(Duration::from_secs(1));
     /// }
     /// ```
     fn timeout(self, dur: Duration) -> Timeout<Self>

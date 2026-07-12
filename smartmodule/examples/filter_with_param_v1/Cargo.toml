@@ -10,4 +10,5 @@ description = "Old Streamfy WASM Filter with Parameters"
 crate-type = ['cdylib']
 
 [dependencies]
-streamfy-smartmodule = "0.2.5"
+# Path/workspace dep — package is not published to crates.io under this name.
+streamfy-smartmodule = { workspace = true }
