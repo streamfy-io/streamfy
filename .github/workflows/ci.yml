@@ -774,12 +774,12 @@ jobs:
           if-no-files-found: ignore
 
   # CLI bats smoke matrix (streamfy / smdk / cdk / svm)
+  # Note: job-level `if` cannot use `matrix` when `needs` is present (workflow fails to start).
+  # SVM steps are gated on check-stable-release instead.
   cli-smoke:
     name: CLI smoke (${{ matrix.test }})
     runs-on: ubuntu-latest
     needs: [build, check-stable-release]
-    # SVM install/switch tests require published stable release artifacts.
-    if: matrix.test != 'svm' || needs.check-stable-release.outputs.available == 'true'
     env:
       SPU: 2
       CLI_TEST_RETRIES: 3
@@ -862,18 +862,22 @@ jobs:
           echo "$HOME/bin" >> "$GITHUB_PATH"
           make CDK_BIN=$HOME/bin/cdk cli-cdk-smoke
       - name: Download svm
-        if: matrix.test == 'svm'
+        # Requires a published stable release; skip (no-op success) until then.
+        if: matrix.test == 'svm' && needs.check-stable-release.outputs.available == 'true'
         uses: actions/download-artifact@v4
         with:
           name: svm-${{ env.RUST_TARGET }}
           path: ~/bin
       - name: Run SVM smoke
-        if: matrix.test == 'svm'
+        if: matrix.test == 'svm' && needs.check-stable-release.outputs.available == 'true'
         timeout-minutes: 20
         run: |
           chmod +x ~/bin/svm
           echo "$HOME/bin" >> "$GITHUB_PATH"
           make SVM_BIN=$HOME/bin/svm cli-svm-smoke
+      - name: Skip SVM smoke (no stable release)
+        if: matrix.test == 'svm' && needs.check-stable-release.outputs.available != 'true'
+        run: echo "Skipping SVM smoke — no non-prerelease GitHub release yet"
       - name: Diagnostics on failure
         if: ${{ !success() && matrix.test != 'svm' }}
         timeout-minutes: 5
