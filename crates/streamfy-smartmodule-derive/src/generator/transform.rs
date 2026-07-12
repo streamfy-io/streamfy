@@ -29,6 +29,7 @@ pub(crate) fn generate_transform(
                 };
 
                 // DECODING
+                #[link(wasm_import_module = "env")]
                 unsafe extern "C" {
                     fn copy_records(putr: i32, len: i32);
                 }

@@ -3,7 +3,9 @@ default: build
 SMDK_BIN ?= smdk
 SMDK_OPT ?=
 
-SUBDIRS := $(filter-out target/., $(wildcard */.))
+# filter_with_param_v1 uses the pre-init #[smartmodule(filter, params)] API which
+# current streamfy-smartmodule-derive rejects. Keep sources for reference; skip build.
+SUBDIRS := $(filter-out target/. filter_with_param_v1/., $(wildcard */.))
 
 .PHONY: build $(SUBDIRS)
 

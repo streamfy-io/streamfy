@@ -25,6 +25,7 @@ pub fn generate_look_back_smartmodule(sm_func: &SmartModuleFn) -> TokenStream {
                 };
 
                 // DECODING
+                #[link(wasm_import_module = "env")]
                 unsafe extern "C" {
                     fn copy_records(putr: i32, len: i32);
                 }
