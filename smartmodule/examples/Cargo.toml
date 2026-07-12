@@ -15,7 +15,8 @@ members = [
     "filter_odd_key",
     "filter_json",
     "filter_regex",
-    "filter_with_param_v1",
+    # filter_with_param_v1: historical #[smartmodule(filter, params)] API — not buildable
+    # with current derive; kept on disk for reference only.
     "filter_hashset",
     "map",
     "map_double",

@@ -15,6 +15,7 @@ use anyhow::Result;
 use streamfy_types::PartitionCount;
 use streamfy_types::ReplicationFactor;
 use streamfy::metadata::topic::CleanupPolicy;
+use streamfy::metadata::topic::CompactionPolicy;
 use streamfy::metadata::topic::ReplicaSpec;
 use streamfy::metadata::topic::SegmentBasedPolicy;
 use streamfy::metadata::topic::TopicStorageConfig;
@@ -225,10 +226,38 @@ impl CreateTopicOpt {
         };
 
         let mut topic_spec: TopicSpec = replica_spec.into();
-        if let Some(retention) = self.setting.retention_time {
-            topic_spec.set_cleanup_policy(CleanupPolicy::Segment(SegmentBasedPolicy {
-                time_in_seconds: retention.as_secs() as u32,
-            }));
+
+        // Determine cleanup policy from --cleanup-policy and --retention-time flags
+        let cleanup_policy_str = self.setting.cleanup_policy.as_deref();
+        match cleanup_policy_str {
+            Some("compact") => {
+                topic_spec.set_cleanup_policy(CleanupPolicy::Compact(CompactionPolicy::default()));
+            }
+            Some("compact,delete") | Some("compact+delete") => {
+                let segment_policy = if let Some(retention) = self.setting.retention_time {
+                    SegmentBasedPolicy {
+                        time_in_seconds: retention.as_secs() as u32,
+                    }
+                } else {
+                    SegmentBasedPolicy::default()
+                };
+                topic_spec.set_cleanup_policy(CleanupPolicy::CompactAndDelete(
+                    CompactionPolicy::default(),
+                    segment_policy,
+                ));
+            }
+            Some("segment") | None => {
+                if let Some(retention) = self.setting.retention_time {
+                    topic_spec.set_cleanup_policy(CleanupPolicy::Segment(SegmentBasedPolicy {
+                        time_in_seconds: retention.as_secs() as u32,
+                    }));
+                }
+            }
+            Some(other) => {
+                return Err(CliError::InvalidArg(format!(
+                    "Invalid cleanup policy '{other}'. Valid values: segment, compact, compact,delete"
+                )).into());
+            }
         }
 
         if let Some(compression_type) = self.setting.compression_type {
@@ -319,6 +348,13 @@ pub struct TopicConfigOpt {
     /// Ex: `2048`, '2 Ki', '10 MiB', `1 GB`
     #[arg(long, value_name = "bytes")]
     max_partition_size: Option<bytesize::ByteSize>,
+
+    /// Cleanup policy for the topic.
+    /// Values: 'segment' (TTL/size-based deletion, default),
+    ///         'compact' (key-based log compaction),
+    ///         'compact,delete' (compaction + TTL/size deletion).
+    #[arg(long, value_name = "policy")]
+    cleanup_policy: Option<String>,
 
     /// Deduplicate records in the topic
     #[arg(long)]

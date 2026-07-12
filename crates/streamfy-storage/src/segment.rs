@@ -458,6 +458,19 @@ impl Segment<MutLogIndex, MutFileRecords> {
     pub async fn flush(&mut self) -> Result<(), StorageError> {
         self.msg_log.flush().await.map_err(|err| err.into())
     }
+
+    /// Write raw pre-encoded batch bytes to the segment, preserving the original offset.
+    /// This is used by compaction to write batches without resetting their base offset.
+    /// `new_end_offset` should be `batch.get_last_offset() + 1`.
+    pub(crate) async fn write_raw_batch(
+        &mut self,
+        raw_bytes: &[u8],
+        new_end_offset: Offset,
+    ) -> Result<()> {
+        self.msg_log.write_raw(raw_bytes).await?;
+        self.end_offset = new_end_offset;
+        Ok(())
+    }
 }
 
 #[cfg(test)]

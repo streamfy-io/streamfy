@@ -200,14 +200,19 @@ mod test {
             .iter()
             .map(|record| record.timestamp_delta())
             .collect();
-        assert_eq!(records_delta[0], 0);
+        // Allow 1ms slack: Windows timer resolution can make the first delta non-zero.
         assert!(
-            (100..150).contains(&records_delta[1]),
+            (0..=1).contains(&records_delta[0]),
+            "records_delta[0]: {}",
+            records_delta[0]
+        );
+        assert!(
+            (99..151).contains(&records_delta[1]),
             "records_delta[1]: {}",
             records_delta[1]
         );
         assert!(
-            (200..250).contains(&records_delta[2]),
+            (199..251).contains(&records_delta[2]),
             "records_delta[2]: {}",
             records_delta[2]
         );

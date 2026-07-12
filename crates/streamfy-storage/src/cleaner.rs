@@ -3,12 +3,13 @@ use std::time::Duration;
 use std::ops::Div;
 use std::ops::Rem;
 
-use tracing::{debug, info, instrument};
+use tracing::{debug, info, warn, instrument};
 
 use streamfy_future::task::spawn;
 use streamfy_future::timer::sleep;
 use streamfy_types::event::StickyEvent;
 
+use crate::compact;
 use crate::config::{SharedReplicaConfig, StorageConfig};
 use crate::replica::ReplicaSize;
 use crate::segments::SharedSegments;
@@ -74,6 +75,7 @@ impl Cleaner {
                 _ = sleep(sleep_period) => {
                     self.enforce_size().await;
                     self.enforce_ttl().await;
+                    self.enforce_compaction().await;
                 }
             }
         }
@@ -107,6 +109,30 @@ impl Cleaner {
 
             let read = self.segments.read().await;
             self.replica_size.store_prev(read.occupied_memory());
+        }
+    }
+
+    #[instrument(skip(self))]
+    async fn enforce_compaction(&self) {
+        if !self.replica_config.compaction_enabled {
+            return;
+        }
+        match compact::try_compact(&self.replica_config, &self.segments).await {
+            Ok(Some(result)) => {
+                info!(
+                    records_removed = result.records_removed,
+                    segments_rewritten = result.segments_rewritten,
+                    "compaction completed"
+                );
+                let read = self.segments.read().await;
+                self.replica_size.store_prev(read.occupied_memory());
+            }
+            Ok(None) => {
+                debug!("compaction skipped (not eligible)");
+            }
+            Err(err) => {
+                warn!("compaction failed: {:#}", err);
+            }
         }
     }
 

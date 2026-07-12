@@ -17,6 +17,7 @@ use streamfy_protocol::record::{Batch, BatchRecords};
 use streamfy_protocol::record::RecordSet;
 
 use crate::checkpoint::HW_CHECKPOINT_FILE_NAME;
+use crate::compact;
 use crate::{OffsetInfo, checkpoint::CheckPoint};
 use crate::segments::SharedSegments;
 use crate::segment::MutableSegment;
@@ -229,6 +230,9 @@ impl FileReplica {
 
         info!(replica_dir = %replica_dir.display(),  "creating");
         create_dir_all(&replica_dir).await?; // ensure dir_name exits
+
+        // Clean up any leftover .compact/ directory from a previous crashed compaction.
+        compact::cleanup_compact_dir(&replica_dir).await;
 
         let mut rep_option = replica_config.clone();
         rep_option.base_dir = replica_dir;

@@ -74,7 +74,7 @@ smoke-test-local: TEST_ARG_EXTRA=--local  $(EXTRA_ARG)
 smoke-test-local: smoke-test
 
 smoke-test-stream: TEST_ARG_EXTRA=--local $(EXTRA_ARG)
-smoke-test-stream: TEST_ARG_CONSUMER_WAIT=--consumer-wait=true
+smoke-test-stream: TEST_ARG_CONSUMER_WAIT=--consumer-wait
 smoke-test-stream: smoke-test
 
 smoke-test-tls: TEST_ARG_EXTRA=--tls --local $(EXTRA_ARG)
