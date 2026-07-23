@@ -227,10 +227,7 @@ mod context {
                         }
 
                         if let Some(err) = self.take_action_error(&key).await {
-                            return Err(IoError::new(
-                                ErrorKind::Other,
-                                format!("store action failed: {err}"),
-                            ));
+                            return Err(IoError::other(format!("store action failed: {err}")));
                         }
 
                         debug!("{} store, waiting for delete event", S::LABEL);
@@ -238,10 +235,7 @@ mod context {
                         select! {
                             _ = &mut timer => {
                                 if let Some(err) = self.take_action_error(&key).await {
-                                    return Err(IoError::new(
-                                        ErrorKind::Other,
-                                        format!("store action failed: {err}"),
-                                    ));
+                                    return Err(IoError::other(format!("store action failed: {err}")));
                                 }
                                 return Err(IoError::new(
                                     ErrorKind::TimedOut,
@@ -326,10 +320,9 @@ mod context {
                     }
 
                     if let Some(err) = self.take_action_error(key).await {
-                        return Err(IoError::new(
-                            ErrorKind::Other,
-                            format!("store action failed: {debug_action}: {err}"),
-                        ));
+                        return Err(IoError::other(format!(
+                            "store action failed: {debug_action}: {err}"
+                        )));
                     }
 
                     trace!(SPEC = %S::LABEL, "waiting");
@@ -337,10 +330,9 @@ mod context {
                     select! {
                         _ = &mut timer => {
                             if let Some(err) = self.take_action_error(key).await {
-                                return Err(IoError::new(
-                                    ErrorKind::Other,
-                                    format!("store action failed: {debug_action}: {err}"),
-                                ));
+                                return Err(IoError::other(format!(
+                                    "store action failed: {debug_action}: {err}"
+                                )));
                             }
                             return Err(IoError::new(
                                 ErrorKind::TimedOut,
