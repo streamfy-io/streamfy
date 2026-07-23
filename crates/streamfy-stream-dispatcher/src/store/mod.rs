@@ -6,6 +6,7 @@ pub use streamfy_stream_model::store::*;
 
 mod context {
 
+    use std::collections::HashMap;
     use std::sync::Arc;
     use std::io::Error as IoError;
     use std::io::ErrorKind;
@@ -15,8 +16,10 @@ mod context {
     use streamfy_stream_model::core::MetadataItem;
     use tracing::error;
     use async_channel::{Sender, Receiver, bounded, SendError};
+    use async_lock::Mutex;
     use once_cell::sync::Lazy;
     use tokio::select;
+    use tokio::sync::Notify;
     use tracing::{debug, trace};
 
     use streamfy_future::timer::sleep;
@@ -50,6 +53,10 @@ mod context {
         sender: Sender<WSAction<S, MetaContext>>,
         receiver: Receiver<WSAction<S, MetaContext>>,
         wait_time: u64,
+        /// Apply/update failures keyed by object key, for waiters to fail fast
+        /// with the real backend error instead of only timing out.
+        action_errors: Arc<Mutex<HashMap<String, String>>>,
+        action_notify: Arc<Notify>,
     }
 
     impl<S, MetaContext> StoreContext<S, MetaContext>
@@ -70,6 +77,8 @@ mod context {
                 sender,
                 receiver,
                 wait_time: *MAX_WAIT_TIME,
+                action_errors: Arc::new(Mutex::new(HashMap::new())),
+                action_notify: Arc::new(Notify::new()),
             }
         }
 
@@ -99,6 +108,28 @@ mod context {
 
         pub fn receiver(&self) -> Receiver<WSAction<S, MetaContext>> {
             self.receiver.clone()
+        }
+
+        /// Record a dispatcher apply/update failure so imperative waiters can
+        /// surface the backend error instead of hanging until timeout.
+        pub async fn report_action_error(&self, key: impl Display, error: impl Display) {
+            let key = key.to_string();
+            let error = error.to_string();
+            error!(
+                %key,
+                %error,
+                spec = S::LABEL,
+                "metadata action failed"
+            );
+            self.action_errors.lock().await.insert(key, error);
+            self.action_notify.notify_waiters();
+        }
+
+        async fn take_action_error(&self, key: &S::IndexKey) -> Option<String>
+        where
+            S::IndexKey: Display,
+        {
+            self.action_errors.lock().await.remove(&key.to_string())
         }
     }
 
@@ -173,13 +204,21 @@ mod context {
         ///
         /// This should only used in the imperative code such as API Server where confirmation is needed.  
         /// Controller should only use Action.
-        pub async fn delete(&self, key: S::IndexKey) -> Result<(), IoError> {
+        pub async fn delete(&self, key: S::IndexKey) -> Result<(), IoError>
+        where
+            S::IndexKey: Display,
+        {
+            // Drop any stale error from a prior attempt on this key.
+            let _ = self.take_action_error(&key).await;
+
             match self.sender.send(WSAction::Delete(key.clone())).await {
                 Ok(_) => {
                     // wait for object created in the store
 
                     let mut timer = sleep(Duration::from_secs(self.wait_time));
                     let mut spec_listener = self.change_listener();
+                    let action_notified = self.action_notify.notified();
+                    tokio::pin!(action_notified);
                     loop {
                         // check if we can find old object
                         if !self.store.contains_key(&key).await {
@@ -187,10 +226,17 @@ mod context {
                             return Ok(());
                         }
 
+                        if let Some(err) = self.take_action_error(&key).await {
+                            return Err(IoError::other(format!("store action failed: {err}")));
+                        }
+
                         debug!("{} store, waiting for delete event", S::LABEL);
 
                         select! {
                             _ = &mut timer => {
+                                if let Some(err) = self.take_action_error(&key).await {
+                                    return Err(IoError::other(format!("store action failed: {err}")));
+                                }
                                 return Err(IoError::new(
                                     ErrorKind::TimedOut,
                                     format!("store timed out: {} for {:?}, timer: {} secs", S::LABEL,key,self.wait_time)
@@ -200,6 +246,9 @@ mod context {
 
                                 let changes = spec_listener.sync_changes().await;
                                 trace!("{} received changes: {:#?}",S::LABEL,changes);
+                            }
+                            _ = &mut action_notified => {
+                                action_notified.set(self.action_notify.notified());
                             }
                         }
                     }
@@ -243,10 +292,15 @@ mod context {
         {
             trace!("{} applying action: {:#?}", S::LABEL, action);
 
+            // Drop any stale error from a prior attempt on this key.
+            let _ = self.take_action_error(key).await;
+
             let current_value = self.store.value(key).await;
 
             let mut spec_listener = self.change_listener();
             let mut timer = sleep(timeout);
+            let action_notified = self.action_notify.notified();
+            tokio::pin!(action_notified);
 
             let debug_action = action.to_string();
             let mut loop_count: u16 = 0;
@@ -265,10 +319,21 @@ mod context {
                         }
                     }
 
+                    if let Some(err) = self.take_action_error(key).await {
+                        return Err(IoError::other(format!(
+                            "store action failed: {debug_action}: {err}"
+                        )));
+                    }
+
                     trace!(SPEC = %S::LABEL, "waiting");
 
                     select! {
                         _ = &mut timer => {
+                            if let Some(err) = self.take_action_error(key).await {
+                                return Err(IoError::other(format!(
+                                    "store action failed: {debug_action}: {err}"
+                                )));
+                            }
                             return Err(IoError::new(
                                 ErrorKind::TimedOut,
                                 format!("store timed out: {debug_action} loop: {loop_count}, timer: {} ms", timeout.as_millis()),
@@ -278,6 +343,11 @@ mod context {
                         _ = spec_listener.listen() => {
                             let changes = spec_listener.sync_changes().await;
                             trace!("{} received changes: {:#?}",S::LABEL,changes);
+                        }
+
+                        _ = &mut action_notified => {
+                            // Re-arm for the next notification after checking errors above.
+                            action_notified.set(self.action_notify.notified());
                         }
                     }
 

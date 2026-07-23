@@ -195,25 +195,37 @@ where
     async fn process_ws_action(&mut self, action: WSAction<S, M>) {
         match action {
             WSAction::Apply(obj) => {
+                let key = obj.key_owned();
                 if let Err(err) = self.client.apply(obj).await {
-                    error!("error: {}, applying {}", S::LABEL, err);
+                    self.ctx
+                        .report_action_error(&key, format!("applying {}: {err}", S::LABEL))
+                        .await;
                 }
             }
             WSAction::UpdateSpec((key, spec)) => {
                 let read_guard = self.ctx.store().read().await;
                 if let Some(obj) = read_guard.get(&key) {
                     let meta = obj.inner().ctx().item().clone();
+                    drop(read_guard);
                     if let Err(err) = self.client.update_spec(meta, spec).await {
-                        error!("error: {:#?}, update spec {:#?}", S::LABEL, err);
+                        self.ctx
+                            .report_action_error(&key, format!("update spec {}: {err:#}", S::LABEL))
+                            .await;
                     }
                 } else {
+                    drop(read_guard);
                     // create new ctx
                     if let Err(err) = self
                         .client
-                        .update_spec_by_key(key, &self.namespace, spec)
+                        .update_spec_by_key(key.clone(), &self.namespace, spec)
                         .await
                     {
-                        error!("error: {:#?}, update spec by key {:#?}", S::LABEL, err);
+                        self.ctx
+                            .report_action_error(
+                                &key,
+                                format!("update spec by key {}: {err:#}", S::LABEL),
+                            )
+                            .await;
                     }
                 };
             }
@@ -223,6 +235,13 @@ where
                     obj.inner().ctx().item().clone()
                 } else {
                     error!("update status: {} without existing item: {}", S::LABEL, key);
+                    drop(read_guard);
+                    self.ctx
+                        .report_action_error(
+                            &key,
+                            format!("update status {} without existing item", S::LABEL),
+                        )
+                        .await;
                     return;
                 };
                 drop(read_guard);
@@ -264,9 +283,22 @@ where
                                     key,
                                     status
                                 );
+                                self.ctx
+                                    .report_action_error(
+                                        &key,
+                                        format!("patch status {}: {err}", S::LABEL),
+                                    )
+                                    .await;
                             } else {
                                 tracing::info!("successfully patched status for {key}");
                             }
+                        } else {
+                            self.ctx
+                                .report_action_error(
+                                    &key,
+                                    format!("update status {}: {err}", S::LABEL),
+                                )
+                                .await;
                         }
                     }
                 }
@@ -274,35 +306,52 @@ where
             WSAction::Delete(key) => {
                 let read_guard = self.ctx.store().read().await;
                 if let Some(obj) = read_guard.get(&key) {
-                    if let Err(err) = self
-                        .client
-                        .delete_item::<S>(obj.inner().ctx().item().clone())
-                        .await
-                    {
-                        error!("error: {}, deleting {}", S::LABEL, err);
+                    let meta = obj.inner().ctx().item().clone();
+                    drop(read_guard);
+                    if let Err(err) = self.client.delete_item::<S>(meta).await {
+                        self.ctx
+                            .report_action_error(&key, format!("deleting {}: {err}", S::LABEL))
+                            .await;
                     }
                 } else {
+                    drop(read_guard);
                     error!(
                         key = &*format!("{key}"),
                         "Store: trying to delete non existent key",
                     );
+                    self.ctx
+                        .report_action_error(
+                            &key,
+                            format!("delete {}: key not found in store", S::LABEL),
+                        )
+                        .await;
                 }
             }
             WSAction::DeleteFinal(key) => {
                 let read_guard = self.ctx.store().read().await;
                 if let Some(obj) = read_guard.get(&key) {
-                    if let Err(err) = self
-                        .client
-                        .finalize_delete_item::<S>(obj.inner().ctx().item().clone())
-                        .await
-                    {
-                        error!("error: {}, deleting final {}", S::LABEL, err);
+                    let meta = obj.inner().ctx().item().clone();
+                    drop(read_guard);
+                    if let Err(err) = self.client.finalize_delete_item::<S>(meta).await {
+                        self.ctx
+                            .report_action_error(
+                                &key,
+                                format!("deleting final {}: {err}", S::LABEL),
+                            )
+                            .await;
                     }
                 } else {
+                    drop(read_guard);
                     error!(
                         key = &*format!("{key}"),
                         "Store: trying to delete final non existent key",
                     );
+                    self.ctx
+                        .report_action_error(
+                            &key,
+                            format!("delete final {}: key not found in store", S::LABEL),
+                        )
+                        .await;
                 }
             }
         }

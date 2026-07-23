@@ -407,6 +407,12 @@ jobs:
       CI: true
       SERVER_LOG: streamfy=info
       K8_NAMESPACE: streamfy-test
+      # Align SC/client waits: client socket must outlive SC create_spec + partition provision.
+      # Defaults (dispatcher 10s, socket 60s) flake on local-k8; 300s dispatcher alone hits client 60s.
+      FLV_DISPATCHER_WAIT: "90"
+      FLV_TOPIC_WAIT: "90"
+      FLV_SOCKET_WAIT: "200"
+      FLV_METADATA_TIMEOUT: "200000"
     steps:
       - uses: actions/checkout@v4
       - name: Install Helm
@@ -467,13 +473,19 @@ jobs:
       - name: Diagnostics on failure
         if: ${{ !success() }}
         timeout-minutes: 5
-        run: streamfy cluster diagnostics || true
+        run: |
+          streamfy cluster diagnostics || true
+          kubectl get topics,partitions,spus,mirrors -A -o wide || true
+          ls -la "${HOME}/.streamfy/log" || true
+          cat "${HOME}/.streamfy/log/flv_sc.log" || true
       - name: Upload diagnostics
         if: ${{ !success() }}
         uses: actions/upload-artifact@v4
         with:
           name: local-${{ matrix.run-mode }}-${{ matrix.test }}-diag
-          path: diagnostics*.gz
+          path: |
+            diagnostics*.gz
+            /home/runner/.streamfy/log/**
           retention-days: 5
           if-no-files-found: ignore
 
@@ -1033,6 +1045,11 @@ jobs:
         run-mode: [local, local-k8]
     env:
       RUST_TARGET: x86_64-unknown-linux-musl
+      # Align SC/client waits for local-k8 (see local-cluster-test)
+      FLV_DISPATCHER_WAIT: "90"
+      FLV_TOPIC_WAIT: "90"
+      FLV_SOCKET_WAIT: "200"
+      FLV_METADATA_TIMEOUT: "200000"
     steps:
       - uses: actions/checkout@v4
       - name: Setup BATS
@@ -1067,6 +1084,8 @@ jobs:
       - name: Start cluster
         timeout-minutes: 10
         run: streamfy cluster start --${{ matrix.run-mode }}
+      - name: Wait for cluster
+        run: sleep 15
       - name: Run mirroring smoke
         timeout-minutes: 15
         run: make STREAMFY_BIN=$HOME/.streamfy/bin/streamfy cli-streamfy-mirroring-smoke
@@ -1074,7 +1093,11 @@ jobs:
         if: ${{ !success() }}
         timeout-minutes: 5
         run: |
-          kubectl get pods --namespace streamfy-test -o yaml || true
+          kubectl get topics,partitions,spus,mirrors -A -o wide || true
+          kubectl get pods -A || true
+          ls -la "${HOME}/.streamfy/log" || true
+          cat "${HOME}/.streamfy/log/flv_sc.log" || true
+          cat "${HOME}/.streamfy/log"/spu_log_*.log || true
           cat /tmp/flv_sc.log || cat /tmp/streamfy_sc.log || true
 
   mirroring-smoke-test-e2e:
