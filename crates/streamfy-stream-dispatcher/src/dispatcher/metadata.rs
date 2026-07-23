@@ -209,10 +209,7 @@ where
                     drop(read_guard);
                     if let Err(err) = self.client.update_spec(meta, spec).await {
                         self.ctx
-                            .report_action_error(
-                                &key,
-                                format!("update spec {}: {err:#}", S::LABEL),
-                            )
+                            .report_action_error(&key, format!("update spec {}: {err:#}", S::LABEL))
                             .await;
                     }
                 } else {
