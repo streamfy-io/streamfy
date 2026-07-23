@@ -33,6 +33,10 @@ pub struct PartitionSpec {
     #[cfg_attr(feature = "use_serde", serde(default))]
     #[streamfy(min_version = 14)]
     pub mirror: Option<PartitionMirrorConfig>,
+    /// Incremented by topic clear so SPUs wipe partition storage without removing metadata.
+    #[cfg_attr(feature = "use_serde", serde(default))]
+    #[streamfy(min_version = 20)]
+    pub clear_epoch: u32,
 }
 
 impl PartitionSpec {
@@ -61,6 +65,7 @@ impl PartitionSpec {
             compression_type: topic.get_compression_type().clone(),
             deduplication: topic.get_deduplication().cloned(),
             system: topic.is_system(),
+            clear_epoch: 0,
         }
     }
 

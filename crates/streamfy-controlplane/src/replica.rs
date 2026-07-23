@@ -25,6 +25,9 @@ pub struct Replica {
     pub storage: Option<TopicStorageConfig>,
     pub compression_type: CompressionAlgorithm,
     pub deduplication: Option<Deduplication>,
+    /// Bumped on topic clear; SPUs wipe storage when this increases.
+    #[streamfy(min_version = 20)]
+    pub clear_epoch: u32,
 }
 
 impl Replica {
@@ -69,6 +72,7 @@ where
             storage: spec.storage,
             compression_type: spec.compression_type,
             deduplication: spec.deduplication,
+            clear_epoch: spec.clear_epoch,
         }
     }
 }

@@ -171,4 +171,24 @@ where
         self.leo.update(REMOVAL_END);
         Ok(())
     }
+
+    /// Wipe on-disk records and recreate empty storage, resetting offsets to a fresh log.
+    /// Consumer offset metadata is not touched (that lives in the consumer-offset topic).
+    pub async fn clear(&self, config: S::ReplicaConfig) -> Result<()> {
+        {
+            let writer = self.write().await;
+            writer.remove().await?;
+        }
+        let storage = S::create_or_load(&self.id, config).await?;
+        let leo = storage.get_leo();
+        let hw = storage.get_hw();
+        {
+            let mut writer = self.write().await;
+            *writer = storage;
+        }
+        self.leo.update(leo);
+        self.hw.update(hw);
+        debug!(replica = %self.id, leo, hw, "replica storage cleared");
+        Ok(())
+    }
 }

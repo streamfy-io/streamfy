@@ -11,7 +11,8 @@ pub type UpdateReplicaRequest = ControlPlaneRequest<Replica>;
 
 impl Request for UpdateReplicaRequest {
     const API_KEY: u16 = InternalSpuApi::UpdateReplica as u16;
-    const DEFAULT_API_VERSION: i16 = 18; // align with pubic api to get version encoding
+    // Must be >= PartitionSpec/Replica clear_epoch min_version (20) or clear never reaches SPUs.
+    const DEFAULT_API_VERSION: i16 = 20;
     const MIN_API_VERSION: i16 = 0;
     type Response = UpdateReplicaResponse;
 }

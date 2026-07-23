@@ -4,6 +4,7 @@ mod describe;
 mod list;
 mod add_partition;
 mod add_mirror;
+mod clear;
 
 pub use cmd::TopicCmd;
 
@@ -25,6 +26,7 @@ mod cmd {
 
     use super::add_mirror::AddMirrorOpt;
     use super::add_partition::AddPartitionOpt;
+    use super::clear::ClearTopicOpt;
     use super::create::CreateTopicOpt;
     use super::delete::DeleteTopicOpt;
     use super::describe::DescribeTopicsOpt;
@@ -46,6 +48,13 @@ mod cmd {
             help_template = COMMAND_TEMPLATE,
         )]
         Delete(DeleteTopicOpt),
+
+        /// Clear all records from a Topic without deleting it
+        #[command(
+            name = "clear",
+            help_template = COMMAND_TEMPLATE,
+        )]
+        Clear(ClearTopicOpt),
 
         /// Print detailed information about a Topic
         #[command(
@@ -89,6 +98,9 @@ mod cmd {
                 }
                 Self::Delete(delete) => {
                     delete.process(streamfy).await?;
+                }
+                Self::Clear(clear) => {
+                    clear.process(streamfy).await?;
                 }
                 Self::Describe(describe) => {
                     describe.process(out, streamfy).await?;
