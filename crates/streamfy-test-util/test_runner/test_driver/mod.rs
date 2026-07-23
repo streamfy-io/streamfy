@@ -227,14 +227,22 @@ impl TestDriver {
 
             let _topic_time = now.elapsed().unwrap().as_nanos();
 
-            if topic_create.is_ok() {
-                println!("topic \"{topic_name}\" created");
-                //self.topic_create_latency_histogram
-                //    .record(topic_time as u64)
-                //    .unwrap();
-                //self.topic_num += 1;
-            } else {
-                println!("topic \"{topic_name}\" already exists");
+            match topic_create {
+                Ok(()) => {
+                    println!("topic \"{topic_name}\" created");
+                }
+                Err(err) => {
+                    let err_msg = err.to_string();
+                    // TopicAlreadyExists is recoverable when reusing a cluster.
+                    // Any other failure (store timeout, not provisioned, etc.)
+                    // must fail the test instead of continuing to produce/consume.
+                    if err_msg.to_ascii_lowercase().contains("already exists") {
+                        println!("topic \"{topic_name}\" already exists");
+                    } else {
+                        eprintln!("failed to create topic \"{topic_name}\": {err:#}");
+                        return Err(());
+                    }
+                }
             }
         }
 

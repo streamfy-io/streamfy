@@ -67,6 +67,14 @@ impl ScProcess {
         }
         binary.env("RUST_LOG", &self.rust_log);
 
+        // K8-backed SC (local-k8) applies specs via CRDs + watch. Default
+        // FLV_DISPATCHER_WAIT of 10s is too tight under CI/k3d load. Full K8
+        // install already raises this; local-k8 must set it on the SC child.
+        if matches!(self.mode, ScMode::K8s) {
+            let wait = std::env::var("FLV_DISPATCHER_WAIT").unwrap_or_else(|_| "300".to_string());
+            binary.env("FLV_DISPATCHER_WAIT", wait);
+        }
+
         info!(cmd = %binary.display(),"Invoking command");
         binary
             .stdout(Stdio::from(outputs))
