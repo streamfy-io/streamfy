@@ -341,7 +341,7 @@ impl DiagnosticsOpt {
         match contents {
             Ok(output) => {
                 if !self.quiet {
-                    println!("{}", &output);
+                    println!("{}", output);
                 }
                 write(path, output)?;
             }

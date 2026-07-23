@@ -44,7 +44,7 @@ pub async fn install_channel_streamfy_bin(
     // Download the package file from the package registry
     install_println(format!(
         "⏳ Downloading Streamfy CLI with latest version: {}...",
-        &id.version()
+        id.version()
     ));
     let package_result = fetch_package_file(&agent, &id, &target).await;
     let package_file = match package_result {
@@ -52,7 +52,7 @@ pub async fn install_channel_streamfy_bin(
         Err(_e) => {
             install_println(format!(
                 "❕ Streamfy is not published at version {} for {}, skipping self-update",
-                &id.version(),
+                id.version(),
                 target
             ));
             return Ok(());
@@ -70,7 +70,7 @@ pub async fn install_channel_streamfy_bin(
     install_bin(&streamfy_path, package_file)?;
     install_println(format!(
         "✅ Successfully updated {}",
-        &streamfy_path.display(),
+        streamfy_path.display(),
     ));
 
     Ok(())

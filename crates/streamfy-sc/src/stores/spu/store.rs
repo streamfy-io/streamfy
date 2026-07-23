@@ -91,7 +91,7 @@ where
     // build hashmap of online
     async fn online_status(&self) -> HashSet<SpuId> {
         let mut status = HashSet::new();
-        for (_, spu) in self.read().await.iter() {
+        for spu in self.read().await.values() {
             if spu.status.is_online() {
                 status.insert(spu.spec.id);
             }
@@ -169,7 +169,7 @@ where
     */
 
     async fn get_by_id(&self, id: SpuId) -> Option<SpuMetadata<C>> {
-        for (_, spu) in self.read().await.iter() {
+        for spu in self.read().await.values() {
             if spu.spec.id == id {
                 return Some(spu.inner().clone());
             }
@@ -179,7 +179,7 @@ where
 
     // check if spu can be registered
     async fn validate_spu_for_registered(&self, id: SpuId) -> bool {
-        for (_, spu) in self.read().await.iter() {
+        for spu in self.read().await.values() {
             if spu.spec.id == id {
                 return true;
             }

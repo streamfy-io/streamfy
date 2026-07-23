@@ -564,10 +564,7 @@ fn compute_hw(
 
     let mut qualified_leos: Vec<Reverse<Offset>> = Vec::new();
     for _ in 0..min_lrs {
-        match qualified_leos_iter.next() {
-            Some(leo) => qualified_leos.push(Reverse(leo)),
-            None => return None,
-        };
+        qualified_leos.push(Reverse(qualified_leos_iter.next()?));
     }
 
     // sort with O(min_lrs*log(min_lrs)) time without extra memory

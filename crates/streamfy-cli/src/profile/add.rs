@@ -31,7 +31,7 @@ impl ManualAddOpt {
         let config = config_file.mut_config().current_cluster_mut()?;
         self.installation_type.unwrap_or_default().save_to(config)?;
         config_file.save()?;
-        println!("Switched to profile {}", &self.profile_name);
+        println!("Switched to profile {}", self.profile_name);
 
         Ok(())
     }

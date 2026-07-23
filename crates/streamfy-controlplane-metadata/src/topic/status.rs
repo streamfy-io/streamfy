@@ -171,7 +171,7 @@ impl TopicStatus {
     pub fn spus_in_replica(&self) -> Vec<SpuId> {
         let mut spu_list: Vec<SpuId> = vec![];
 
-        for (_, replicas) in self.replica_map.iter() {
+        for replicas in self.replica_map.values() {
             for spu in replicas {
                 if !spu_list.contains(spu) {
                     spu_list.push(*spu);

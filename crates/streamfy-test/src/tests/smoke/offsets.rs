@@ -24,7 +24,7 @@ pub async fn find_offsets(test_driver: &TestDriver, test_case: &SmokeTestCase) -
         let topic_name = test_case.environment.base_topic_name();
         // find last offset
         let offset = last_leo(&mut admin, &topic_name).await;
-        println!("found topic: {} offset: {}", &topic_name, offset);
+        println!("found topic: {} offset: {}", topic_name, offset);
         offsets.insert(topic_name.to_string(), offset);
     }
 

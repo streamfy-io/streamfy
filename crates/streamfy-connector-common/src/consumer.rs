@@ -17,7 +17,7 @@ pub async fn consumer_stream_from_config(
     config: &ConnectorConfig,
 ) -> Result<(Streamfy, BoxConsumerStream)> {
     let mut cluster_config = StreamfyClusterConfig::load()?;
-    cluster_config.client_id = Some(format!("streamfy_connector_{}", &config.meta().name()));
+    cluster_config.client_id = Some(format!("streamfy_connector_{}", config.meta().name()));
 
     let streamfy = Streamfy::connect_with_config(&cluster_config).await?;
     ensure_topic_exists(config).await?;

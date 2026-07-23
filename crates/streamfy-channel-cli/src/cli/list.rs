@@ -54,9 +54,9 @@ impl ListOpt {
 
         for c in config.list_channels() {
             if current_channel == c {
-                println!("* {}", &c);
+                println!("* {}", c);
             } else {
-                println!("  {}", &c);
+                println!("  {}", c);
             }
         }
 

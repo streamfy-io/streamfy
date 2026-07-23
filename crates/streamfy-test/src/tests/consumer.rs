@@ -272,10 +272,10 @@ pub fn run(mut test_driver: StreamfyTestDriver, mut test_case: TestCase) {
     println!("\nStarting Consumer test");
 
     println!("Consumers: {consumers}");
-    println!("Starting offset: {:?}", &offset);
+    println!("Starting offset: {:?}", offset);
 
     if test_case.option.num_records != 0 {
-        println!("# records to consume: {:?}", &test_case.option.num_records);
+        println!("# records to consume: {:?}", test_case.option.num_records);
     } else {
         println!("# records to consume: (until end):");
     }

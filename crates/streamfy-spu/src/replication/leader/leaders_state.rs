@@ -79,7 +79,7 @@ where
         let read = self.read().await;
 
         let mut replicas = Vec::new();
-        for (_replica_key, state) in read.iter() {
+        for state in read.values() {
             let replica_config = state.get_replica();
             replicas.push(replica_config.clone());
         }
@@ -94,7 +94,7 @@ where
         home_replica: &str,
     ) -> Option<(SharedLeaderState<S>, bool)> {
         let read = self.read().await;
-        for (_replica_key, state) in read.iter() {
+        for state in read.values() {
             let replica_config = state.get_replica();
             if let Some(PartitionMirrorConfig::Home(home)) = &replica_config.mirror
                 && home.remote_cluster == remote_cluster

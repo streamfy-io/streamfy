@@ -29,7 +29,7 @@ impl DeleteClusterOpt {
 
         // Check if the named cluster exists
         if config.cluster(&cluster_name).is_none() {
-            println!("No profile named {} exists", &cluster_name);
+            println!("No profile named {} exists", cluster_name);
             return Ok(());
         }
 
@@ -37,10 +37,7 @@ impl DeleteClusterOpt {
             // Check whether there are any profiles that conflict with
             // this cluster being deleted. That is, if any profiles reference it.
             if let Err(profile_conflicts) = config.delete_cluster_check(&cluster_name) {
-                println!(
-                    "The following profiles reference cluster {}:",
-                    &cluster_name
-                );
+                println!("The following profiles reference cluster {}:", cluster_name);
                 for profile in profile_conflicts.iter() {
                     println!("  {profile}");
                 }
@@ -52,14 +49,14 @@ impl DeleteClusterOpt {
         let _deleted = match config.delete_cluster(&cluster_name) {
             Some(deleted) => deleted,
             None => {
-                println!("Cluster {} not found", &cluster_name);
+                println!("Cluster {} not found", cluster_name);
                 return Ok(());
             }
         };
 
         match config_file.save() {
             Ok(_) => {
-                println!("Cluster {} deleted", &cluster_name);
+                println!("Cluster {} deleted", cluster_name);
             }
             Err(e) => {
                 println!("Unable to save config file: {e}");
