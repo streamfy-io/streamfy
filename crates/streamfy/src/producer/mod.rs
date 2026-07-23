@@ -197,7 +197,7 @@ impl ProducerPool {
     }
 
     async fn clear_errors(&self) {
-        for (_, error) in self.errors.iter() {
+        for error in self.errors.values() {
             let mut error_handle = error.write().await;
             *error_handle = None;
         }

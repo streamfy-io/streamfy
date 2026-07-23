@@ -34,12 +34,12 @@ impl CreateTableFormatOpt {
 
         debug!(
             "creating tableformat: {} spec: {:#?}",
-            &name, tableformat_spec
+            name, tableformat_spec
         );
 
         let admin = streamfy.admin().await;
         admin.create(name.clone(), false, tableformat_spec).await?;
-        println!("tableformat \"{}\" created", &name);
+        println!("tableformat \"{}\" created", name);
 
         Ok(())
     }

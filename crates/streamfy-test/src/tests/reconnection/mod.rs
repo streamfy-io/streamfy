@@ -121,7 +121,7 @@ async fn terminate_spu(test_driver: &TestDriver, leader: i32) {
         .expect("cluster")
         .env_driver()
         .create_cluster_manager();
-    println!("terminating spu: {}", &leader);
+    println!("terminating spu: {}", leader);
     cluster_manager.terminate_spu(leader).expect("terminate");
 }
 
@@ -131,7 +131,7 @@ async fn start_spu(test_driver: &TestDriver, leader: i32) {
         .expect("cluster")
         .env_driver()
         .create_cluster_manager();
-    println!("starting spu again: {}", &leader);
+    println!("starting spu again: {}", leader);
     let leader_spu = cluster_manager.create_spu_absolute(leader as u16);
     leader_spu.start().expect("start");
 }

@@ -44,7 +44,7 @@ impl TestRecord {
 
         // Use all fields to build CRC
         // Order is important: go by order of fields
-        digest.update(format!("{:?}", &self.timestamp).as_bytes());
+        digest.update(format!("{:?}", self.timestamp).as_bytes());
         digest.update(self.tag.as_bytes());
         digest.update(self.data.as_bytes());
 
@@ -113,7 +113,7 @@ impl TestRecordBuilder {
 
         // Use all fields to build CRC
         // Order is important: go by order of fields
-        digest.update(format!("{:?}", &self.timestamp).as_bytes());
+        digest.update(format!("{:?}", self.timestamp).as_bytes());
         digest.update(self.tag.as_bytes());
         digest.update(self.data.as_bytes());
         digest.finalize()

@@ -237,7 +237,7 @@ where
 
     async fn count_topic_partitions(&self, topic: &str) -> i32 {
         let mut count: i32 = 0;
-        for (name, _) in self.read().await.iter() {
+        for name in self.read().await.keys() {
             if name.topic == topic {
                 count += 1;
             }
@@ -327,7 +327,7 @@ where
     /// count leades and follower by spu, this is used for scheduling
     async fn group_by_spu(&self) -> ReplicaSchedulingGroups {
         let mut groups = ReplicaSchedulingGroups::default();
-        for (_, partition) in self.read().await.iter() {
+        for partition in self.read().await.values() {
             let leader = partition.spec.leader;
             groups.increase_leaders(leader);
 

@@ -158,7 +158,7 @@ impl SmartModuleChainInstance {
                 if let Some(existing_metrics) = out.get(name) {
                     existing_metrics.append(&mfrac);
                 } else {
-                    let mfrac_w_name = SmartModuleChainMetrics::new(&[name.to_string()]);
+                    let mfrac_w_name = SmartModuleChainMetrics::new(std::slice::from_ref(name));
                     mfrac_w_name.append(&mfrac);
                     out.insert(name.to_string(), mfrac_w_name);
                 }

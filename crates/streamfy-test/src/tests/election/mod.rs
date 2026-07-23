@@ -92,7 +92,7 @@ pub async fn election(mut test_driver: TestDriver, mut test_case: TestCase) {
     }
 
     // start previous follower
-    println!("starting leader again: {}", &leader);
+    println!("starting leader again: {}", leader);
     let leader_spu = cluster_manager.create_spu_absolute(leader as u16);
     leader_spu.start().expect("start");
 

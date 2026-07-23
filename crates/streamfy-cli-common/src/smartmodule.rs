@@ -250,7 +250,7 @@ async fn build_chain(
         let wasm = api_client
             .get(transform.uses.clone())
             .await?
-            .ok_or_else(|| anyhow!("smartmodule {} not found", &transform.uses))?
+            .ok_or_else(|| anyhow!("smartmodule {} not found", transform.uses))?
             .wasm
             .as_raw_wasm()?;
         let mut config = SmartModuleConfig::from(transform);

@@ -102,7 +102,7 @@ impl MinikubeContext {
         Command::new("kubectl")
             .args(["config", "set-context", &self.name])
             .arg("--user=minikube")
-            .arg(format!("--cluster={}", &self.name))
+            .arg(format!("--cluster={}", self.name))
             .stdout(Stdio::inherit())
             .stderr(Stdio::inherit())
             .status()?;
@@ -128,7 +128,7 @@ export IP="${{IP:-$(minikube ip)}}"
 sudo sed -i'' -e '/minikubeCA/d' /etc/hosts
 echo "$IP minikubeCA" | sudo tee -a  /etc/hosts
 "#,
-            ip = &self.profile.ip()
+            ip = self.profile.ip()
         );
 
         let tmp_file = env::temp_dir().join("flv_minikube.sh");

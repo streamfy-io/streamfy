@@ -65,10 +65,10 @@ pub fn streamfy_test(args: TokenStream, input: TokenStream) -> TokenStream {
         fn_user_test.sig.ident.to_string()
     };
 
-    let test_driver_name = format!("{}_{}", test_name, &rand_string);
-    let user_test_name = format!("ext_test_fn_{}", &rand_string);
-    let requirements_name = format!("requirements_{}", &rand_string);
-    let validate_name = format!("validate_subcommand_{}", &rand_string);
+    let test_driver_name = format!("{}_{}", test_name, rand_string);
+    let user_test_name = format!("ext_test_fn_{}", rand_string);
+    let requirements_name = format!("requirements_{}", rand_string);
+    let validate_name = format!("validate_subcommand_{}", rand_string);
 
     let test_driver_iden = Ident::new(&test_driver_name, Span::call_site());
     let user_test_fn_iden = Ident::new(&user_test_name, Span::call_site());
@@ -77,7 +77,7 @@ pub fn streamfy_test(args: TokenStream, input: TokenStream) -> TokenStream {
 
     // Enforce naming convention for converting dyn TestOption to concrete type
     let test_opt_ident = Ident::new(
-        &format!("{}TestOption", &test_name).to_pascal_case(),
+        &format!("{}TestOption", test_name).to_pascal_case(),
         Span::call_site(),
     );
 

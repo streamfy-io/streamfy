@@ -104,7 +104,7 @@ pub fn smoke(mut test_driver: StreamfyTestDriver, mut test_case: TestCase) {
                         .create(name.clone(), false, table_format_spec)
                         .await
                         .expect("TableFormat create failed");
-                    println!("tableformat \"{}\" created", &name);
+                    println!("tableformat \"{}\" created", name);
 
                     // Wait a moment then delete
                     sleep(Duration::from_secs(5)).await;
@@ -115,7 +115,7 @@ pub fn smoke(mut test_driver: StreamfyTestDriver, mut test_case: TestCase) {
                         .expect("TableFormat delete failed");
                     println!(
                         "tableformat \"{}\" deleted, took: {} seconds",
-                        &name,
+                        name,
                         time.elapsed().unwrap().as_secs()
                     );
                 },

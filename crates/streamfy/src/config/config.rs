@@ -145,7 +145,7 @@ impl ConfigFile {
             .map_err(|e| config_file_error(&format!("parent {:?}", self.path), e))?;
         self.config
             .save_to(&self.path)
-            .map_err(|e| config_file_error(&format!("{:?}", &self.path), e))?;
+            .map_err(|e| config_file_error(&format!("{:?}", self.path), e))?;
         Ok(())
     }
 

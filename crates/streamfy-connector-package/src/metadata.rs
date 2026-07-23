@@ -263,7 +263,7 @@ fn validate_deployment(deployment: &Deployment, config: &ConnectorConfig) -> any
             if !deployment_image.eq(&cfg_image) {
                 anyhow::bail!(
                     "deployment image in metadata: '{}' mismatches image in config: '{}'",
-                    &deployment_image,
+                    deployment_image,
                     cfg_image
                 );
             }

@@ -47,7 +47,7 @@ jobs:
         uses: actions-rs/toolchain@v1
         with:
           profile: minimal
-          toolchain: 1.96.0
+          toolchain: 1.97.1
           override: true
       - name: Install zig
         run: ./actions/zig-install.sh
@@ -78,7 +78,7 @@ jobs:
         uses: actions-rs/toolchain@v1
         with:
           profile: minimal
-          toolchain: 1.96.0
+          toolchain: 1.97.1
           override: true
       - name: Install zig
         run: ./actions/zig-install.sh
@@ -132,7 +132,7 @@ jobs:
         uses: actions-rs/toolchain@v1
         with:
           profile: minimal
-          toolchain: 1.96.0
+          toolchain: 1.97.1
           override: true
           target: wasm32-unknown-unknown
       - name: Build WASM for ${{ matrix.context.crate }}
@@ -167,7 +167,7 @@ jobs:
         uses: actions-rs/toolchain@v1
         with:
           profile: minimal
-          toolchain: 1.96.0
+          toolchain: 1.97.1
           override: true
       - name: Check ${{ matrix.crate }} with ${{ matrix.features }}
         run: cargo check --manifest-path ./crates/${{ matrix.crate }}/Cargo.toml --${{ matrix.features }}
@@ -190,7 +190,7 @@ jobs:
         uses: actions-rs/toolchain@v1
         with:
           profile: minimal
-          toolchain: 1.96.0
+          toolchain: 1.97.1
           override: true
       - name: Install NASM
         uses: ilammy/setup-nasm@v1
@@ -247,7 +247,7 @@ jobs:
         uses: actions-rs/toolchain@v1
         with:
           profile: minimal
-          toolchain: 1.96.0
+          toolchain: 1.97.1
           override: true
           target: ${{ matrix.rust-target }}
       - name: Install zig
@@ -301,7 +301,7 @@ jobs:
         uses: actions-rs/toolchain@v1
         with:
           profile: minimal
-          toolchain: 1.96.0
+          toolchain: 1.97.1
           override: true
       - name: Install zig
         run: ./actions/zig-install.sh
@@ -805,7 +805,7 @@ jobs:
         uses: actions-rs/toolchain@v1
         with:
           profile: minimal
-          toolchain: 1.96.0
+          toolchain: 1.97.1
           override: true
           target: wasm32-wasip1
       - name: Download streamfy

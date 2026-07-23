@@ -163,7 +163,7 @@ mod root {
                 #[cfg(feature = "k8s")]
                 Self::Cluster(cluster) => {
                     if let Ok(channel_name) = std::env::var(STREAMFY_RELEASE_CHANNEL) {
-                        println!("Current channel: {}", &channel_name);
+                        println!("Current channel: {}", channel_name);
                     };
 
                     let version = semver::Version::parse(crate::VERSION).unwrap();
@@ -291,13 +291,13 @@ mod root {
                     Ok(streamfy_dir) => {
                         println!(
                             "Unable to find plugin '{}'. Make sure it is installed in {:?}.",
-                            &subcommand, streamfy_dir,
+                            subcommand, streamfy_dir,
                         );
                     }
                     Err(_) => {
                         println!(
                             "Unable to find plugin '{}'. Make sure it is in your PATH.",
-                            &subcommand,
+                            subcommand,
                         );
                     }
                 }

@@ -78,6 +78,6 @@ fn issue_2168_regression_test() {
         .success()
         .stdout(predicate::str::contains(format!(
             "Release channel \"{}\" not found",
-            &random_channel_name
+            random_channel_name
         )));
 }

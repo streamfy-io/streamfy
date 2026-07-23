@@ -170,7 +170,7 @@ mod tests {
             *partition_count += 1;
         }
 
-        for (_partition, &count) in counts.iter() {
+        for &count in counts.values() {
             assert_eq!(count, 500);
         }
     }

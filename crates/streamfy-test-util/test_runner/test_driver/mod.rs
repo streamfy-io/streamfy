@@ -188,10 +188,10 @@ impl TestDriver {
         if option.topic > 1 {
             println!(
                 "Creating {} topics. Base name: {}",
-                option.topic, &topic_name
+                option.topic, topic_name
             );
         } else {
-            println!("Creating the topic: {}", &topic_name);
+            println!("Creating the topic: {}", topic_name);
         }
 
         let admin = self.client().admin().await;

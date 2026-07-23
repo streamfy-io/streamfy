@@ -20,7 +20,7 @@ impl SwitchOpt {
         match ConfigFile::load(None) {
             Ok(mut config_file) => {
                 if !config_file.mut_config().set_current_profile(&profile_name) {
-                    println!("profile {} not found", &profile_name);
+                    println!("profile {} not found", profile_name);
                 } else if let Err(err) = config_file.save() {
                     println!("unable to save profile: {err}");
                 }

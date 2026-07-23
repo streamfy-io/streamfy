@@ -73,8 +73,8 @@ impl HttpAgent {
 
         let url = self.base_url.join(&format!(
             "packages/{group}/{name}/{version}/{target}/{file_name}",
-            group = &id.group(),
-            name = &id.name(),
+            group = id.group(),
+            name = id.name(),
             file_name = file_name,
             version = version,
             target = target.as_str(),
@@ -96,8 +96,8 @@ impl HttpAgent {
         };
         let url = self.base_url.join(&format!(
             "packages/{group}/{name}/{version}/{target}/{file_name}.sha256",
-            group = &id.group(),
-            name = &id.name(),
+            group = id.group(),
+            name = id.name(),
             file_name = file_name,
             version = version,
             target = target.as_str(),
